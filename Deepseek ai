@@ -1,3 +1,109 @@
+--============================================
+-- DIAGNOSTIC SCRIPT - شغّله لحاله أولاً
+--============================================
+print("========== DIAGNOSTIC START ==========")
+
+-- 1) تحميل المكتبة
+local ok1, redzlib = pcall(function()
+    return loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"
+    ))()
+end)
+print("[1] Library load:", ok1)
+if not ok1 then
+    warn("[1] Library error:", redzlib)
+    return
+end
+if not redzlib then
+    warn("[1] redzlib is nil!")
+    return
+end
+
+-- 2) إنشاء النافذة
+local ok2, win = pcall(function()
+    return redzlib:MakeWindow({
+        Title = "DIAG", SubTitle = "Test", SaveFolder = "Diag"
+    })
+end)
+print("[2] MakeWindow:", ok2)
+if not ok2 then
+    warn("[2] Window error:", win)
+    return
+end
+
+-- 3) إنشاء تاب أساسية
+local ok3, tab = pcall(function()
+    return win:MakeTab({"Home", "home"})
+end)
+print("[3] MakeTab 'home':", ok3)
+if not ok3 then
+    warn("[3] Tab error:", tab)
+    return
+end
+
+-- 4) اختبار كل الأيقونات المستخدمة
+print("[4] Testing icons...")
+for _, icon in ipairs({
+    "home", "user", "zap", "image", "settings",
+    "eye", "tool", "map", "sparkles", "info",
+    "wrench", "star", "package", "box", "hammer"
+}) do
+    local ok, err = pcall(function()
+        win:MakeTab({"T_"..icon, icon})
+    end)
+    print("    icon '"..icon.."':", ok and "✅ OK" or ("❌ FAIL: "..tostring(err)))
+end
+
+-- 5) اختبار Paragraph و Set
+print("[5] Testing Paragraph...")
+local ok5, para = pcall(function()
+    return tab:AddParagraph({"Test", "Hello"})
+end)
+print("    AddParagraph:", ok5, "| return type:", type(para))
+if ok5 and para then
+    print("    Has :Set()?", pcall(function() para:Set("Updated") end))
+    print("    Has .Text?", pcall(function() para.Text = "Updated" end))
+    print("    Has :Update()?", pcall(function() para:Update("Updated") end))
+end
+
+-- 6) اختبار Slider بقيم مختلفة
+print("[6] Testing Slider defaults...")
+local ok6a, err6a = pcall(function()
+    tab:AddSlider({Name="S1", Min=0, Max=300, Increase=1, Default=196, Callback=function() end})
+end)
+print("    Slider Default=196 (Increase=1):", ok6a and "✅ OK" or ("❌ "..tostring(err6a)))
+
+local ok6b, err6b = pcall(function()
+    tab:AddSlider({Name="S2", Min=0, Max=300, Increase=1, Default=196.2, Callback=function() end})
+end)
+print("    Slider Default=196.2 (Increase=1):", ok6b and "✅ OK" or ("❌ "..tostring(err6b)))
+
+local ok6c, err6c = pcall(function()
+    tab:AddSlider({Name="S3", Min=10, Max=200, Increase=5, Default=130, Callback=function() end})
+end)
+print("    Slider Default=130 (Increase=5):", ok6c and "✅ OK" or ("❌ "..tostring(err6c)))
+
+-- 7) اختبار Dropdown بقيمة افتراضية فارغة
+print("[7] Testing Dropdown...")
+local ok7a, err7a = pcall(function()
+    tab:AddDropdown({Name="D1", Options={"A","B"}, Default="", Callback=function() end})
+end)
+print("    Dropdown Default='' (not in options):", ok7a and "✅ OK" or ("❌ "..tostring(err7a)))
+
+local ok7b, err7b = pcall(function()
+    tab:AddDropdown({Name="D2", Options={"A","B"}, Default="A", Callback=function() end})
+end)
+print("    Dropdown Default='A' (in options):", ok7b and "✅ OK" or ("❌ "..tostring(err7b)))
+
+-- 8) اختبار GetNetworkPing
+print("[8] Testing GetNetworkPing...")
+local ok8, ping = pcall(function()
+    return game:GetService("Players").LocalPlayer:GetNetworkPing()
+end)
+print("    GetNetworkPing:", ok8, "| value:", ping, "| type:", type(ping))
+
+print("========== DIAGNOSTIC END ==========")
+print("👆 انسخ هذا الإخراج كاملاً وأرسله لي")
 --==================================================
 -- ALAWI HUB - MOBILE ULTRA MEGA EDITION v4.0
 -- PART 1 / 2  |  REDZ LIBRARY
