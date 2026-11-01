@@ -1,0 +1,864 @@
+--==================================================
+-- ALAWI HUB - ULTRA EXTENDED EDITION
+-- REDZ LIBRARY | No Kill | No Harm Features
+--==================================================
+
+local redzlib = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"
+))()
+
+--==================================================
+-- SERVICES
+--==================================================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local VirtualUser = game:GetService("VirtualUser")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
+
+--==================================================
+-- STATE
+--==================================================
+local State = {
+    ESP = false,
+    NameESP = false,
+    TracerESP = false,
+    TeamCheck = true,
+    Fullbright = false,
+    InfJump = false,
+    Fly = false,
+    FlySpeed = 50,
+    NoClip = false,
+    AntiVoid = false,
+    Freeze = false,
+    AntiAFK = false,
+    SpectateTarget = nil,
+}
+
+--==================================================
+-- HELPERS
+--==================================================
+local function safeSet(paragraph, text)
+    if not paragraph then return end
+    pcall(function() paragraph:Set(text) end)
+    pcall(function() paragraph.Text = text end)
+    pcall(function() paragraph:Update(text) end)
+end
+
+local function getChar()
+    return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+end
+
+local function getHRP()
+    local c = LocalPlayer.Character
+    return c and c:FindFirstChild("HumanoidRootPart")
+end
+
+local function isEnemy(plr)
+    if plr == LocalPlayer then return false end
+    if not State.TeamCheck then return true end
+    if plr.Team and LocalPlayer.Team then
+        return plr.Team ~= LocalPlayer.Team
+    end
+    return true
+end
+
+--==================================================
+-- WINDOW
+--==================================================
+local Window = redzlib:MakeWindow({
+    Title = "Alawi Hub",
+    SubTitle = "by .مطور علاوي | Ultra Edition",
+    SaveFolder = "AlawiHub"
+})
+
+Window:AddMinimizeButton({
+    Button = { Image = "rbxassetid://11028318025", BackgroundTransparency = 0 },
+    Corner = { CornerRadius = UDim.new(35, 1) }
+})
+
+--==================================================
+-- TAB 1 : الرئيسية + معلومات اللاعب
+--==================================================
+local MainTab = Window:MakeTab({"الرئيسية", "home"})
+
+MainTab:AddSection({"📊 معلومات اللاعب"})
+
+local infoPara = MainTab:AddParagraph({"جاري التحميل...", "..."})
+
+task.spawn(function()
+    while task.wait(1) do
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local fps = math.floor(1 / math.max(RunService.RenderStepped:Wait(), 0.001))
+        local ping = math.floor(LocalPlayer:GetNetworkPing() * 1000)
+
+        local txt = string.format(
+            "👤 الاسم: %s\n" ..
+            "📛 العرض: %s\n" ..
+            "❤️ الصحة: %s / %s\n" ..
+            "🏃 السرعة: %s\n" ..
+            "🦘 القفز: %s\n" ..
+            "📡 بينغ: %d ms\n" ..
+            "🎯 الفريق: %s\n" ..
+            "📍 الموقع: (%.0f, %.0f, %.0f)",
+            LocalPlayer.Name,
+            LocalPlayer.DisplayName,
+            hum and math.floor(hum.Health) or "?",
+            hum and math.floor(hum.MaxHealth) or "?",
+            hum and math.floor(hum.WalkSpeed) or "?",
+            hum and math.floor(hum.JumpPower) or "?",
+            ping,
+            LocalPlayer.Team and LocalPlayer.Team.Name or "بدون فريق",
+            hrp and hrp.Position.X or 0,
+            hrp and hrp.Position.Y or 0,
+            hrp and hrp.Position.Z or 0
+        )
+        safeSet(infoPara, txt)
+    end
+end)
+
+MainTab:AddSection({"⚡ إجراءات سريعة"})
+
+MainTab:AddButton({
+    Name = "🔄 إعادة تعيين الشخصية",
+    Callback = function()
+        if LocalPlayer.Character then LocalPlayer.Character:BreakJoints() end
+    end
+})
+
+MainTab:AddButton({
+    Name = "🚪 إعادة الانضمام للسيرفر",
+    Callback = function()
+        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+    end
+})
+
+MainTab:AddButton({
+    Name = "🌐 الانتقال لسيرفر جديد (Hop)",
+    Callback = function()
+        local servers = game:GetService("HttpService"):JSONDecode(
+            game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?limit=100")
+        )
+        for _, s in ipairs(servers.data) do
+            if s.playing < s.maxPlayers and s.id ~= game.JobId then
+                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, s.id, LocalPlayer)
+                return
+            end
+        end
+    end
+})
+
+--==================================================
+-- TAB 2 : اللاعب (حركة + تعديلات)
+--==================================================
+local PlayerTab = Window:MakeTab({"اللاعب", "user"})
+
+PlayerTab:AddSection({"🏃 الحركة الأساسية"})
+
+PlayerTab:AddSlider({
+    Name = "سرعة المشي (WalkSpeed)",
+    Min = 16, Max = 500, Increase = 1, Default = 16,
+    Callback = function(v)
+        local c = LocalPlayer.Character
+        if c and c:FindFirstChildOfClass("Humanoid") then
+            c:FindFirstChildOfClass("Humanoid").WalkSpeed = v
+        end
+    end
+})
+
+PlayerTab:AddSlider({
+    Name = "قوة القفز (JumpPower)",
+    Min = 50, Max = 500, Increase = 1, Default = 50,
+    Callback = function(v)
+        local c = LocalPlayer.Character
+        if c and c:FindFirstChildOfClass("Humanoid") then
+            c:FindFirstChildOfClass("Humanoid").JumpPower = v
+        end
+    end
+})
+
+PlayerTab:AddSlider({
+    Name = "ارتفاع الورك (HipHeight)",
+    Min = 0, Max = 20, Increase = 0.5, Default = 2,
+    Callback = function(v)
+        local c = LocalPlayer.Character
+        if c and c:FindFirstChildOfClass("Humanoid") then
+            c:FindFirstChildOfClass("Humanoid").HipHeight = v
+        end
+    end
+})
+
+PlayerTab:AddSlider({
+    Name = "الجاذبية (Gravity)",
+    Min = 0, Max = 300, Increase = 1, Default = 196.2,
+    Callback = function(v)
+        workspace.Gravity = v
+    end
+})
+
+PlayerTab:AddSlider({
+    Name = "مجال الرؤية (FOV)",
+    Min = 20, Max = 140, Increase = 1, Default = 70,
+    Callback = function(v)
+        Camera.FieldOfView = v
+    end
+})
+
+PlayerTab:AddSection({"🚀 حركات خاصة"})
+
+PlayerTab:AddToggle({
+    Name = "قفز لانهائي (Infinite Jump)",
+    Default = false,
+    Callback = function(v) State.InfJump = v end
+})
+
+UserInputService.JumpRequest:Connect(function()
+    if State.InfJump and LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+    end
+end)
+
+PlayerTab:AddToggle({
+    Name = "اختراق الجدران (NoClip)",
+    Default = false,
+    Callback = function(v) State.NoClip = v end
+})
+
+RunService.Stepped:Connect(function()
+    if State.NoClip and LocalPlayer.Character then
+        for _, v in ipairs(LocalPlayer.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+end)
+
+PlayerTab:AddToggle({
+    Name = "طيران (Fly)",
+    Default = false,
+    Callback = function(v)
+        State.Fly = v
+        if not v then
+            local hrp = getHRP()
+            if hrp then
+                local bv = hrp:FindFirstChild("FlyBV"); if bv then bv:Destroy() end
+                local bg = hrp:FindFirstChild("FlyBG"); if bg then bg:Destroy() end
+            end
+        end
+    end
+})
+
+PlayerTab:AddSlider({
+    Name = "سرعة الطيران",
+    Min = 20, Max = 300, Increase = 5, Default = 50,
+    Callback = function(v) State.FlySpeed = v end
+})
+
+RunService.RenderStepped:Connect(function()
+    if State.Fly and LocalPlayer.Character then
+        local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local bv = hrp:FindFirstChild("FlyBV") or Instance.new("BodyVelocity")
+            bv.Name = "FlyBV"
+            bv.MaxForce = Vector3.new(5e5, 5e5, 5e5)
+            bv.Parent = hrp
+
+            local bg = hrp:FindFirstChild("FlyBG") or Instance.new("BodyGyro")
+            bg.Name = "FlyBG"
+            bg.MaxTorque = Vector3.new(5e5, 5e5, 5e5)
+            bg.Parent = hrp
+
+            local dir = Vector3.zero
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir += Camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir -= Camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir -= Camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir += Camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.yAxis end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= Vector3.yAxis end
+
+            bv.Velocity = dir.Magnitude > 0 and dir.Unit * State.FlySpeed or Vector3.zero
+            bg.CFrame = Camera.CFrame
+        end
+    end
+end)
+
+PlayerTab:AddToggle({
+    Name = "مقاومة السقوط (Anti-Void)",
+    Default = false,
+    Callback = function(v) State.AntiVoid = v end
+})
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if State.AntiVoid then
+            local hrp = getHRP()
+            if hrp and hrp.Position.Y < -50 then
+                hrp.CFrame = CFrame.new(0, 50, 0)
+                hrp.Velocity = Vector3.zero
+            end
+        end
+    end
+end)
+
+PlayerTab:AddToggle({
+    Name = "تجميد الشخصية (Freeze)",
+    Default = false,
+    Callback = function(v)
+        State.Freeze = v
+        local hrp = getHRP()
+        if hrp then hrp.Anchored = v end
+    end
+})
+
+PlayerTab:AddSection({"🎭 إجراءات"})
+
+PlayerTab:AddButton({
+    Name = "🪑 الجلوس",
+    Callback = function()
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.Sit = true end
+    end
+})
+
+PlayerTab:AddButton({
+    Name = "🧍 الوقوف",
+    Callback = function()
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.Sit = false end
+    end
+})
+
+--==================================================
+-- TAB 3 : الرؤية (ESP + Fullbright + Tracers)
+--==================================================
+local VisionTab = Window:MakeTab({"الرؤية", "eye"})
+
+VisionTab:AddSection({"💡 تحسين الرؤية"})
+
+VisionTab:AddToggle({
+    Name = "إضاءة كاملة (Fullbright)",
+    Default = false,
+    Callback = function(v)
+        State.Fullbright = v
+        if v then
+            Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+            Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+            Lighting.Brightness = 2
+            Lighting.ClockTime = 12
+            Lighting.FogEnd = 100000
+        else
+            Lighting.Ambient = Color3.fromRGB(70, 70, 70)
+            Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+            Lighting.Brightness = 1
+            Lighting.FogEnd = 1000
+        end
+    end
+})
+
+VisionTab:AddSection({"👁️ ESP للاعبين"})
+
+VisionTab:AddToggle({
+    Name = "تفعيل ESP (Highlight)",
+    Default = false,
+    Callback = function(v)
+        State.ESP = v
+        if not v then
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p.Character then
+                    local hl = p.Character:FindFirstChild("ESP_Highlight")
+                    if hl then hl:Destroy() end
+                end
+            end
+        end
+    end
+})
+
+VisionTab:AddToggle({
+    Name = "فحص الفريق (Team Check)",
+    Default = true,
+    Callback = function(v) State.TeamCheck = v end
+})
+
+VisionTab:AddToggle({
+    Name = "أسماء اللاعبين (Name ESP)",
+    Default = false,
+    Callback = function(v)
+        State.NameESP = v
+        if not v then
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p.Character then
+                    local tag = p.Character:FindFirstChild("ESP_NameTag")
+                    if tag then tag:Destroy() end
+                    local head = p.Character:FindFirstChild("Head")
+                    if head then
+                        local bg = head:FindFirstChild("ESP_NameGui")
+                        if bg then bg:Destroy() end
+                    end
+                end
+            end
+        end
+    end
+})
+
+-- دوال ESP
+local function applyHighlight(player)
+    if player == LocalPlayer or not player.Character then return end
+    local char = player.Character
+    local old = char:FindFirstChild("ESP_Highlight")
+    if old then old:Destroy() end
+    if not State.ESP then return end
+
+    local hl = Instance.new("Highlight")
+    hl.Name = "ESP_Highlight"
+    hl.FillColor = isEnemy(player) and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(50, 255, 50)
+    hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+    hl.FillTransparency = 0.55
+    hl.OutlineTransparency = 0.2
+    hl.Parent = char
+end
+
+local function applyNameTag(player)
+    if player == LocalPlayer or not player.Character then return end
+    local head = player.Character:FindFirstChild("Head")
+    if not head then return end
+    local oldBg = head:FindFirstChild("ESP_NameGui")
+    if oldBg then oldBg:Destroy() end
+    if not State.NameESP then return end
+
+    local bg = Instance.new("BillboardGui")
+    bg.Name = "ESP_NameGui"
+    bg.Size = UDim2.new(0, 200, 0, 50)
+    bg.StudsOffset = Vector3.new(0, 2.5, 0)
+    bg.AlwaysOnTop = true
+    bg.Parent = head
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.fromScale(1, 1)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = isEnemy(player) and Color3.fromRGB(255, 80, 80) or Color3.fromRGB(80, 255, 80)
+    lbl.TextStrokeTransparency = 0
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextScaled = true
+    lbl.Parent = bg
+
+    task.spawn(function()
+        while bg.Parent and State.NameESP do
+            local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local tHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if hrp and tHRP then
+                local dist = math.floor((hrp.Position - tHRP.Position).Magnitude)
+                lbl.Text = string.format("%s [%dm]", player.Name, dist)
+            else
+                lbl.Text = player.Name
+            end
+            task.wait(0.3)
+        end
+    end)
+end
+
+Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        applyHighlight(p); applyNameTag(p)
+    end)
+end)
+
+for _, p in ipairs(Players:GetPlayers()) do
+    if p ~= LocalPlayer then
+        p.CharacterAdded:Connect(function()
+            task.wait(0.5)
+            applyHighlight(p); applyNameTag(p)
+        end)
+    end
+end
+
+task.spawn(function()
+    while task.wait(1) do
+        if State.ESP or State.NameESP then
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer then
+                    if State.ESP then applyHighlight(p) end
+                    if State.NameESP then applyNameTag(p) end
+                end
+            end
+        end
+    end
+end)
+
+--==================================================
+-- TAB 4 : الأدوات (محسّن)
+--==================================================
+local ToolsTab = Window:MakeTab({"الأدوات", "tool"})
+
+ToolsTab:AddSection({"📦 نسخ الأداة الحالية"})
+
+ToolsTab:AddButton({
+    Name = "نسخ ×1",
+    Callback = function()
+        local c = LocalPlayer.Character
+        local tool = c and c:FindFirstChildWhichIsA("Tool")
+        if tool then
+            local clone = tool:Clone()
+            clone.Parent = c
+        end
+    end
+})
+
+ToolsTab:AddButton({
+    Name = "نسخ ×5",
+    Callback = function()
+        local c = LocalPlayer.Character
+        local tool = c and c:FindFirstChildWhichIsA("Tool")
+        if tool then
+            for i = 1, 5 do
+                local clone = tool:Clone()
+                clone.Parent = c
+            end
+        end
+    end
+})
+
+ToolsTab:AddButton({
+    Name = "نسخ ×20",
+    Callback = function()
+        local c = LocalPlayer.Character
+        local tool = c and c:FindFirstChildWhichIsA("Tool")
+        if tool then
+            for i = 1, 20 do
+                local clone = tool:Clone()
+                clone.Parent = c
+            end
+        end
+    end
+})
+
+ToolsTab:AddButton({
+    Name = "نسخ ×100 (قد يسبب لاق)",
+    Callback = function()
+        local c = LocalPlayer.Character
+        local tool = c and c:FindFirstChildWhichIsA("Tool")
+        if tool then
+            for i = 1, 100 do
+                local clone = tool:Clone()
+                clone.Parent = c
+            end
+        end
+    end
+})
+
+ToolsTab:AddSection({"🎒 إدارة الحقيبة"})
+
+ToolsTab:AddButton({
+    Name = "تجهيز كل الأدوات (Equip All)",
+    Callback = function()
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        local c = LocalPlayer.Character
+        if backpack and c then
+            local hum = c:FindFirstChildOfClass("Humanoid")
+            if hum then
+                for _, tool in ipairs(backpack:GetChildren()) do
+                    if tool:IsA("Tool") then pcall(function() hum:EquipTool(tool) end) end
+                end
+            end
+        end
+    end
+})
+
+ToolsTab:AddButton({
+    Name = "رمي كل الأدوات (Drop All)",
+    Callback = function()
+        local c = LocalPlayer.Character
+        if c then
+            for _, item in ipairs(c:GetChildren()) do
+                if item:IsA("Tool") then item.Parent = workspace end
+            end
+        end
+    end
+})
+
+ToolsTab:AddButton({
+    Name = "حذف كل الأدوات من الحقيبة",
+    Callback = function()
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        if backpack then
+            for _, tool in ipairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") then tool:Destroy() end
+            end
+        end
+    end
+})
+
+ToolsTab:AddButton({
+    Name = "تفريغ الأداة من اليد",
+    Callback = function()
+        local c = LocalPlayer.Character
+        if c then
+            for _, item in ipairs(c:GetChildren()) do
+                if item:IsA("Tool") then
+                    local bp = LocalPlayer:FindFirstChild("Backpack")
+                    if bp then item.Parent = bp end
+                end
+            end
+        end
+    end
+})
+
+ToolsTab:AddSection({"⚙️ خصائص الأداة"})
+
+ToolsTab:AddButton({
+    Name = "إصلاح قبضة الأداة (Fix Grip)",
+    Callback = function()
+        local c = LocalPlayer.Character
+        local tool = c and c:FindFirstChildWhichIsA("Tool")
+        if tool then
+            tool.Grip = CFrame.new(0, 0, 0)
+        end
+    end
+})
+
+ToolsTab:AddButton({
+    Name = "حذف الأداة الحالية",
+    Callback = function()
+        local c = LocalPlayer.Character
+        local tool = c and c:FindFirstChildWhichIsA("Tool")
+        if tool then tool:Destroy() end
+    end
+})
+
+--==================================================
+-- TAB 5 : تيليبورت
+--==================================================
+local TPTab = Window:MakeTab({"تيليبورت", "map"})
+
+TPTab:AddSection({"🎯 الانتقال إلى لاعب"})
+
+local playerList = {}
+for _, p in ipairs(Players:GetPlayers()) do
+    if p ~= LocalPlayer then table.insert(playerList, p.Name) end
+end
+
+local selectedPlayer = nil
+
+local playerDropdown = TPTab:AddDropdown({
+    Name = "اختر لاعباً",
+    Options = playerList,
+    Default = "",
+    Callback = function(v) selectedPlayer = v end
+})
+
+Players.PlayerAdded:Connect(function(p)
+    if p ~= LocalPlayer then
+        table.insert(playerList, p.Name)
+        pcall(function() playerDropdown:Refresh(playerList) end)
+        pcall(function() playerDropdown:Set(playerList) end)
+    end
+end)
+
+TPTab:AddButton({
+    Name = "📍 الانتقال للاعب المحدد",
+    Callback = function()
+        if selectedPlayer then
+            local target = Players:FindFirstChild(selectedPlayer)
+            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = getHRP()
+                if hrp then
+                    local tHRP = target.Character.HumanoidRootPart
+                    hrp.CFrame = tHRP.CFrame + Vector3.new(3, 0, 0)
+                end
+            end
+        end
+    end
+})
+
+TPTab:AddToggle({
+    Name = "👁️ مراقبة اللاعب (Spectate)",
+    Default = false,
+    Callback = function(v)
+        if v and selectedPlayer then
+            local target = Players:FindFirstChild(selectedPlayer)
+            if target and target.Character and target.Character:FindFirstChildOfClass("Humanoid") then
+                Camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
+                State.SpectateTarget = target
+            end
+        else
+            if LocalPlayer.Character then
+                local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if hum then Camera.CameraSubject = hum end
+            end
+            State.SpectateTarget = nil
+        end
+    end
+})
+
+TPTab:AddSection({"🖱️ تيليبورت متقدم"})
+
+TPTab:AddButton({
+    Name = "النقر للانتقال (Click TP)",
+    Callback = function()
+        local connection
+        connection = UserInputService.InputBegan:Connect(function(input, gp)
+            if gp then return end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                local hrp = getHRP()
+                if hrp and Mouse.Target then
+                    hrp.CFrame = CFrame.new(Mouse.Hit.Position + Vector3.new(0, 3, 0))
+                end
+                connection:Disconnect()
+            end
+        end)
+    end
+})
+
+TPTab:AddButton({
+    Name = "الانتقال للماوس (Teleport to Mouse)",
+    Callback = function()
+        local hrp = getHRP()
+        if hrp and Mouse.Hit then
+            hrp.CFrame = CFrame.new(Mouse.Hit.Position + Vector3.new(0, 3, 0))
+        end
+    end
+})
+
+TPTab:AddButton({
+    Name = "الانتقال لأعلى الماب (Sky)",
+    Callback = function()
+        local hrp = getHRP()
+        if hrp then
+            hrp.CFrame = CFrame.new(hrp.Position.X, 200, hrp.Position.Z)
+        end
+    end
+})
+
+TPTab:AddButton({
+    Name = "الانتقال للمنتصف (0,0,0)",
+    Callback = function()
+        local hrp = getHRP()
+        if hrp then hrp.CFrame = CFrame.new(0, 50, 0) end
+    end
+})
+
+--==================================================
+-- TAB 6 : أوتو
+--==================================================
+local AutoTab = Window:MakeTab({"أوتو", "zap"})
+
+AutoTab:AddSection({"🤖 أنظمة تلقائية"})
+
+AutoTab:AddToggle({
+    Name = "مقاومة الطرد (Anti-AFK)",
+    Default = false,
+    Callback = function(v)
+        State.AntiAFK = v
+        if v then
+            LocalPlayer.Idled:Connect(function()
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.zero)
+            end)
+        end
+    end
+})
+
+AutoTab:AddToggle({
+    Name = "تعزيز الأداء (FPS Booster)",
+    Default = false,
+    Callback = function(v)
+        if v then
+            for _, obj in ipairs(game:GetDescendants()) do
+                pcall(function()
+                    if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") or obj:IsA("Sparkles") then
+                        obj.Enabled = false
+                    elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                        obj.Transparency = 1
+                    end
+                end)
+            end
+            pcall(function() settings().Rendering.QualityLevel = 1 end)
+        end
+    end
+})
+
+AutoTab:AddToggle({
+    Name = "إعادة الظهور التلقائي (Auto Respawn)",
+    Default = false,
+    Callback = function(v)
+        if v then
+            LocalPlayer.CharacterAdded:Connect(function(c)
+                task.wait(2)
+                local hum = c:FindFirstChildOfClass("Humanoid")
+                if hum then hum.Health = hum.MaxHealth end
+            end)
+        end
+    end
+})
+
+AutoTab:AddButton({
+    Name = "🔄 إعادة تعيين فورية",
+    Callback = function()
+        if LocalPlayer.Character then LocalPlayer.Character:BreakJoints() end
+    end
+})
+
+--==================================================
+-- TAB 7 : الإعدادات
+--==================================================
+local SettingsTab = Window:MakeTab({"الإعدادات", "settings"})
+
+SettingsTab:AddSection({"ℹ️ معلومات"})
+
+SettingsTab:AddParagraph({
+    "Alawi Hub - Ultra Edition",
+    "الإصدار: 3.0\nالميزات: ESP, Fly, NoClip, Inf Jump, Anti-Void,\nFullbright, Name ESP, Tools Copy, Teleport,\nClick TP, Spectate, Anti-AFK, FPS Booster.\n\n⚠️ لا توجد ميزات إيذاء (Kill / Damage)."
+})
+
+SettingsTab:AddSection({"🧹 تنظيف"})
+
+SettingsTab:AddButton({
+    Name = "مسح كل الهايلايتات",
+    Callback = function()
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character then
+                local hl = p.Character:FindFirstChild("ESP_Highlight")
+                if hl then hl:Destroy() end
+                local head = p.Character:FindFirstChild("Head")
+                if head then
+                    local gui = head:FindFirstChild("ESP_NameGui")
+                    if gui then gui:Destroy() end
+                end
+            end
+        end
+    end
+})
+
+SettingsTab:AddButton({
+    Name = "إلغاء تجميد الذات",
+    Callback = function()
+        State.Freeze = false
+        local hrp = getHRP()
+        if hrp then hrp.Anchored = false end
+    end
+})
+
+SettingsTab:AddButton({
+    Name = "إعادة ضبط الإضاءة",
+    Callback = function()
+        Lighting.Ambient = Color3.fromRGB(70, 70, 70)
+        Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+        Lighting.Brightness = 1
+        Lighting.ClockTime = 14
+        Lighting.FogEnd = 1000
+    end
+})
+
+--==================================================
+-- SELECT FIRST TAB
+--==================================================
+Window:SelectTab(MainTab)
+
+print("[Alawi Hub] Ultra Edition Loaded Successfully ✅")
