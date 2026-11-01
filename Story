@@ -1,0 +1,87 @@
+
+local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"))()
+
+local Window = redzlib:MakeWindow({
+  Title = "سكربت ali",
+  SubTitle = "by مطور علاوي",
+  SaveFolder = "testando | redz lib v5.lua"
+})
+Window:AddMinimizeButton({
+    Button = { Image = "rbxassetid://5778263837", BackgroundTransparency = 5778263837 },
+    Corner = { CornerRadius = UDim.new(35, 1) },
+})
+
+local Tab1 = Window:MakeTab({"Um", "cherry"})
+
+Tab1:AddDiscordInvite({
+    Name = "Name Hub",
+    Description = "شكرا لستعمال سكربت",
+    Logo = "rbxassetid://5778263837",
+    Invite = "Link discord invite",
+})
+
+Window:SelectTab(Tab1)
+
+local Section = Tab1:AddSection({"قائمة رئيسيه"})
+
+local Paragraph = Tab1:AddParagraph({"Paragraph", "This is a Paragraph\nSecond Line"})
+
+  local Dialog = Window:Dialog({
+    Title = "بدايه",
+    Text = "شكرا لستعمال سكربت",
+    Options = {
+      {"تخطي", function()
+    }
+  })
+  
+  Tab1:AddButton({"Print", function(Value)
+print("Hello World!")
+end})
+
+local Toggle1 = Tab1:AddToggle({
+  Name = "Toggle",
+  Description = "This is a <font color='rgb(88, 101, 242)'>Toggle</font> Example",
+  Default = false 
+})
+Toggle1:Callback(function(Value)
+ 
+end)
+
+Tab1:AddToggle({
+    Name = "Toggle",
+    Default = false,
+    Callback = function(v)
+
+    end
+})
+
+Tab1:AddSlider({
+  Name = "Speed",
+  Min = 1,
+  Max = 100,
+  Increase = 1,
+  Default = 16,
+  Callback = function(Value)
+  
+  end
+})
+
+local Dropdown = Tab1:AddDropdown({
+  Name = "Players List",
+  Description = "Select the <font color='rgb(88, 101, 242)'>Number</font>",
+  Options = {"one", "two", "three"},
+  Default = "two",
+  Flag = "dropdown teste",
+  Callback = function(Value)
+    
+  end
+})
+
+Tab1:AddTextBox({
+  Name = "Name item",
+  Description = "1 Item on 1 Server", 
+  PlaceholderText = "item only",
+  Callback = function(Value)
+    
+  end
+})
