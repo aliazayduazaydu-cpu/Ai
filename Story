@@ -25,20 +25,20 @@ Window:SelectTab(Tab1)
 local Section = Tab1:AddSection({"قائمة رئيسيه"})
 
 local Paragraph = Tab1:AddParagraph({"حسابي : hdjjlawe", "اذا كنت تبي ضيفني"})
-  Tab1:AddButton({"Print", function(Value)
+  Tab1:AddButton({"", function(Value)
 print("Hello World!")
 end})
 
 local Section = Tab1:AddSection({"قائمة رئيسيه"})
 
 local Paragraph = Tab1:AddParagraph({"حسابي في يوتيوب : مطور علاوي", "اشترك"})
-  Tab1:AddButton({"Print", function(Value)
+  Tab1:AddButton({"", function(Value)
 print("Hello World!")
 end})
 
 local Section = Tab1:AddSection({"قائمة رئيسيه"})
 
 local Paragraph = Tab1:AddParagraph({"سكربت لماب story 1", "يشتغل فقط في ذا ماب"})
-  Tab1:AddButton({"Print", function(Value)
+  Tab1:AddButton({"", function(Value)
 print("Hello World!")
 end})
