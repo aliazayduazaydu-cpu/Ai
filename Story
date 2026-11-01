@@ -26,13 +26,6 @@ local Section = Tab1:AddSection({"قائمة رئيسيه"})
 
 local Paragraph = Tab1:AddParagraph({"Paragraph", "This is a Paragraph\nSecond Line"})
 
-  local Dialog = Window:Dialog({
-    Title = "بدايه",
-    Text = "شكرا لستعمال سكربت",
-    Options = {
-      {"تخطي", function()
-    }
-  })
   
   Tab1:AddButton({"Print", function(Value)
 print("Hello World!")
