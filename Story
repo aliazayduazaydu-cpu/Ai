@@ -42,3 +42,34 @@ local Paragraph = Tab1:AddParagraph({"سكربت لماب story 1", "يشتغل 
   Tab1:AddButton({"", function(Value)
 print("Hello World!")
 end})
+
+--_________________________________
+
+local Tab1 = Window:MakeTab({"قائمة رئيسيه", ""})
+
+Tab1:AddButton({"اخذ تفاحه", function(Value)
+print("Hello World!")
+local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+Event:FireServer(
+    "Apple"
+)
+end})
+
+local Toggle1 = Tab1:AddToggle({
+  Name = "اوتو اخذ تفاحه",
+  Description = "",
+  Default = false 
+})
+Toggle1:Callback(function(Value)
+         Running = Value
+
+        if Value then
+            task.spawn(function()
+                while Running do
+                    local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+                    Event:FireServer("Apple")
+                    task.wait()
+                end
+            end)
+        end
+end)
