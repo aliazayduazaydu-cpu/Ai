@@ -1,825 +1,6587 @@
+
 --==================================================
--- ALAWI HACKER HUB V2
--- REDZ LIBRARY
--- BY .مطور علاوي
+-- ALAWI MEGA HUB
+-- PART 1 : BASE SYSTEM
+-- Mobile Friendly
 --==================================================
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
-local UIS = game:GetService("UserInputService")
-local Stats = game:GetService("Stats")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 local Player = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local redzlib = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"
-))()
+--==================================================
+-- CLEAN OLD UI
+--==================================================
 
-local Window = redzlib:MakeWindow({
-    Title = "Alawi Hacker Hub V2",
-    SubTitle = "by .مطور علاوي",
-    SaveFolder = "AlawiHubV2"
-})
+local Old = PlayerGui:FindFirstChild("AlawiMegaHub")
 
-Window:AddMinimizeButton({
-    Button = {
-        Image = "rbxassetid://11028318025",
-        BackgroundTransparency = 0
-    },
-    Corner = {
-        CornerRadius = UDim.new(35, 1)
+if Old then
+    Old:Destroy()
+end
+
+--==================================================
+-- MAIN SETTINGS
+--==================================================
+
+local Settings = {
+    Open = true,
+    FullBright = false,
+    NightMode = false,
+    ShowFPS = true,
+    FOV = 70,
+    Transparency = 0.08
+}
+
+local Tabs = {}
+local Buttons = {}
+local CurrentTab = nil
+
+--==================================================
+-- COLORS
+--==================================================
+
+local Colors = {
+    Background = Color3.fromRGB(15, 15, 19),
+    Panel = Color3.fromRGB(24, 24, 30),
+    Button = Color3.fromRGB(34, 34, 42),
+    Accent = Color3.fromRGB(180, 45, 65),
+    White = Color3.fromRGB(245, 245, 245),
+    Gray = Color3.fromRGB(160, 160, 170),
+    Green = Color3.fromRGB(45, 190, 100),
+    Red = Color3.fromRGB(210, 55, 65)
+}
+
+--==================================================
+-- GUI
+--==================================================
+
+local Screen = Instance.new("ScreenGui")
+Screen.Name = "AlawiMegaHub"
+Screen.ResetOnSpawn = false
+Screen.IgnoreGuiInset = true
+Screen.Parent = PlayerGui
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.fromOffset(340, 440)
+Main.Position = UDim2.new(0.5, -170, 0.5, -220)
+Main.BackgroundColor3 = Colors.Background
+Main.BackgroundTransparency = Settings.Transparency
+Main.BorderSizePixel = 0
+Main.Parent = Screen
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = Main
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Colors.Accent
+MainStroke.Thickness = 1.5
+MainStroke.Parent = Main
+
+--==================================================
+-- HEADER
+--==================================================
+
+local Header = Instance.new("Frame")
+Header.Size = UDim2.new(1, 0, 0, 48)
+Header.BackgroundColor3 = Colors.Panel
+Header.BorderSizePixel = 0
+Header.Parent = Main
+
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 10)
+HeaderCorner.Parent = Header
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -90, 1, 0)
+Title.Position = UDim2.fromOffset(12, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "ALAWI MEGA HUB"
+Title.TextColor3 = Colors.White
+Title.TextSize = 17
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Header
+
+local Close = Instance.new("TextButton")
+Close.Size = UDim2.fromOffset(35, 35)
+Close.Position = UDim2.new(1, -42, 0, 6)
+Close.BackgroundColor3 = Colors.Red
+Close.Text = "X"
+Close.TextColor3 = Colors.White
+Close.TextSize = 17
+Close.Font = Enum.Font.GothamBold
+Close.Parent = Header
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 7)
+CloseCorner.Parent = Close
+
+--==================================================
+-- OPEN BUTTON
+--==================================================
+
+local OpenButton = Instance.new("TextButton")
+OpenButton.Size = UDim2.fromOffset(48, 48)
+OpenButton.Position = UDim2.new(0, 15, 0.5, -24)
+OpenButton.BackgroundColor3 = Colors.Panel
+OpenButton.Text = "+"
+OpenButton.TextColor3 = Colors.White
+OpenButton.TextSize = 30
+OpenButton.Font = Enum.Font.GothamBold
+OpenButton.Visible = false
+OpenButton.Parent = Screen
+
+local OpenCorner = Instance.new("UICorner")
+OpenCorner.CornerRadius = UDim.new(0, 9)
+OpenCorner.Parent = OpenButton
+
+--==================================================
+-- TAB BAR
+--==================================================
+
+local TabBar = Instance.new("ScrollingFrame")
+TabBar.Size = UDim2.new(1, -16, 0, 42)
+TabBar.Position = UDim2.fromOffset(8, 55)
+TabBar.BackgroundTransparency = 1
+TabBar.BorderSizePixel = 0
+TabBar.ScrollBarThickness = 2
+TabBar.ScrollingDirection = Enum.ScrollingDirection.X
+TabBar.CanvasSize = UDim2.new(0, 0, 0, 0)
+TabBar.Parent = Main
+
+local TabLayout = Instance.new("UIListLayout")
+TabLayout.FillDirection = Enum.FillDirection.Horizontal
+TabLayout.Padding = UDim.new(0, 5)
+TabLayout.Parent = TabBar
+
+TabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    TabBar.CanvasSize = UDim2.new(
+        0,
+        TabLayout.AbsoluteContentSize.X + 8,
+        0,
+        0
+    )
+end)
+
+--==================================================
+-- CONTENT
+--==================================================
+
+local Content = Instance.new("ScrollingFrame")
+Content.Size = UDim2.new(1, -16, 1, -110)
+Content.Position = UDim2.fromOffset(8, 102)
+Content.BackgroundTransparency = 1
+Content.BorderSizePixel = 0
+Content.ScrollBarThickness = 3
+Content.CanvasSize = UDim2.new(0, 0, 0, 0)
+Content.Parent = Main
+
+local ContentLayout = Instance.new("UIListLayout")
+ContentLayout.Padding = UDim.new(0, 7)
+ContentLayout.Parent = Content
+
+local ContentPadding = Instance.new("UIPadding")
+ContentPadding.PaddingBottom = UDim.new(0, 10)
+ContentPadding.Parent = Content
+
+ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    Content.CanvasSize = UDim2.new(
+        0,
+        0,
+        0,
+        ContentLayout.AbsoluteContentSize.Y + 15
+    )
+end)
+
+--==================================================
+-- DRAG SYSTEM
+--==================================================
+
+local Dragging = false
+local DragStart
+local StartPosition
+
+Header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+
+        Dragging = true
+        DragStart = input.Position
+        StartPosition = Main.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if Dragging and (
+        input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+
+        local Delta = input.Position - DragStart
+
+        Main.Position = UDim2.new(
+            StartPosition.X.Scale,
+            StartPosition.X.Offset + Delta.X,
+            StartPosition.Y.Scale,
+            StartPosition.Y.Offset + Delta.Y
+        )
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        Dragging = false
+    end
+end)
+
+--==================================================
+-- OPEN / CLOSE
+--==================================================
+
+Close.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    OpenButton.Visible = true
+end)
+
+OpenButton.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    OpenButton.Visible = false
+end)
+
+--==================================================
+-- TAB SYSTEM
+--==================================================
+
+local function CreateTab(Name, Icon)
+
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.fromOffset(95, 35)
+    Button.BackgroundColor3 = Colors.Button
+    Button.Text = Icon .. " " .. Name
+    Button.TextColor3 = Colors.Gray
+    Button.TextSize = 12
+    Button.Font = Enum.Font.GothamBold
+    Button.Parent = TabBar
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = Button
+
+    local Page = Instance.new("Frame")
+    Page.Size = UDim2.new(1, 0, 0, 0)
+    Page.AutomaticSize = Enum.AutomaticSize.Y
+    Page.BackgroundTransparency = 1
+    Page.Visible = false
+    Page.Parent = Content
+
+    local Layout = Instance.new("UIListLayout")
+    Layout.Padding = UDim.new(0, 7)
+    Layout.Parent = Page
+
+    Tabs[Name] = {
+        Button = Button,
+        Page = Page
     }
-})
+
+    Button.MouseButton1Click:Connect(function()
+
+        for _, Tab in pairs(Tabs) do
+            Tab.Page.Visible = false
+            Tab.Button.BackgroundColor3 = Colors.Button
+            Tab.Button.TextColor3 = Colors.Gray
+        end
+
+        Page.Visible = true
+        Button.BackgroundColor3 = Colors.Accent
+        Button.TextColor3 = Colors.White
+
+        CurrentTab = Name
+
+    end)
+
+    return Page
+end
 
 --==================================================
--- VARIABLES
+-- BUTTON SYSTEM
 --==================================================
 
-local Character
-local Humanoid
-local Root
+local function AddButton(Page, Name, Callback)
 
-local ESPEnabled = false
-local ESPObjects = {}
-local NoclipEnabled = false
-local InfiniteJump = false
-local FullBright = false
-local NightMode = false
-local FlyEnabled = false
-local FlySpeed = 50
-local FlyConnection
-local NoclipConnection
-local JumpConnection
-local SelectedPlayer
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, -4, 0, 39)
+    Button.BackgroundColor3 = Colors.Button
+    Button.Text = Name
+    Button.TextColor3 = Colors.White
+    Button.TextSize = 13
+    Button.Font = Enum.Font.Gotham
+    Button.Parent = Page
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = Button
+
+    Button.MouseButton1Click:Connect(function()
+        if Callback then
+            Callback()
+        end
+    end)
+
+    table.insert(Buttons, Button)
+
+    return Button
+end
+
+--==================================================
+-- TOGGLE SYSTEM
+--==================================================
+
+local function AddToggle(Page, Name, Default, Callback)
+
+    local State = Default or false
+
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, -4, 0, 39)
+    Button.BackgroundColor3 = Colors.Button
+    Button.TextColor3 = Colors.White
+    Button.TextSize = 13
+    Button.Font = Enum.Font.GothamBold
+    Button.Parent = Page
+
+    local function Update()
+        Button.Text = Name .. " : " .. (State and "ON" or "OFF")
+        Button.BackgroundColor3 = State and Colors.Green or Colors.Button
+    end
+
+    Update()
+
+    Button.MouseButton1Click:Connect(function()
+        State = not State
+        Update()
+
+        if Callback then
+            Callback(State)
+        end
+    end)
+
+    return {
+        Get = function()
+            return State
+        end,
+
+        Set = function(Value)
+            State = Value
+            Update()
+
+            if Callback then
+                Callback(State)
+            end
+        end
+    }
+end
+
+--==================================================
+-- LABEL SYSTEM
+--==================================================
+
+local function AddLabel(Page, Text)
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -4, 0, 30)
+    Label.BackgroundTransparency = 1
+    Label.Text = Text
+    Label.TextColor3 = Colors.Gray
+    Label.TextSize = 13
+    Label.Font = Enum.Font.GothamBold
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = Page
+
+    return Label
+end
+
+--==================================================
+-- PLAYER TAB
+--==================================================
+
+local PlayerTab = CreateTab("Player", "👤")
+
+AddLabel(PlayerTab, "PLAYER INFORMATION")
+
+local InfoLabel = AddButton(
+    PlayerTab,
+    "عرض معلومات شخصيتك",
+    function()
+
+        local Character = Player.Character
+        local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+
+        if Humanoid then
+            print("Health:", Humanoid.Health)
+            print("WalkSpeed:", Humanoid.WalkSpeed)
+            print("JumpPower:", Humanoid.JumpPower)
+        end
+
+    end
+)
+
+AddButton(PlayerTab, "Reset Character", function()
+
+    local Character = Player.Character
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+
+    if Humanoid then
+        Humanoid.Health = 0
+    end
+
+end)
+
+--==================================================
+-- VISUALS TAB
+--==================================================
+
+local VisualTab = CreateTab("Visuals", "👁")
+
+AddLabel(VisualTab, "LIGHTING SETTINGS")
+
 local OriginalLighting = {
     Brightness = Lighting.Brightness,
     ClockTime = Lighting.ClockTime,
-    FogEnd = Lighting.FogEnd
+    FogEnd = Lighting.FogEnd,
+    GlobalShadows = Lighting.GlobalShadows
 }
 
-local function UpdateCharacter()
-    Character = Player.Character
-    if Character then
-        Humanoid = Character:FindFirstChildOfClass("Humanoid")
-        Root = Character:FindFirstChild("HumanoidRootPart")
-    end
-end
-
-UpdateCharacter()
-
-Player.CharacterAdded:Connect(function()
-    task.wait(1)
-    UpdateCharacter()
-end)
-
-local function GetPlayers()
-    local list = {}
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= Player then
-            table.insert(list, p.Name)
-        end
-    end
-    return list
-end
-
-local function GetPlayer(name)
-    return Players:FindFirstChild(name)
-end
-
-local function Notify(title, message)
-    print("[ALAWI] " .. title .. ": " .. message)
-end
-
---==================================================
--- 1 MAIN
---==================================================
-
-local MainTab = Window:MakeTab({"الرئيسية", "home"})
-
-MainTab:AddSection({"ALAWI SYSTEM"})
-
-MainTab:AddParagraph({
-    "ALAWI HACKER HUB",
-    "Version 2.0 | Expanded Edition"
-})
-
-MainTab:AddParagraph({
-    "Player",
-    Player.Name
-})
-
-MainTab:AddParagraph({
-    "User ID",
-    tostring(Player.UserId)
-})
-
-MainTab:AddParagraph({
-    "Game",
-    game.Name
-})
-
-MainTab:AddParagraph({
-    "Place ID",
-    tostring(game.PlaceId)
-})
-
-MainTab:AddButton({
-    Name = "تحديث الشخصية",
-    Callback = function()
-        UpdateCharacter()
-        Notify("Character", "Updated")
-    end
-})
-
-MainTab:AddButton({
-    Name = "تحديث قائمة اللاعبين",
-    Callback = function()
-        Notify("Players", tostring(#Players:GetPlayers()))
-    end
-})
-
-MainTab:AddButton({
-    Name = "معلومات النظام",
-    Callback = function()
-        print("ALAWI HUB V2")
-        print("Players: " .. #Players:GetPlayers())
-        print("Place: " .. game.PlaceId)
-        print("Job: " .. game.JobId)
-    end
-})
-
---==================================================
--- 2 PLAYER
---==================================================
-
-local PlayerTab = Window:MakeTab({"اللاعب", "user"})
-
-PlayerTab:AddSection({"Movement"})
-
-PlayerTab:AddSlider({
-    Name = "WalkSpeed",
-    Min = 16,
-    Max = 250,
-    Increase = 1,
-    Default = 16,
-    Callback = function(v)
-        UpdateCharacter()
-        if Humanoid then
-            Humanoid.WalkSpeed = v
-        end
-    end
-})
-
-PlayerTab:AddTextBox({
-    Name = "كتابة السرعة",
-    PlaceholderText = "16",
-    Callback = function(v)
-        local n = tonumber(v)
-        if n and Humanoid then
-            Humanoid.WalkSpeed = math.clamp(n, 0, 250)
-        end
-    end
-})
-
-PlayerTab:AddSlider({
-    Name = "Jump Power",
-    Min = 50,
-    Max = 300,
-    Increase = 5,
-    Default = 50,
-    Callback = function(v)
-        UpdateCharacter()
-        if Humanoid then
-            Humanoid.UseJumpPower = true
-            Humanoid.JumpPower = v
-        end
-    end
-})
-
-PlayerTab:AddTextBox({
-    Name = "كتابة قوة القفز",
-    PlaceholderText = "50",
-    Callback = function(v)
-        local n = tonumber(v)
-        if n and Humanoid then
-            Humanoid.UseJumpPower = true
-            Humanoid.JumpPower = math.clamp(n, 0, 300)
-        end
-    end
-})
-
-PlayerTab:AddSlider({
-    Name = "Field Of View",
-    Min = 40,
-    Max = 120,
-    Increase = 1,
-    Default = 70,
-    Callback = function(v)
-        Camera.FieldOfView = v
-    end
-})
-
-PlayerTab:AddToggle({
-    Name = "Infinite Jump",
-    Default = false,
-    Callback = function(v)
-        InfiniteJump = v
-        if JumpConnection then
-            JumpConnection:Disconnect()
-            JumpConnection = nil
-        end
-
-        if v then
-            JumpConnection = UIS.JumpRequest:Connect(function()
-                if Humanoid then
-                    Humanoid:ChangeState(
-                        Enum.HumanoidStateType.Jumping
-                    )
-                end
-            end)
-        end
-    end
-})
-
-PlayerTab:AddToggle({
-    Name = "Noclip",
-    Default = false,
-    Callback = function(v)
-        NoclipEnabled = v
-
-        if NoclipConnection then
-            NoclipConnection:Disconnect()
-            NoclipConnection = nil
-        end
-
-        if v then
-            NoclipConnection = RunService.Stepped:Connect(function()
-                UpdateCharacter()
-                if Character then
-                    for _, part in ipairs(Character:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = false
-                        end
-                    end
-                end
-            end)
-        else
-            UpdateCharacter()
-            if Character then
-                for _, part in ipairs(Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = true
-                    end
-                end
-            end
-        end
-    end
-})
-
-PlayerTab:AddButton({
-    Name = "Reset Movement",
-    Callback = function()
-        UpdateCharacter()
-        if Humanoid then
-            Humanoid.WalkSpeed = 16
-            Humanoid.JumpPower = 50
-            Humanoid.UseJumpPower = true
-        end
-    end
-})
-
-PlayerTab:AddButton({
-    Name = "Reset FOV",
-    Callback = function()
-        Camera.FieldOfView = 70
-    end
-})
-
---==================================================
--- 3 ESP
---==================================================
-
-local ESPTab = Window:MakeTab({"ESP", "eye"})
-
-ESPTab:AddSection({"Player ESP"})
-
-local function ClearESP()
-    for _, obj in pairs(ESPObjects) do
-        if obj then
-            obj:Destroy()
-        end
-    end
-    table.clear(ESPObjects)
-end
-
-local function RefreshESP()
-    ClearESP()
-
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= Player and p.Character then
-            local highlight = Instance.new("Highlight")
-            highlight.Name = "AlawiESP"
-            highlight.FillColor = Color3.fromRGB(255, 0, 0)
-            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-            highlight.FillTransparency = 0.65
-            highlight.Parent = p.Character
-
-            ESPObjects[p] = highlight
-        end
-    end
-end
-
-ESPTab:AddToggle({
-    Name = "Player Highlight ESP",
-    Default = false,
-    Callback = function(v)
-        ESPEnabled = v
-        if v then
-            RefreshESP()
-        else
-            ClearESP()
-        end
-    end
-})
-
-ESPTab:AddButton({
-    Name = "Refresh ESP",
-    Callback = function()
-        if ESPEnabled then
-            RefreshESP()
-        end
-    end
-})
-
-ESPTab:AddButton({
-    Name = "Clear ESP",
-    Callback = function()
-        ClearESP()
-        ESPEnabled = false
-    end
-})
-
-ESPTab:AddDropdown({
-    Name = "لون ESP",
-    Options = {"Red", "Green", "Blue", "Purple", "White"},
-    Default = "Red",
-    Callback = function(v)
-        local colors = {
-            Red = Color3.fromRGB(255, 0, 0),
-            Green = Color3.fromRGB(0, 255, 0),
-            Blue = Color3.fromRGB(0, 100, 255),
-            Purple = Color3.fromRGB(170, 0, 255),
-            White = Color3.fromRGB(255, 255, 255)
-        }
-
-        for _, obj in pairs(ESPObjects) do
-            if obj then
-                obj.FillColor = colors[v]
-            end
-        end
-    end
-})
-
---==================================================
--- 4 SPECTATE
---==================================================
-
-local SpectateTab = Window:MakeTab({"المشاهدة", "video"})
-
-SpectateTab:AddSection({"Player Camera"})
-
-SpectateTab:AddDropdown({
-    Name = "اختيار لاعب",
-    Options = GetPlayers(),
-    Default = nil,
-    Callback = function(v)
-        SelectedPlayer = GetPlayer(v)
-    end
-})
-
-SpectateTab:AddButton({
-    Name = "Spectate",
-    Callback = function()
-        if SelectedPlayer and SelectedPlayer.Character then
-            local h = SelectedPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if h then
-                Camera.CameraSubject = h
-            end
-        end
-    end
-})
-
-SpectateTab:AddButton({
-    Name = "Stop Spectate",
-    Callback = function()
-        UpdateCharacter()
-        if Humanoid then
-            Camera.CameraSubject = Humanoid
-        end
-    end
-})
-
-SpectateTab:AddButton({
-    Name = "Player Information",
-    Callback = function()
-        if SelectedPlayer then
-            print("Name: " .. SelectedPlayer.Name)
-            print("UserId: " .. SelectedPlayer.UserId)
-            print("DisplayName: " .. SelectedPlayer.DisplayName)
-        end
-    end
-})
-
-SpectateTab:AddButton({
-    Name = "تحديث القائمة",
-    Callback = function()
-        print("Players refreshed")
-        for _, p in ipairs(GetPlayers()) do
-            print(p)
-        end
-    end
-})
-
---==================================================
--- 5 TOOLS
---==================================================
-
-local ToolsTab = Window:MakeTab({"الأدوات", "backpack"})
-
-ToolsTab:AddSection({"Inventory Scanner"})
-
-ToolsTab:AddButton({
-    Name = "عرض أدواتي",
-    Callback = function()
-        UpdateCharacter()
-
-        local backpack = Player:FindFirstChildOfClass("Backpack")
-
-        if backpack then
-            for _, tool in ipairs(backpack:GetChildren()) do
-                if tool:IsA("Tool") then
-                    print("Backpack: " .. tool.Name)
-                end
-            end
-        end
-
-        if Character then
-            for _, tool in ipairs(Character:GetChildren()) do
-                if tool:IsA("Tool") then
-                    print("Equipped: " .. tool.Name)
-                end
-            end
-        end
-    end
-})
-
-ToolsTab:AddButton({
-    Name = "عرض عناصر Workspace",
-    Callback = function()
-        local count = 0
-
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("Tool") then
-                count += 1
-                print(obj:GetFullName())
-            end
-        end
-
-        print("Total Tools: " .. count)
-    end
-})
-
-ToolsTab:AddTextBox({
-    Name = "البحث عن أداة",
-    PlaceholderText = "Tool Name",
-    Callback = function(v)
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("Tool") and string.find(
-                string.lower(obj.Name),
-                string.lower(v),
-                1,
-                true
-            ) then
-                print("Found: " .. obj:GetFullName())
-            end
-        end
-    end
-})
-
-ToolsTab:AddButton({
-    Name = "تحديث الأدوات",
-    Callback = function()
-        print("Inventory refreshed")
-    end
-})
-
---==================================================
--- 6 AUTO
---==================================================
-
-local AutoTab = Window:MakeTab({"أوتو", "zap"})
-
-AutoTab:AddSection({"Automation"})
-
-AutoTab:AddToggle({
-    Name = "Auto Refresh ESP",
-    Default = false,
-    Callback = function(v)
-        ESPEnabled = v
-
-        if v then
-            task.spawn(function()
-                while ESPEnabled do
-                    RefreshESP()
-                    task.wait(3)
-                end
-            end)
-        else
-            ClearESP()
-        end
-    end
-})
-
-AutoTab:AddToggle({
-    Name = "Auto Refresh Player List",
-    Default = false,
-    Callback = function(v)
-        _G.AutoPlayerRefresh = v
-
-        if v then
-            task.spawn(function()
-                while _G.AutoPlayerRefresh do
-                    print("Players: " .. #Players:GetPlayers())
-                    task.wait(5)
-                end
-            end)
-        end
-    end
-})
-
-AutoTab:AddButton({
-    Name = "Refresh All",
-    Callback = function()
-        UpdateCharacter()
-        if ESPEnabled then
-            RefreshESP()
-        end
-        print("All refreshed")
-    end
-})
-
---==================================================
--- 7 SERVER
---==================================================
-
-local ServerTab = Window:MakeTab({"السيرفر", "globe"})
-
-ServerTab:AddSection({"Server Information"})
-
-ServerTab:AddParagraph({
-    "Place ID",
-    tostring(game.PlaceId)
-})
-
-ServerTab:AddParagraph({
-    "Job ID",
-    game.JobId
-})
-
-ServerTab:AddParagraph({
-    "Player Count",
-    tostring(#Players:GetPlayers())
-})
-
-ServerTab:AddButton({
-    Name = "نسخ Job ID",
-    Callback = function()
-        if setclipboard then
-            setclipboard(game.JobId)
-        end
-    end
-})
-
-ServerTab:AddButton({
-    Name = "نسخ Place ID",
-    Callback = function()
-        if setclipboard then
-            setclipboard(tostring(game.PlaceId))
-        end
-    end
-})
-
-ServerTab:AddButton({
-    Name = "عرض اللاعبين",
-    Callback = function()
-        for _, p in ipairs(Players:GetPlayers()) do
-            print(p.Name, p.UserId)
-        end
-    end
-})
-
---==================================================
--- 8 VISUALS
---==================================================
-
-local VisualTab = Window:MakeTab({"Visuals", "palette"})
-
-VisualTab:AddSection({"Graphics"})
-
-VisualTab:AddToggle({
-    Name = "Full Bright",
-    Default = false,
-    Callback = function(v)
-        FullBright = v
-
-        if v then
-            Lighting.Brightness = 3
-            Lighting.ClockTime = 14
-            Lighting.GlobalShadows = false
-        else
-            Lighting.Brightness = OriginalLighting.Brightness
-            Lighting.ClockTime = OriginalLighting.ClockTime
-            Lighting.GlobalShadows = true
-        end
-    end
-})
-
-VisualTab:AddToggle({
-    Name = "Night Mode",
-    Default = false,
-    Callback = function(v)
-        NightMode = v
-        Lighting.ClockTime = v and 0 or OriginalLighting.ClockTime
-    end
-})
-
-VisualTab:AddSlider({
-    Name = "Brightness",
-    Min = 0,
-    Max = 10,
-    Increase = 1,
-    Default = 3,
-    Callback = function(v)
-        Lighting.Brightness = v
-    end
-})
-
-VisualTab:AddSlider({
-    Name = "FOV",
-    Min = 40,
-    Max = 120,
-    Increase = 1,
-    Default = 70,
-    Callback = function(v)
-        Camera.FieldOfView = v
-    end
-})
-
-VisualTab:AddButton({
-    Name = "Reset Lighting",
-    Callback = function()
+AddToggle(VisualTab, "Full Bright", false, function(Value)
+
+    if Value then
+        Lighting.Brightness = 3
+        Lighting.ClockTime = 14
+        Lighting.GlobalShadows = false
+    else
         Lighting.Brightness = OriginalLighting.Brightness
         Lighting.ClockTime = OriginalLighting.ClockTime
-        Lighting.FogEnd = OriginalLighting.FogEnd
+        Lighting.GlobalShadows = OriginalLighting.GlobalShadows
     end
-})
+
+end)
+
+AddToggle(VisualTab, "Night Mode", false, function(Value)
+
+    if Value then
+        Lighting.ClockTime = 0
+    else
+        Lighting.ClockTime = OriginalLighting.ClockTime
+    end
+
+end)
+
+AddButton(VisualTab, "Restore Lighting", function()
+
+    Lighting.Brightness = OriginalLighting.Brightness
+    Lighting.ClockTime = OriginalLighting.ClockTime
+    Lighting.FogEnd = OriginalLighting.FogEnd
+    Lighting.GlobalShadows = OriginalLighting.GlobalShadows
+
+end)
+
+AddToggle(VisualTab, "Remove Fog", false, function(Value)
+
+    Lighting.FogEnd = Value and 100000 or OriginalLighting.FogEnd
+
+end)
 
 --==================================================
--- 9 TERMINAL
+-- CAMERA TAB
 --==================================================
 
-local TerminalTab = Window:MakeTab({"Terminal", "terminal"})
+local CameraTab = CreateTab("Camera", "📷")
 
-TerminalTab:AddSection({"ALAWI COMMAND LINE"})
+AddLabel(CameraTab, "CAMERA SETTINGS")
 
-TerminalTab:AddParagraph({
-    "Terminal",
-    "اكتب help لعرض الأوامر"
-})
+local function SetFOV(Value)
 
-TerminalTab:AddTextBox({
-    Name = "Command Input",
-    PlaceholderText = "help",
-    Callback = function(v)
-        local command = string.lower(v)
+    local Camera = workspace.CurrentCamera
 
-        if command == "help" then
-            print("help | info | players | tools | clear")
+    if Camera then
+        Camera.FieldOfView = Value
+    end
 
-        elseif command == "info" then
-            print("Game: " .. game.Name)
-            print("Place: " .. game.PlaceId)
+    Settings.FOV = Value
 
-        elseif command == "players" then
-            print("Players: " .. #Players:GetPlayers())
+end
 
-        elseif command == "tools" then
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("Tool") then
-                    print(obj.Name)
-                end
+AddButton(CameraTab, "FOV 70", function()
+    SetFOV(70)
+end)
+
+AddButton(CameraTab, "FOV 90", function()
+    SetFOV(90)
+end)
+
+AddButton(CameraTab, "FOV 110", function()
+    SetFOV(110)
+end)
+
+AddButton(CameraTab, "Reset FOV", function()
+    SetFOV(70)
+end)
+
+--==================================================
+-- UTILITY TAB
+--==================================================
+
+local UtilityTab = CreateTab("Utility", "⚙")
+
+AddLabel(UtilityTab, "UTILITY")
+
+AddButton(UtilityTab, "Print Player Name", function()
+    print("Player:", Player.Name)
+end)
+
+AddButton(UtilityTab, "Print User ID", function()
+    print("UserId:", Player.UserId)
+end)
+
+AddButton(UtilityTab, "Print Place ID", function()
+    print("PlaceId:", game.PlaceId)
+end)
+
+AddButton(UtilityTab, "Print Job ID", function()
+    print("JobId:", game.JobId)
+end)
+
+--==================================================
+-- SETTINGS TAB
+--==================================================
+
+local SettingsTab = CreateTab("Settings", "🔧")
+
+AddLabel(SettingsTab, "HUB SETTINGS")
+
+AddToggle(SettingsTab, "Show FPS", true, function(Value)
+    Settings.ShowFPS = Value
+end)
+
+AddButton(SettingsTab, "Reset Hub Position", function()
+
+    Main.Position = UDim2.new(0.5, -170, 0.5, -220)
+
+end)
+
+AddButton(SettingsTab, "Restore Camera", function()
+
+    SetFOV(70)
+
+end)
+
+--==================================================
+-- INITIAL TAB
+--==================================================
+
+Tabs["Player"].Button.BackgroundColor3 = Colors.Accent
+Tabs["Player"].Button.TextColor3 = Colors.White
+Tabs["Player"].Page.Visible = true
+
+CurrentTab = "Player"
+
+--==================================================
+-- RESPONSIVE SIZE
+--==================================================
+
+local function UpdateSize()
+
+    local Camera = workspace.CurrentCamera
+
+    if not Camera then return end
+
+    local Viewport = Camera.ViewportSize
+
+    if Viewport.X < 500 then
+
+        Main.Size = UDim2.new(0.88, 0, 0.72, 0)
+        Main.Position = UDim2.new(0.06, 0, 0.14, 0)
+
+    else
+
+        Main.Size = UDim2.fromOffset(420, 470)
+        Main.Position = UDim2.new(0.5, -210, 0.5, -235)
+
+    end
+
+end
+
+UpdateSize()
+
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(UpdateSize)
+
+print("ALAWI MEGA HUB PART 1 LOADED")
+
+--==================================================
+-- ALAWI MEGA HUB
+-- PART 2 : PLAYER + MOVEMENT
+-- Append after PART 1
+--==================================================
+
+local RunService = game:GetService("RunService")
+
+local MovementSettings = {
+    WalkSpeed = 16,
+    JumpPower = 50,
+    SprintSpeed = 28,
+    SprintEnabled = false,
+    SavedSpeed = 16,
+    SavedJump = 50
+}
+
+local CharacterConnections = {}
+
+local function GetCharacter()
+    return Player.Character
+end
+
+local function GetHumanoid()
+    local Character = GetCharacter()
+
+    if not Character then
+        return nil
+    end
+
+    return Character:FindFirstChildOfClass("Humanoid")
+end
+
+local function ApplyMovement()
+    local Humanoid = GetHumanoid()
+
+    if not Humanoid then
+        return
+    end
+
+    if MovementSettings.SprintEnabled then
+        Humanoid.WalkSpeed = MovementSettings.SprintSpeed
+    else
+        Humanoid.WalkSpeed = MovementSettings.WalkSpeed
+    end
+
+    Humanoid.UseJumpPower = true
+    Humanoid.JumpPower = MovementSettings.JumpPower
+end
+
+local function ResetMovement()
+    MovementSettings.WalkSpeed = 16
+    MovementSettings.JumpPower = 50
+    MovementSettings.SprintSpeed = 28
+    MovementSettings.SprintEnabled = false
+
+    ApplyMovement()
+end
+
+local function CreateInput(Page, Name, Default, Callback)
+
+    local Container = Instance.new("Frame")
+    Container.Size = UDim2.new(1, -4, 0, 68)
+    Container.BackgroundColor3 = Colors.Button
+    Container.Parent = Page
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 7)
+    Corner.Parent = Container
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(0.55, 0, 1, 0)
+    Label.Position = UDim2.fromOffset(10, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = Name
+    Label.TextColor3 = Colors.White
+    Label.TextSize = 12
+    Label.Font = Enum.Font.GothamBold
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = Container
+
+    local Input = Instance.new("TextBox")
+    Input.Size = UDim2.new(0.35, 0, 0, 35)
+    Input.Position = UDim2.new(0.62, 0, 0.5, -17)
+    Input.BackgroundColor3 = Colors.Panel
+    Input.TextColor3 = Colors.White
+    Input.Text = tostring(Default)
+    Input.PlaceholderText = "Number"
+    Input.TextSize = 13
+    Input.Font = Enum.Font.Gotham
+    Input.ClearTextOnFocus = false
+    Input.Parent = Container
+
+    local InputCorner = Instance.new("UICorner")
+    InputCorner.CornerRadius = UDim.new(0, 6)
+    InputCorner.Parent = Input
+
+    Input.FocusLost:Connect(function()
+
+        local Value = tonumber(Input.Text)
+
+        if Value then
+            Callback(Value)
+        else
+            Input.Text = tostring(Default)
+        end
+
+    end)
+
+    return Input
+end
+
+--==================================================
+-- MOVEMENT TAB
+--==================================================
+
+local MovementTab = CreateTab("Movement", "🏃")
+
+AddLabel(MovementTab, "MOVEMENT CONTROLS")
+
+CreateInput(
+    MovementTab,
+    "Walk Speed",
+    16,
+    function(Value)
+
+        MovementSettings.WalkSpeed = math.clamp(Value, 0, 250)
+
+        ApplyMovement()
+
+    end
+)
+
+CreateInput(
+    MovementTab,
+    "Jump Power",
+    50,
+    function(Value)
+
+        MovementSettings.JumpPower = math.clamp(Value, 0, 250)
+
+        ApplyMovement()
+
+    end
+)
+
+CreateInput(
+    MovementTab,
+    "Sprint Speed",
+    28,
+    function(Value)
+
+        MovementSettings.SprintSpeed = math.clamp(Value, 16, 250)
+
+        ApplyMovement()
+
+    end
+)
+
+AddToggle(
+    MovementTab,
+    "Sprint",
+    false,
+    function(Value)
+
+        MovementSettings.SprintEnabled = Value
+
+        ApplyMovement()
+
+    end
+)
+
+AddButton(
+    MovementTab,
+    "Save Movement Settings",
+    function()
+
+        MovementSettings.SavedSpeed =
+            MovementSettings.WalkSpeed
+
+        MovementSettings.SavedJump =
+            MovementSettings.JumpPower
+
+        print("Movement settings saved")
+
+    end
+)
+
+AddButton(
+    MovementTab,
+    "Load Movement Settings",
+    function()
+
+        MovementSettings.WalkSpeed =
+            MovementSettings.SavedSpeed
+
+        MovementSettings.JumpPower =
+            MovementSettings.SavedJump
+
+        ApplyMovement()
+
+    end
+)
+
+AddButton(
+    MovementTab,
+    "Reset Movement",
+    ResetMovement
+)
+
+--==================================================
+-- PLAYER INFORMATION TAB
+--==================================================
+
+local PlayerInfoTab = CreateTab("Player Info", "📊")
+
+local HealthLabel = AddLabel(
+    PlayerInfoTab,
+    "Health: Loading..."
+)
+
+local SpeedLabel = AddLabel(
+    PlayerInfoTab,
+    "Speed: Loading..."
+)
+
+local JumpLabel = AddLabel(
+    PlayerInfoTab,
+    "Jump: Loading..."
+)
+
+local PositionLabel = AddLabel(
+    PlayerInfoTab,
+    "Position: Loading..."
+)
+
+local StateLabel = AddLabel(
+    PlayerInfoTab,
+    "State: Loading..."
+)
+
+local function UpdatePlayerInformation()
+
+    local Character = GetCharacter()
+    local Humanoid = GetHumanoid()
+
+    if not Character or not Humanoid then
+        return
+    end
+
+    local Root = Character:FindFirstChild(
+        "HumanoidRootPart"
+    )
+
+    HealthLabel.Text =
+        "Health: " ..
+        math.floor(Humanoid.Health) ..
+        " / " ..
+        math.floor(Humanoid.MaxHealth)
+
+    SpeedLabel.Text =
+        "Speed: " ..
+        math.floor(Humanoid.WalkSpeed)
+
+    JumpLabel.Text =
+        "Jump: " ..
+        math.floor(Humanoid.JumpPower)
+
+    if Root then
+
+        local Position = Root.Position
+
+        PositionLabel.Text = string.format(
+            "Position: %.1f, %.1f, %.1f",
+            Position.X,
+            Position.Y,
+            Position.Z
+        )
+
+    end
+
+    StateLabel.Text =
+        "State: " ..
+        tostring(Humanoid:GetState())
+
+end
+
+local InformationConnection
+
+if InformationConnection then
+    InformationConnection:Disconnect()
+end
+
+InformationConnection = RunService.Heartbeat:Connect(
+    function()
+
+        if not Screen.Parent then
+            InformationConnection:Disconnect()
+            return
+        end
+
+        UpdatePlayerInformation()
+
+    end
+)
+
+--==================================================
+-- CHARACTER RESPAWN
+--==================================================
+
+local CharacterConnection
+
+CharacterConnection = Player.CharacterAdded:Connect(
+    function(Character)
+
+        Character:WaitForChild("Humanoid")
+
+        task.wait(0.5)
+
+        ApplyMovement()
+
+        UpdatePlayerInformation()
+
+    end
+)
+
+--==================================================
+-- PART 2 FINISHED
+--==================================================
+
+print("ALAWI MEGA HUB PART 2 LOADED")
+
+--==================================================
+-- ALAWI MEGA HUB
+-- PART 3 : ESP + SPECTATE
+--==================================================
+
+local ESPSettings = {
+    Enabled = false,
+    ShowNames = true,
+    ShowDistance = true,
+    TeamColors = false,
+    MaxDistance = 1000
+}
+
+local ESPObjects = {}
+local SpectatingPlayer = nil
+local ESPConnection = nil
+
+--==================================================
+-- ESP TAB
+--==================================================
+
+local ESPTab = CreateTab("ESP", "👁")
+
+AddLabel(ESPTab, "PLAYER ESP SETTINGS")
+
+local function RemoveESP(PlayerObject)
+
+    local Data = ESPObjects[PlayerObject]
+
+    if not Data then
+        return
+    end
+
+    if Data.Highlight then
+        Data.Highlight:Destroy()
+    end
+
+    if Data.Billboard then
+        Data.Billboard:Destroy()
+    end
+
+    ESPObjects[PlayerObject] = nil
+
+end
+
+local function CreateESP(PlayerObject)
+
+    if PlayerObject == Player then
+        return
+    end
+
+    local Character = PlayerObject.Character
+
+    if not Character then
+        return
+    end
+
+    local Root = Character:FindFirstChild(
+        "HumanoidRootPart"
+    )
+
+    if not Root then
+        return
+    end
+
+    RemoveESP(PlayerObject)
+
+    local Highlight = Instance.new("Highlight")
+
+    Highlight.Name = "AlawiESP"
+    Highlight.Adornee = Character
+    Highlight.FillTransparency = 0.75
+    Highlight.OutlineTransparency = 0
+    Highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+
+    if ESPSettings.TeamColors
+    and PlayerObject.Team
+    and Player.Team == PlayerObject.Team then
+
+        Highlight.FillColor = Color3.fromRGB(50, 180, 255)
+        Highlight.OutlineColor = Color3.fromRGB(50, 180, 255)
+
+    else
+
+        Highlight.FillColor = Color3.fromRGB(220, 50, 70)
+        Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+
+    end
+
+    Highlight.Parent = Character
+
+    local Billboard = Instance.new("BillboardGui")
+
+    Billboard.Name = "AlawiESPInfo"
+    Billboard.Adornee = Root
+    Billboard.Size = UDim2.fromOffset(180, 40)
+    Billboard.StudsOffset = Vector3.new(0, 3, 0)
+    Billboard.AlwaysOnTop = false
+    Billboard.Parent = Root
+
+    local Text = Instance.new("TextLabel")
+
+    Text.Name = "Info"
+    Text.Size = UDim2.fromScale(1, 1)
+    Text.BackgroundTransparency = 1
+    Text.TextColor3 = Color3.new(1, 1, 1)
+    Text.TextStrokeTransparency = 0.2
+    Text.Font = Enum.Font.GothamBold
+    Text.TextSize = 12
+    Text.Parent = Billboard
+
+    ESPObjects[PlayerObject] = {
+        Highlight = Highlight,
+        Billboard = Billboard,
+        Text = Text
+    }
+
+end
+
+local function UpdateESP()
+
+    if not ESPSettings.Enabled then
+        return
+    end
+
+    local MyCharacter = Player.Character
+
+    if not MyCharacter then
+        return
+    end
+
+    local MyRoot = MyCharacter:FindFirstChild(
+        "HumanoidRootPart"
+    )
+
+    if not MyRoot then
+        return
+    end
+
+    for _, Target in ipairs(Players:GetPlayers()) do
+
+        if Target == Player then
+            continue
+        end
+
+        local Character = Target.Character
+
+        local Root = Character
+            and Character:FindFirstChild("HumanoidRootPart")
+
+        if not Root then
+            RemoveESP(Target)
+            continue
+        end
+
+        local Distance = (
+            MyRoot.Position - Root.Position
+        ).Magnitude
+
+        if Distance > ESPSettings.MaxDistance then
+            RemoveESP(Target)
+            continue
+        end
+
+        if not ESPObjects[Target] then
+            CreateESP(Target)
+        end
+
+        local Data = ESPObjects[Target]
+
+        if Data then
+
+            local NameText = ""
+
+            if ESPSettings.ShowNames then
+                NameText = Target.DisplayName
             end
 
-        elseif command == "clear" then
-            print("Console cleared")
+            if ESPSettings.ShowDistance then
+
+                if NameText ~= "" then
+                    NameText = NameText .. " | "
+                end
+
+                NameText = NameText ..
+                    math.floor(Distance) .. "m"
+
+            end
+
+            Data.Text.Text = NameText
+
+        end
+
+    end
+
+end
+
+AddToggle(
+    ESPTab,
+    "Player ESP",
+    false,
+    function(Value)
+
+        ESPSettings.Enabled = Value
+
+        if not Value then
+
+            for Target in pairs(ESPObjects) do
+                RemoveESP(Target)
+            end
 
         else
-            print("Unknown Command: " .. v)
-        end
-    end
-})
 
-TerminalTab:AddButton({
-    Name = "System Scan",
-    Callback = function()
-        print("Scanning...")
+            UpdateESP()
+
+        end
+
+    end
+)
+
+AddToggle(
+    ESPTab,
+    "Show Names",
+    true,
+    function(Value)
+
+        ESPSettings.ShowNames = Value
+        UpdateESP()
+
+    end
+)
+
+AddToggle(
+    ESPTab,
+    "Show Distance",
+    true,
+    function(Value)
+
+        ESPSettings.ShowDistance = Value
+        UpdateESP()
+
+    end
+)
+
+AddToggle(
+    ESPTab,
+    "Team Colors",
+    false,
+    function(Value)
+
+        ESPSettings.TeamColors = Value
+
+        for Target in pairs(ESPObjects) do
+            RemoveESP(Target)
+        end
+
+        UpdateESP()
+
+    end
+)
+
+CreateInput(
+    ESPTab,
+    "Maximum Distance",
+    1000,
+    function(Value)
+
+        ESPSettings.MaxDistance =
+            math.clamp(Value, 50, 10000)
+
+        UpdateESP()
+
+    end
+)
+
+AddButton(
+    ESPTab,
+    "Refresh ESP",
+    function()
+
+        for Target in pairs(ESPObjects) do
+            RemoveESP(Target)
+        end
+
+        UpdateESP()
+
+    end
+)
+
+--==================================================
+-- ESP UPDATE LOOP
+--==================================================
+
+ESPConnection = RunService.Heartbeat:Connect(
+    function()
+
+        if ESPSettings.Enabled then
+            UpdateESP()
+        end
+
+    end
+)
+
+--==================================================
+-- PLAYER SPECTATE TAB
+--==================================================
+
+local SpectateTab = CreateTab("Spectate", "📷")
+
+AddLabel(
+    SpectateTab,
+    "PLAYER SELECTION"
+)
+
+local SelectedPlayer = nil
+
+local PlayerDropdown = Instance.new("TextButton")
+
+PlayerDropdown.Size = UDim2.new(1, -4, 0, 40)
+PlayerDropdown.BackgroundColor3 = Colors.Button
+PlayerDropdown.TextColor3 = Colors.White
+PlayerDropdown.TextSize = 12
+PlayerDropdown.Font = Enum.Font.GothamBold
+PlayerDropdown.Text = "Select Player"
+PlayerDropdown.Parent = SpectateTab
+
+local DropCorner = Instance.new("UICorner")
+DropCorner.CornerRadius = UDim.new(0, 7)
+DropCorner.Parent = PlayerDropdown
+
+local PlayerList = Instance.new("Frame")
+
+PlayerList.Size = UDim2.new(1, -4, 0, 150)
+PlayerList.BackgroundColor3 = Colors.Panel
+PlayerList.Visible = false
+PlayerList.Parent = SpectateTab
+
+local ListCorner = Instance.new("UICorner")
+ListCorner.CornerRadius = UDim.new(0, 7)
+ListCorner.Parent = PlayerList
+
+local ListScroll = Instance.new("ScrollingFrame")
+
+ListScroll.Size = UDim2.fromScale(1, 1)
+ListScroll.BackgroundTransparency = 1
+ListScroll.BorderSizePixel = 0
+ListScroll.ScrollBarThickness = 3
+ListScroll.Parent = PlayerList
+
+local ListLayout = Instance.new("UIListLayout")
+
+ListLayout.Padding = UDim.new(0, 4)
+ListLayout.Parent = ListScroll
+
+local function RefreshPlayerList()
+
+    for _, Object in ipairs(ListScroll:GetChildren()) do
+
+        if Object:IsA("TextButton") then
+            Object:Destroy()
+        end
+
+    end
+
+    for _, Target in ipairs(Players:GetPlayers()) do
+
+        if Target == Player then
+            continue
+        end
+
+        local Option = Instance.new("TextButton")
+
+        Option.Size = UDim2.new(1, -6, 0, 32)
+        Option.BackgroundColor3 = Colors.Button
+        Option.TextColor3 = Colors.White
+        Option.TextSize = 12
+        Option.Font = Enum.Font.Gotham
+        Option.Text = Target.DisplayName ..
+            " (@" .. Target.Name .. ")"
+
+        Option.Parent = ListScroll
+
+        Option.MouseButton1Click:Connect(function()
+
+            SelectedPlayer = Target
+
+            PlayerDropdown.Text = Target.DisplayName
+
+            PlayerList.Visible = false
+
+        end)
+
+    end
+
+    ListScroll.CanvasSize = UDim2.new(
+        0,
+        0,
+        0,
+        ListLayout.AbsoluteContentSize.Y + 5
+    )
+
+end
+
+PlayerDropdown.MouseButton1Click:Connect(function()
+
+    PlayerList.Visible = not PlayerList.Visible
+
+    if PlayerList.Visible then
+        RefreshPlayerList()
+    end
+
+end)
+
+Players.PlayerAdded:Connect(RefreshPlayerList)
+Players.PlayerRemoving:Connect(RefreshPlayerList)
+
+--==================================================
+-- SPECTATE FUNCTIONS
+--==================================================
+
+local function StartSpectate(Target)
+
+    if not Target then
+        return
+    end
+
+    if Target == Player then
+        return
+    end
+
+    local Character = Target.Character
+
+    local Humanoid = Character
+        and Character:FindFirstChildOfClass("Humanoid")
+
+    if not Humanoid then
+        warn("Target character unavailable")
+        return
+    end
+
+    local Camera = workspace.CurrentCamera
+
+    if Camera then
+
+        Camera.CameraSubject = Humanoid
+
+        SpectatingPlayer = Target
+
+    end
+
+end
+
+local function StopSpectate()
+
+    local Camera = workspace.CurrentCamera
+
+    local Character = Player.Character
+
+    local Humanoid = Character
+        and Character:FindFirstChildOfClass("Humanoid")
+
+    if Camera and Humanoid then
+
+        Camera.CameraSubject = Humanoid
+
+    end
+
+    SpectatingPlayer = nil
+
+end
+
+AddButton(
+    SpectateTab,
+    "Start Spectating",
+    function()
+
+        StartSpectate(SelectedPlayer)
+
+    end
+)
+
+AddButton(
+    SpectateTab,
+    "Stop Spectating",
+    StopSpectate
+)
+
+AddButton(
+    SpectateTab,
+    "Refresh Player List",
+    RefreshPlayerList
+)
+
+AddLabel(
+    SpectateTab,
+    "Spectate Status"
+)
+
+local SpectateStatus = AddLabel(
+    SpectateTab,
+    "Not Spectating"
+)
+
+RunService.Heartbeat:Connect(function()
+
+    if SpectatingPlayer then
+
+        if SpectatingPlayer.Parent ~= Players then
+
+            StopSpectate()
+            SpectateStatus.Text = "Not Spectating"
+
+        else
+
+            SpectateStatus.Text =
+                "Watching: " .. SpectatingPlayer.Name
+
+        end
+
+    else
+
+        SpectateStatus.Text = "Not Spectating"
+
+    end
+
+end)
+
+--==================================================
+-- CHARACTER RESPAWN SUPPORT
+--==================================================
+
+Player.CharacterAdded:Connect(function()
+
+    task.wait(1)
+
+    if SpectatingPlayer then
+        StopSpectate()
+    end
+
+    if ESPSettings.Enabled then
+        UpdateESP()
+    end
+
+end)
+
+--==================================================
+-- PART 3 COMPLETE
+--==================================================
+
+print("ALAWI MEGA HUB PART 3 LOADED")
+
+--==================================================
+-- ALAWI MEGA HUB
+-- PART 4 : TOOLS + INVENTORY
+--==================================================
+
+local InventoryTab = CreateTab("Inventory", "🎒")
+
+local ToolSettings = {
+    Search = "",
+    SelectedTool = nil
+}
+
+local InventoryLabels = {}
+
+--==================================================
+-- INVENTORY FUNCTIONS
+--==================================================
+
+local function GetBackpack()
+
+    return Player:FindFirstChildOfClass("Backpack")
+
+end
+
+local function GetEquippedTools()
+
+    local Character = Player.Character
+
+    if not Character then
+        return {}
+    end
+
+    local Result = {}
+
+    for _, Object in ipairs(Character:GetChildren()) do
+
+        if Object:IsA("Tool") then
+            table.insert(Result, Object)
+        end
+
+    end
+
+    return Result
+
+end
+
+local function GetOwnedTools()
+
+    local Result = {}
+
+    local Backpack = GetBackpack()
+
+    if Backpack then
+
+        for _, Object in ipairs(Backpack:GetChildren()) do
+
+            if Object:IsA("Tool") then
+                table.insert(Result, Object)
+            end
+
+        end
+
+    end
+
+    for _, Tool in ipairs(GetEquippedTools()) do
+        table.insert(Result, Tool)
+    end
+
+    return Result
+
+end
+
+local function FindOwnedTool(Name)
+
+    for _, Tool in ipairs(GetOwnedTools()) do
+
+        if Tool.Name:lower() == Name:lower() then
+            return Tool
+        end
+
+    end
+
+    return nil
+
+end
+
+--==================================================
+-- INVENTORY COUNTER
+--==================================================
+
+local ToolCountLabel = AddLabel(
+    InventoryTab,
+    "Owned Tools: 0"
+)
+
+local EquippedCountLabel = AddLabel(
+    InventoryTab,
+    "Equipped Tools: 0"
+)
+
+local function UpdateToolCounters()
+
+    local Tools = GetOwnedTools()
+    local Equipped = GetEquippedTools()
+
+    ToolCountLabel.Text =
+        "Owned Tools: " .. #Tools
+
+    EquippedCountLabel.Text =
+        "Equipped Tools: " .. #Equipped
+
+end
+
+--==================================================
+-- TOOL SEARCH
+--==================================================
+
+AddLabel(
+    InventoryTab,
+    "SEARCH YOUR INVENTORY"
+)
+
+local SearchBox = Instance.new("TextBox")
+
+SearchBox.Size = UDim2.new(1, -4, 0, 40)
+SearchBox.BackgroundColor3 = Colors.Button
+SearchBox.TextColor3 = Colors.White
+SearchBox.PlaceholderColor3 = Colors.Gray
+SearchBox.PlaceholderText = "Search tool name..."
+SearchBox.Text = ""
+SearchBox.TextSize = 13
+SearchBox.Font = Enum.Font.Gotham
+SearchBox.ClearTextOnFocus = false
+SearchBox.Parent = InventoryTab
+
+local SearchCorner = Instance.new("UICorner")
+SearchCorner.CornerRadius = UDim.new(0, 7)
+SearchCorner.Parent = SearchBox
+
+--==================================================
+-- TOOL INFORMATION
+--==================================================
+
+local ToolInfo = AddLabel(
+    InventoryTab,
+    "Selected Tool: None"
+)
+
+local ToolDetails = AddLabel(
+    InventoryTab,
+    "Tool Information: None"
+)
+
+--==================================================
+-- TOOL LIST
+--==================================================
+
+local ToolList = Instance.new("Frame")
+
+ToolList.Size = UDim2.new(1, -4, 0, 180)
+ToolList.BackgroundColor3 = Colors.Panel
+ToolList.Parent = InventoryTab
+
+local ToolListCorner = Instance.new("UICorner")
+ToolListCorner.CornerRadius = UDim.new(0, 7)
+ToolListCorner.Parent = ToolList
+
+local ToolScroll = Instance.new("ScrollingFrame")
+
+ToolScroll.Size = UDim2.new(1, -8, 1, -8)
+ToolScroll.Position = UDim2.fromOffset(4, 4)
+ToolScroll.BackgroundTransparency = 1
+ToolScroll.BorderSizePixel = 0
+ToolScroll.ScrollBarThickness = 3
+ToolScroll.Parent = ToolList
+
+local ToolLayout = Instance.new("UIListLayout")
+
+ToolLayout.Padding = UDim.new(0, 4)
+ToolLayout.Parent = ToolScroll
+
+ToolLayout:GetPropertyChangedSignal(
+    "AbsoluteContentSize"
+):Connect(function()
+
+    ToolScroll.CanvasSize = UDim2.new(
+        0,
+        0,
+        0,
+        ToolLayout.AbsoluteContentSize.Y + 5
+    )
+
+end)
+
+--==================================================
+-- SELECT TOOL
+--==================================================
+
+local function SelectTool(Tool)
+
+    ToolSettings.SelectedTool = Tool
+
+    ToolInfo.Text =
+        "Selected Tool: " .. Tool.Name
+
+    ToolDetails.Text =
+        "Class: " .. Tool.ClassName ..
+        " | RequiresHandle: " ..
+        tostring(Tool.RequiresHandle)
+
+end
+
+--==================================================
+-- REFRESH INVENTORY
+--==================================================
+
+local function RefreshInventory()
+
+    for _, Object in ipairs(ToolScroll:GetChildren()) do
+
+        if Object:IsA("TextButton") then
+            Object:Destroy()
+        end
+
+    end
+
+    local Search = SearchBox.Text:lower()
+
+    for _, Tool in ipairs(GetOwnedTools()) do
+
+        if Search == ""
+        or Tool.Name:lower():find(Search, 1, true) then
+
+            local Button = Instance.new("TextButton")
+
+            Button.Size = UDim2.new(1, -4, 0, 34)
+            Button.BackgroundColor3 = Colors.Button
+            Button.TextColor3 = Colors.White
+            Button.TextSize = 12
+            Button.Font = Enum.Font.Gotham
+            Button.Text = Tool.Name
+            Button.Parent = ToolScroll
+
+            local Corner = Instance.new("UICorner")
+            Corner.CornerRadius = UDim.new(0, 5)
+            Corner.Parent = Button
+
+            Button.MouseButton1Click:Connect(function()
+
+                SelectTool(Tool)
+
+            end)
+
+        end
+
+    end
+
+    UpdateToolCounters()
+
+end
+
+SearchBox:GetPropertyChangedSignal("Text"):Connect(
+    RefreshInventory
+)
+
+--==================================================
+-- INVENTORY ACTIONS
+--==================================================
+
+AddButton(
+    InventoryTab,
+    "Refresh Inventory",
+    RefreshInventory
+)
+
+AddButton(
+    InventoryTab,
+    "Equip Selected Tool",
+    function()
+
+        local Tool = ToolSettings.SelectedTool
+        local Humanoid = GetHumanoid()
+
+        if Tool and Humanoid then
+
+            local Backpack = GetBackpack()
+
+            if Backpack and Tool.Parent == Backpack then
+
+                Humanoid:EquipTool(Tool)
+
+            end
+
+        end
+
+    end
+)
+
+AddButton(
+    InventoryTab,
+    "Unequip All Tools",
+    function()
+
+        local Humanoid = GetHumanoid()
+
+        if Humanoid then
+            Humanoid:UnequipTools()
+        end
+
+    end
+)
+
+AddButton(
+    InventoryTab,
+    "Clear Search",
+    function()
+
+        SearchBox.Text = ""
+
+        RefreshInventory()
+
+    end
+)
+
+AddButton(
+    InventoryTab,
+    "Print Inventory",
+    function()
+
+        for Index, Tool in ipairs(GetOwnedTools()) do
+
+            print(
+                Index,
+                Tool.Name,
+                Tool.ClassName
+            )
+
+        end
+
+    end
+)
+
+--==================================================
+-- WORLD ITEM SCANNER
+--==================================================
+
+local WorldTab = CreateTab("World Items", "🔎")
+
+AddLabel(
+    WorldTab,
+    "WORLD TOOL SCANNER"
+)
+
+local WorldCount = AddLabel(
+    WorldTab,
+    "World Tools: 0"
+)
+
+local WorldScroll = Instance.new("ScrollingFrame")
+
+WorldScroll.Size = UDim2.new(1, -4, 0, 190)
+WorldScroll.BackgroundColor3 = Colors.Panel
+WorldScroll.BorderSizePixel = 0
+WorldScroll.ScrollBarThickness = 3
+WorldScroll.Parent = WorldTab
+
+local WorldLayout = Instance.new("UIListLayout")
+
+WorldLayout.Padding = UDim.new(0, 4)
+WorldLayout.Parent = WorldScroll
+
+WorldLayout:GetPropertyChangedSignal(
+    "AbsoluteContentSize"
+):Connect(function()
+
+    WorldScroll.CanvasSize = UDim2.new(
+        0,
+        0,
+        0,
+        WorldLayout.AbsoluteContentSize.Y + 5
+    )
+
+end)
+
+--==================================================
+-- WORLD SCANNER FUNCTION
+--==================================================
+
+local function ScanWorldTools()
+
+    for _, Object in ipairs(WorldScroll:GetChildren()) do
+
+        if Object:IsA("TextButton") then
+            Object:Destroy()
+        end
+
+    end
+
+    local Count = 0
+
+    for _, Object in ipairs(workspace:GetDescendants()) do
+
+        if Object:IsA("Tool") then
+
+            Count += 1
+
+            local Button = Instance.new("TextButton")
+
+            Button.Size = UDim2.new(1, -4, 0, 32)
+            Button.BackgroundColor3 = Colors.Button
+            Button.TextColor3 = Colors.White
+            Button.TextSize = 11
+            Button.Font = Enum.Font.Gotham
+
+            Button.Text =
+                Object.Name ..
+                " | " ..
+                Object.Parent.Name
+
+            Button.Parent = WorldScroll
+
+            Button.MouseButton1Click:Connect(function()
+
+                print("Tool:", Object.Name)
+                print("Parent:", Object.Parent)
+
+            end)
+
+        end
+
+    end
+
+    WorldCount.Text =
+        "World Tools: " .. Count
+
+end
+
+AddButton(
+    WorldTab,
+    "Scan World",
+    ScanWorldTools
+)
+
+AddButton(
+    WorldTab,
+    "Clear World Results",
+    function()
+
+        for _, Object in ipairs(WorldScroll:GetChildren()) do
+
+            if Object:IsA("TextButton") then
+                Object:Destroy()
+            end
+
+        end
+
+        WorldCount.Text = "World Tools: 0"
+
+    end
+)
+
+--==================================================
+-- AUTO REFRESH
+--==================================================
+
+local Backpack = GetBackpack()
+
+if Backpack then
+
+    Backpack.ChildAdded:Connect(function()
+
+        task.wait(0.1)
+
+        RefreshInventory()
+
+    end)
+
+    Backpack.ChildRemoved:Connect(function()
+
+        task.wait(0.1)
+
+        RefreshInventory()
+
+    end)
+
+end
+
+Player.CharacterAdded:Connect(function(Character)
+
+    Character.ChildAdded:Connect(function(Object)
+
+        if Object:IsA("Tool") then
+            task.wait(0.1)
+            RefreshInventory()
+        end
+
+    end)
+
+    Character.ChildRemoved:Connect(function(Object)
+
+        if Object:IsA("Tool") then
+            task.wait(0.1)
+            RefreshInventory()
+        end
+
+    end)
+
+end)
+
+--==================================================
+-- INITIAL REFRESH
+--==================================================
+
+RefreshInventory()
+
+ScanWorldTools()
+
+print("ALAWI MEGA HUB PART 4 LOADED")
+
+--==================================================
+-- ALAWI MEGA HUB
+-- PART 5 : VISUALS + CAMERA + GRAPHICS
+--==================================================
+
+local GraphicsTab = CreateTab("Graphics", "🎨")
+
+local CameraSettingsTab = CreateTab("Camera Pro", "📷")
+
+local GraphicsSettings = {
+    FullBright = false,
+    NightMode = false,
+    NoFog = false,
+    Shadows = true,
+    Bloom = false,
+    ColorCorrection = false,
+    Blur = false,
+    LowGraphics = false,
+
+    Brightness = Lighting.Brightness,
+    ClockTime = Lighting.ClockTime,
+    FogEnd = Lighting.FogEnd,
+    FOV = 70,
+    Zoom = 12
+}
+
+--==================================================
+-- SAVE ORIGINAL LIGHTING
+--==================================================
+
+local OriginalGraphics = {
+    Brightness = Lighting.Brightness,
+    ClockTime = Lighting.ClockTime,
+    FogEnd = Lighting.FogEnd,
+    FogStart = Lighting.FogStart,
+    GlobalShadows = Lighting.GlobalShadows,
+    Ambient = Lighting.Ambient,
+    OutdoorAmbient = Lighting.OutdoorAmbient,
+    ExposureCompensation = Lighting.ExposureCompensation
+}
+
+local Camera = workspace.CurrentCamera
+
+local OriginalFOV = Camera and Camera.FieldOfView or 70
+
+local OriginalMinZoom = Player.CameraMinZoomDistance
+local OriginalMaxZoom = Player.CameraMaxZoomDistance
+
+--==================================================
+-- EFFECT CREATION
+--==================================================
+
+local function GetEffect(Name, ClassName)
+
+    local Effect = Lighting:FindFirstChild(Name)
+
+    if not Effect then
+
+        Effect = Instance.new(ClassName)
+        Effect.Name = Name
+        Effect.Parent = Lighting
+
+    end
+
+    return Effect
+
+end
+
+local Bloom = GetEffect(
+    "AlawiBloom",
+    "BloomEffect"
+)
+
+local ColorEffect = GetEffect(
+    "AlawiColorCorrection",
+    "ColorCorrectionEffect"
+)
+
+local Blur = GetEffect(
+    "AlawiBlur",
+    "BlurEffect"
+)
+
+Bloom.Enabled = false
+Bloom.Intensity = 0.5
+Bloom.Size = 24
+Bloom.Threshold = 1
+
+ColorEffect.Enabled = false
+ColorEffect.Brightness = 0
+ColorEffect.Contrast = 0
+ColorEffect.Saturation = 0
+
+Blur.Enabled = false
+Blur.Size = 8
+
+--==================================================
+-- GRAPHICS FUNCTIONS
+--==================================================
+
+local function SetFullBright(Value)
+
+    GraphicsSettings.FullBright = Value
+
+    if Value then
+
+        Lighting.Brightness = 3
+        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+        Lighting.ExposureCompensation = 0.5
+
+    else
+
+        Lighting.Brightness = OriginalGraphics.Brightness
+        Lighting.Ambient = OriginalGraphics.Ambient
+        Lighting.OutdoorAmbient = OriginalGraphics.OutdoorAmbient
+        Lighting.ExposureCompensation =
+            OriginalGraphics.ExposureCompensation
+
+    end
+
+end
+
+local function SetNightMode(Value)
+
+    GraphicsSettings.NightMode = Value
+
+    if Value then
+        Lighting.ClockTime = 0
+    else
+        Lighting.ClockTime = OriginalGraphics.ClockTime
+    end
+
+end
+
+local function SetNoFog(Value)
+
+    GraphicsSettings.NoFog = Value
+
+    if Value then
+        Lighting.FogEnd = 100000
+        Lighting.FogStart = 0
+    else
+        Lighting.FogEnd = OriginalGraphics.FogEnd
+        Lighting.FogStart = OriginalGraphics.FogStart
+    end
+
+end
+
+local function SetShadows(Value)
+
+    GraphicsSettings.Shadows = Value
+
+    Lighting.GlobalShadows = Value
+
+end
+
+local function SetBloom(Value)
+
+    GraphicsSettings.Bloom = Value
+
+    Bloom.Enabled = Value
+
+end
+
+local function SetColorCorrection(Value)
+
+    GraphicsSettings.ColorCorrection = Value
+
+    ColorEffect.Enabled = Value
+
+    if Value then
+
+        ColorEffect.Brightness = 0.05
+        ColorEffect.Contrast = 0.15
+        ColorEffect.Saturation = 0.2
+
+    else
+
+        ColorEffect.Brightness = 0
+        ColorEffect.Contrast = 0
+        ColorEffect.Saturation = 0
+
+    end
+
+end
+
+local function SetBlur(Value)
+
+    GraphicsSettings.Blur = Value
+
+    Blur.Enabled = Value
+
+end
+
+--==================================================
+-- GRAPHICS TAB
+--==================================================
+
+AddLabel(
+    GraphicsTab,
+    "LIGHTING OPTIONS"
+)
+
+AddToggle(
+    GraphicsTab,
+    "Full Bright",
+    false,
+    SetFullBright
+)
+
+AddToggle(
+    GraphicsTab,
+    "Night Mode",
+    false,
+    SetNightMode
+)
+
+AddToggle(
+    GraphicsTab,
+    "Remove Fog",
+    false,
+    SetNoFog
+)
+
+AddToggle(
+    GraphicsTab,
+    "Global Shadows",
+    true,
+    SetShadows
+)
+
+AddLabel(
+    GraphicsTab,
+    "POST PROCESSING"
+)
+
+AddToggle(
+    GraphicsTab,
+    "Bloom Effect",
+    false,
+    SetBloom
+)
+
+AddToggle(
+    GraphicsTab,
+    "Color Correction",
+    false,
+    SetColorCorrection
+)
+
+AddToggle(
+    GraphicsTab,
+    "Blur Effect",
+    false,
+    SetBlur
+)
+
+--==================================================
+-- BRIGHTNESS INPUT
+--==================================================
+
+CreateInput(
+    GraphicsTab,
+    "Brightness",
+    OriginalGraphics.Brightness,
+    function(Value)
+
+        GraphicsSettings.Brightness =
+            math.clamp(Value, 0, 10)
+
+        Lighting.Brightness =
+            GraphicsSettings.Brightness
+
+    end
+)
+
+--==================================================
+-- CLOCK TIME INPUT
+--==================================================
+
+CreateInput(
+    GraphicsTab,
+    "Clock Time",
+    OriginalGraphics.ClockTime,
+    function(Value)
+
+        Lighting.ClockTime =
+            math.clamp(Value, 0, 24)
+
+    end
+)
+
+--==================================================
+-- EXPOSURE INPUT
+--==================================================
+
+CreateInput(
+    GraphicsTab,
+    "Exposure",
+    0,
+    function(Value)
+
+        Lighting.ExposureCompensation =
+            math.clamp(Value, -3, 3)
+
+    end
+)
+
+--==================================================
+-- FOG INPUT
+--==================================================
+
+CreateInput(
+    GraphicsTab,
+    "Fog Distance",
+    OriginalGraphics.FogEnd,
+    function(Value)
+
+        Lighting.FogEnd =
+            math.clamp(Value, 0, 100000)
+
+    end
+)
+
+--==================================================
+-- COLOR SETTINGS
+--==================================================
+
+AddButton(
+    GraphicsTab,
+    "Warm Color Preset",
+    function()
+
+        ColorEffect.Enabled = true
+        ColorEffect.TintColor =
+            Color3.fromRGB(255, 220, 180)
+
+        ColorEffect.Saturation = 0.2
+
+    end
+)
+
+AddButton(
+    GraphicsTab,
+    "Cool Color Preset",
+    function()
+
+        ColorEffect.Enabled = true
+        ColorEffect.TintColor =
+            Color3.fromRGB(180, 220, 255)
+
+        ColorEffect.Saturation = 0.1
+
+    end
+)
+
+AddButton(
+    GraphicsTab,
+    "Normal Color Preset",
+    function()
+
+        ColorEffect.TintColor =
+            Color3.new(1, 1, 1)
+
+        ColorEffect.Brightness = 0
+        ColorEffect.Contrast = 0
+        ColorEffect.Saturation = 0
+
+    end
+)
+
+--==================================================
+-- CAMERA PRO FUNCTIONS
+--==================================================
+
+local function GetCurrentCamera()
+
+    return workspace.CurrentCamera
+
+end
+
+local function SetCameraFOV(Value)
+
+    local CurrentCamera = GetCurrentCamera()
+
+    if not CurrentCamera then
+        return
+    end
+
+    GraphicsSettings.FOV =
+        math.clamp(Value, 40, 120)
+
+    CurrentCamera.FieldOfView =
+        GraphicsSettings.FOV
+
+end
+
+local function SetCameraZoom(Value)
+
+    Value = math.clamp(Value, 0.5, 50)
+
+    GraphicsSettings.Zoom = Value
+
+    Player.CameraMinZoomDistance = 0.5
+    Player.CameraMaxZoomDistance = Value
+
+end
+
+--==================================================
+-- CAMERA PRO TAB
+--==================================================
+
+AddLabel(
+    CameraSettingsTab,
+    "FIELD OF VIEW"
+)
+
+AddButton(
+    CameraSettingsTab,
+    "FOV 60",
+    function()
+        SetCameraFOV(60)
+    end
+)
+
+AddButton(
+    CameraSettingsTab,
+    "FOV 70",
+    function()
+        SetCameraFOV(70)
+    end
+)
+
+AddButton(
+    CameraSettingsTab,
+    "FOV 80",
+    function()
+        SetCameraFOV(80)
+    end
+)
+
+AddButton(
+    CameraSettingsTab,
+    "FOV 90",
+    function()
+        SetCameraFOV(90)
+    end
+)
+
+AddButton(
+    CameraSettingsTab,
+    "FOV 100",
+    function()
+        SetCameraFOV(100)
+    end
+)
+
+AddButton(
+    CameraSettingsTab,
+    "FOV 110",
+    function()
+        SetCameraFOV(110)
+    end
+)
+
+AddButton(
+    CameraSettingsTab,
+    "FOV 120",
+    function()
+        SetCameraFOV(120)
+    end
+)
+
+CreateInput(
+    CameraSettingsTab,
+    "Custom FOV",
+    70,
+    function(Value)
+
+        SetCameraFOV(Value)
+
+    end
+)
+
+--==================================================
+-- ZOOM SETTINGS
+--==================================================
+
+AddLabel(
+    CameraSettingsTab,
+    "CAMERA ZOOM"
+)
+
+AddButton(
+    CameraSettingsTab,
+    "Zoom 5",
+    function()
+        SetCameraZoom(5)
+    end
+)
+
+AddButton(
+    CameraSettingsTab,
+    "Zoom 10",
+    function()
+        SetCameraZoom(10)
+    end
+)
+
+AddButton(
+    CameraSettingsTab,
+    "Zoom 20",
+    function()
+        SetCameraZoom(20)
+    end
+)
+
+AddButton(
+    CameraSettingsTab,
+    "Zoom 30",
+    function()
+        SetCameraZoom(30)
+    end
+)
+
+AddButton(
+    CameraSettingsTab,
+    "Zoom 50",
+    function()
+        SetCameraZoom(50)
+    end
+)
+
+CreateInput(
+    CameraSettingsTab,
+    "Custom Zoom",
+    12,
+    function(Value)
+
+        SetCameraZoom(Value)
+
+    end
+)
+
+--==================================================
+-- CAMERA RESET
+--==================================================
+
+AddButton(
+    CameraSettingsTab,
+    "Reset FOV",
+    function()
+
+        SetCameraFOV(OriginalFOV)
+
+    end
+)
+
+AddButton(
+    CameraSettingsTab,
+    "Reset Zoom",
+    function()
+
+        Player.CameraMinZoomDistance =
+            OriginalMinZoom
+
+        Player.CameraMaxZoomDistance =
+            OriginalMaxZoom
+
+    end
+)
+
+--==================================================
+-- GRAPHICS PRESETS
+--==================================================
+
+AddLabel(
+    GraphicsTab,
+    "GRAPHICS PRESETS"
+)
+
+AddButton(
+    GraphicsTab,
+    "Performance Preset",
+    function()
+
+        SetBloom(false)
+        SetBlur(false)
+        SetColorCorrection(false)
+
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 100000
+
+    end
+)
+
+AddButton(
+    GraphicsTab,
+    "Visual Quality Preset",
+    function()
+
+        SetBloom(true)
+        SetColorCorrection(true)
+
+        Lighting.GlobalShadows = true
+
+    end
+)
+
+--==================================================
+-- RESTORE GRAPHICS
+--==================================================
+
+local function RestoreGraphics()
+
+    Lighting.Brightness =
+        OriginalGraphics.Brightness
+
+    Lighting.ClockTime =
+        OriginalGraphics.ClockTime
+
+    Lighting.FogEnd =
+        OriginalGraphics.FogEnd
+
+    Lighting.FogStart =
+        OriginalGraphics.FogStart
+
+    Lighting.GlobalShadows =
+        OriginalGraphics.GlobalShadows
+
+    Lighting.Ambient =
+        OriginalGraphics.Ambient
+
+    Lighting.OutdoorAmbient =
+        OriginalGraphics.OutdoorAmbient
+
+    Lighting.ExposureCompensation =
+        OriginalGraphics.ExposureCompensation
+
+    Bloom.Enabled = false
+    ColorEffect.Enabled = false
+    Blur.Enabled = false
+
+    SetCameraFOV(OriginalFOV)
+
+    Player.CameraMinZoomDistance =
+        OriginalMinZoom
+
+    Player.CameraMaxZoomDistance =
+        OriginalMaxZoom
+
+    GraphicsSettings.FullBright = false
+    GraphicsSettings.NightMode = false
+    GraphicsSettings.NoFog = false
+    GraphicsSettings.Bloom = false
+    GraphicsSettings.ColorCorrection = false
+    GraphicsSettings.Blur = false
+
+end
+
+AddButton(
+    GraphicsTab,
+    "Restore Original Graphics",
+    RestoreGraphics
+)
+
+--==================================================
+-- CAMERA REPLACEMENT SUPPORT
+--==================================================
+
+workspace:GetPropertyChangedSignal(
+    "CurrentCamera"
+):Connect(function()
+
+    task.wait(0.2)
+
+    local NewCamera = workspace.CurrentCamera
+
+    if NewCamera then
+
+        NewCamera.FieldOfView =
+            GraphicsSettings.FOV
+
+    end
+
+end)
+
+--==================================================
+-- PART 5 COMPLETE
+--==================================================
+
+print("ALAWI MEGA HUB PART 5 LOADED")
+
+--==================================================
+-- ALAWI MEGA HUB
+-- PART 6 : WORLD SCANNER
+--==================================================
+
+local ScannerTab = CreateTab("Scanner", "🔎")
+
+local ScannerSettings = {
+    SearchText = "",
+    SelectedObject = nil,
+    SearchType = "All",
+    MaxResults = 150
+}
+
+--==================================================
+-- SCANNER COUNTERS
+--==================================================
+
+local ScannerTotal = AddLabel(
+    ScannerTab,
+    "Total Objects: 0"
+)
+
+local ScannerParts = AddLabel(
+    ScannerTab,
+    "Parts: 0"
+)
+
+local ScannerModels = AddLabel(
+    ScannerTab,
+    "Models: 0"
+)
+
+local ScannerTools = AddLabel(
+    ScannerTab,
+    "Tools: 0"
+)
+
+local ScannerFolders = AddLabel(
+    ScannerTab,
+    "Folders: 0"
+)
+
+--==================================================
+-- SEARCH INPUT
+--==================================================
+
+AddLabel(
+    ScannerTab,
+    "SEARCH WORLD OBJECTS"
+)
+
+local ScannerSearch = Instance.new("TextBox")
+
+ScannerSearch.Size = UDim2.new(1, -4, 0, 40)
+ScannerSearch.BackgroundColor3 = Colors.Button
+ScannerSearch.TextColor3 = Colors.White
+ScannerSearch.PlaceholderColor3 = Colors.Gray
+ScannerSearch.PlaceholderText = "Enter object name..."
+ScannerSearch.Text = ""
+ScannerSearch.TextSize = 13
+ScannerSearch.Font = Enum.Font.Gotham
+ScannerSearch.ClearTextOnFocus = false
+ScannerSearch.Parent = ScannerTab
+
+local ScannerSearchCorner = Instance.new("UICorner")
+ScannerSearchCorner.CornerRadius = UDim.new(0, 7)
+ScannerSearchCorner.Parent = ScannerSearch
+
+--==================================================
+-- SEARCH TYPE
+--==================================================
+
+local SearchTypeButton = Instance.new("TextButton")
+
+SearchTypeButton.Size = UDim2.new(1, -4, 0, 38)
+SearchTypeButton.BackgroundColor3 = Colors.Button
+SearchTypeButton.TextColor3 = Colors.White
+SearchTypeButton.TextSize = 12
+SearchTypeButton.Font = Enum.Font.GothamBold
+SearchTypeButton.Text = "Search Type: All"
+SearchTypeButton.Parent = ScannerTab
+
+local SearchTypes = {
+    "All",
+    "Part",
+    "Model",
+    "Tool",
+    "Folder"
+}
+
+local SearchTypeIndex = 1
+
+SearchTypeButton.MouseButton1Click:Connect(function()
+
+    SearchTypeIndex += 1
+
+    if SearchTypeIndex > #SearchTypes then
+        SearchTypeIndex = 1
+    end
+
+    ScannerSettings.SearchType =
+        SearchTypes[SearchTypeIndex]
+
+    SearchTypeButton.Text =
+        "Search Type: " ..
+        ScannerSettings.SearchType
+
+end)
+
+--==================================================
+-- RESULTS FRAME
+--==================================================
+
+local ScannerResults = Instance.new("ScrollingFrame")
+
+ScannerResults.Size = UDim2.new(1, -4, 0, 210)
+ScannerResults.BackgroundColor3 = Colors.Panel
+ScannerResults.BorderSizePixel = 0
+ScannerResults.ScrollBarThickness = 3
+ScannerResults.Parent = ScannerTab
+
+local ScannerLayout = Instance.new("UIListLayout")
+
+ScannerLayout.Padding = UDim.new(0, 4)
+ScannerLayout.Parent = ScannerResults
+
+ScannerLayout:GetPropertyChangedSignal(
+    "AbsoluteContentSize"
+):Connect(function()
+
+    ScannerResults.CanvasSize = UDim2.new(
+        0,
+        0,
+        0,
+        ScannerLayout.AbsoluteContentSize.Y + 5
+    )
+
+end)
+
+--==================================================
+-- OBJECT TYPE
+--==================================================
+
+local function GetObjectType(Object)
+
+    if Object:IsA("BasePart") then
+        return "Part"
+    end
+
+    if Object:IsA("Model") then
+        return "Model"
+    end
+
+    if Object:IsA("Tool") then
+        return "Tool"
+    end
+
+    if Object:IsA("Folder") then
+        return "Folder"
+    end
+
+    return "Other"
+
+end
+
+--==================================================
+-- TYPE FILTER
+--==================================================
+
+local function MatchesType(Object)
+
+    local Type = ScannerSettings.SearchType
+
+    if Type == "All" then
+        return true
+    end
+
+    if Type == "Part" then
+        return Object:IsA("BasePart")
+    end
+
+    if Type == "Model" then
+        return Object:IsA("Model")
+    end
+
+    if Type == "Tool" then
+        return Object:IsA("Tool")
+    end
+
+    if Type == "Folder" then
+        return Object:IsA("Folder")
+    end
+
+    return false
+
+end
+
+--==================================================
+-- OBJECT INFORMATION
+--==================================================
+
+local ObjectInfo = AddLabel(
+    ScannerTab,
+    "Selected Object: None"
+)
+
+local ObjectClass = AddLabel(
+    ScannerTab,
+    "Class: None"
+)
+
+local ObjectPosition = AddLabel(
+    ScannerTab,
+    "Position: None"
+)
+
+local ObjectSize = AddLabel(
+    ScannerTab,
+    "Size: None"
+)
+
+local function GetPosition(Object)
+
+    if Object:IsA("BasePart") then
+        return Object.Position
+    end
+
+    if Object:IsA("Model") then
+        return Object:GetPivot().Position
+    end
+
+    return nil
+
+end
+
+local function ShowObjectInformation(Object)
+
+    ScannerSettings.SelectedObject = Object
+
+    ObjectInfo.Text =
+        "Selected Object: " .. Object.Name
+
+    ObjectClass.Text =
+        "Class: " .. Object.ClassName
+
+    local Position = GetPosition(Object)
+
+    if Position then
+
+        ObjectPosition.Text = string.format(
+            "Position: %.1f, %.1f, %.1f",
+            Position.X,
+            Position.Y,
+            Position.Z
+        )
+
+    else
+
+        ObjectPosition.Text = "Position: Not Available"
+
+    end
+
+    if Object:IsA("BasePart") then
+
+        local Size = Object.Size
+
+        ObjectSize.Text = string.format(
+            "Size: %.1f, %.1f, %.1f",
+            Size.X,
+            Size.Y,
+            Size.Z
+        )
+
+    else
+
+        ObjectSize.Text = "Size: Not Available"
+
+    end
+
+end
+
+--==================================================
+-- SCAN WORLD
+--==================================================
+
+local function ScanWorld()
+
+    for _, Object in ipairs(
+        ScannerResults:GetChildren()
+    ) do
+
+        if Object:IsA("TextButton") then
+            Object:Destroy()
+        end
+
+    end
+
+    local Search = ScannerSearch.Text:lower()
+
+    local Total = 0
+    local PartCount = 0
+    local ModelCount = 0
+    local ToolCount = 0
+    local FolderCount = 0
+
+    local Results = {}
+
+    for _, Object in ipairs(workspace:GetDescendants()) do
+
+        if Object:IsA("BasePart") then
+            PartCount += 1
+        elseif Object:IsA("Model") then
+            ModelCount += 1
+        elseif Object:IsA("Tool") then
+            ToolCount += 1
+        elseif Object:IsA("Folder") then
+            FolderCount += 1
+        end
+
+        local NameMatches =
+            Search == "" or
+            Object.Name:lower():find(
+                Search,
+                1,
+                true
+            )
+
+        if NameMatches and MatchesType(Object) then
+
+            table.insert(Results, Object)
+
+        end
+
+    end
+
+    Total = #Results
+
+    ScannerTotal.Text =
+        "Search Results: " .. Total
+
+    ScannerParts.Text =
+        "Parts: " .. PartCount
+
+    ScannerModels.Text =
+        "Models: " .. ModelCount
+
+    ScannerTools.Text =
+        "Tools: " .. ToolCount
+
+    ScannerFolders.Text =
+        "Folders: " .. FolderCount
+
+    for Index, Object in ipairs(Results) do
+
+        if Index > ScannerSettings.MaxResults then
+            break
+        end
+
+        local Button = Instance.new("TextButton")
+
+        Button.Size = UDim2.new(1, -4, 0, 34)
+        Button.BackgroundColor3 = Colors.Button
+        Button.TextColor3 = Colors.White
+        Button.TextSize = 11
+        Button.Font = Enum.Font.Gotham
+
+        Button.Text =
+            Object.Name ..
+            " | " ..
+            GetObjectType(Object)
+
+        Button.Parent = ScannerResults
+
+        Button.MouseButton1Click:Connect(function()
+
+            ShowObjectInformation(Object)
+
+        end)
+
+    end
+
+end
+
+--==================================================
+-- SCANNER BUTTONS
+--==================================================
+
+AddButton(
+    ScannerTab,
+    "Scan Workspace",
+    ScanWorld
+)
+
+AddButton(
+    ScannerTab,
+    "Clear Search",
+    function()
+
+        ScannerSearch.Text = ""
+
+        ScanWorld()
+
+    end
+)
+
+AddButton(
+    ScannerTab,
+    "Refresh Results",
+    ScanWorld
+)
+
+AddButton(
+    ScannerTab,
+    "Print Selected Object",
+    function()
+
+        local Object =
+            ScannerSettings.SelectedObject
+
+        if Object and Object.Parent then
+
+            print("Name:", Object.Name)
+            print("Class:", Object.ClassName)
+            print("Parent:", Object.Parent:GetFullName())
+
+        end
+
+    end
+)
+
+--==================================================
+-- NEARBY OBJECT SCANNER
+--==================================================
+
+local NearbyTab = CreateTab("Nearby", "📍")
+
+AddLabel(
+    NearbyTab,
+    "NEARBY OBJECT FINDER"
+)
+
+local NearbyDistance = 50
+
+CreateInput(
+    NearbyTab,
+    "Search Radius",
+    50,
+    function(Value)
+
+        NearbyDistance =
+            math.clamp(Value, 5, 500)
+
+    end
+)
+
+local NearbyCount = AddLabel(
+    NearbyTab,
+    "Nearby Parts: 0"
+)
+
+local NearbyResults = Instance.new("ScrollingFrame")
+
+NearbyResults.Size = UDim2.new(1, -4, 0, 190)
+NearbyResults.BackgroundColor3 = Colors.Panel
+NearbyResults.BorderSizePixel = 0
+NearbyResults.ScrollBarThickness = 3
+NearbyResults.Parent = NearbyTab
+
+local NearbyLayout = Instance.new("UIListLayout")
+
+NearbyLayout.Padding = UDim.new(0, 4)
+NearbyLayout.Parent = NearbyResults
+
+NearbyLayout:GetPropertyChangedSignal(
+    "AbsoluteContentSize"
+):Connect(function()
+
+    NearbyResults.CanvasSize = UDim2.new(
+        0,
+        0,
+        0,
+        NearbyLayout.AbsoluteContentSize.Y + 5
+    )
+
+end)
+
+--==================================================
+-- NEARBY SCAN
+--==================================================
+
+local function ScanNearby()
+
+    for _, Object in ipairs(
+        NearbyResults:GetChildren()
+    ) do
+
+        if Object:IsA("TextButton") then
+            Object:Destroy()
+        end
+
+    end
+
+    local Character = Player.Character
+
+    local Root = Character and Character:FindFirstChild(
+        "HumanoidRootPart"
+    )
+
+    if not Root then
+        return
+    end
+
+    local Count = 0
+
+    for _, Object in ipairs(
+        workspace:GetDescendants()
+    ) do
+
+        if Object:IsA("BasePart") then
+
+            local Distance = (
+                Root.Position - Object.Position
+            ).Magnitude
+
+            if Distance <= NearbyDistance then
+
+                Count += 1
+
+                if Count <= 100 then
+
+                    local Button = Instance.new("TextButton")
+
+                    Button.Size = UDim2.new(1, -4, 0, 32)
+                    Button.BackgroundColor3 = Colors.Button
+                    Button.TextColor3 = Colors.White
+                    Button.TextSize = 11
+                    Button.Font = Enum.Font.Gotham
+
+                    Button.Text = string.format(
+                        "%s | %.1fm",
+                        Object.Name,
+                        Distance
+                    )
+
+                    Button.Parent = NearbyResults
+
+                    Button.MouseButton1Click:Connect(function()
+
+                        ShowObjectInformation(Object)
+
+                    end)
+
+                end
+
+            end
+
+        end
+
+    end
+
+    NearbyCount.Text =
+        "Nearby Parts: " .. Count
+
+end
+
+AddButton(
+    NearbyTab,
+    "Scan Nearby Parts",
+    ScanNearby
+)
+
+AddButton(
+    NearbyTab,
+    "Refresh Nearby",
+    ScanNearby
+)
+
+--==================================================
+-- SEARCH EVENTS
+--==================================================
+
+ScannerSearch.FocusLost:Connect(function()
+
+    ScanWorld()
+
+end)
+
+--==================================================
+-- INITIAL SCAN
+--==================================================
+
+ScanWorld()
+
+print("ALAWI MEGA HUB PART 6 LOADED")
+
+--==================================================
+-- ALAWI MEGA HUB
+-- PART 7 : AUTOMATION + TASK MANAGER
+--==================================================
+
+local AutomationTab = CreateTab("Automation", "🤖")
+local TaskManagerTab = CreateTab("Task Manager", "📋")
+
+local AutomationSettings = {
+    AutoRespawn = false,
+    AutoEquip = false,
+    AutoCheckpoint = false,
+    AutoNotification = false,
+    AutoSavePosition = false,
+
+    TasksRunning = false,
+    SavedPosition = nil,
+
+    CheckInterval = 5
+}
+
+local AutomationConnections = {}
+local AutomationStatus = {}
+
+--==================================================
+-- TASK MANAGER DATA
+--==================================================
+
+local TaskList = {
+    {
+        Name = "Auto Respawn",
+        Enabled = false
+    },
+    {
+        Name = "Auto Equip",
+        Enabled = false
+    },
+    {
+        Name = "Auto Checkpoint",
+        Enabled = false
+    },
+    {
+        Name = "Auto Notification",
+        Enabled = false
+    },
+    {
+        Name = "Auto Save Position",
+        Enabled = false
+    }
+}
+
+--==================================================
+-- STATUS SYSTEM
+--==================================================
+
+local AutomationStatusLabel = AddLabel(
+    AutomationTab,
+    "Automation: Ready"
+)
+
+local RunningTasksLabel = AddLabel(
+    TaskManagerTab,
+    "Running Tasks: 0"
+)
+
+local function UpdateAutomationStatus()
+
+    local Count = 0
+
+    for _, Task in ipairs(TaskList) do
+
+        if Task.Enabled then
+            Count += 1
+        end
+
+    end
+
+    RunningTasksLabel.Text =
+        "Running Tasks: " .. Count
+
+    AutomationStatusLabel.Text =
+        "Automation: " ..
+        (Count > 0 and "Running" or "Ready")
+
+end
+
+local function SetTaskState(Name, Value)
+
+    for _, Task in ipairs(TaskList) do
+
+        if Task.Name == Name then
+            Task.Enabled = Value
+        end
+
+    end
+
+    UpdateAutomationStatus()
+
+end
+
+--==================================================
+-- TASK 1 : AUTO EQUIP
+--==================================================
+
+local function AutoEquip()
+
+    local Character = Player.Character
+    local Humanoid = GetHumanoid()
+    local Backpack = GetBackpack()
+
+    if not Character or not Humanoid or not Backpack then
+        return
+    end
+
+    local Equipped = GetEquippedTools()
+
+    if #Equipped > 0 then
+        return
+    end
+
+    local Tools = GetOwnedTools()
+
+    if Tools[1] and Tools[1].Parent == Backpack then
+
+        Humanoid:EquipTool(Tools[1])
+
+    end
+
+end
+
+--==================================================
+-- TASK 2 : AUTO SAVE POSITION
+--==================================================
+
+local function SaveCurrentPosition()
+
+    local Character = Player.Character
+
+    local Root = Character and Character:FindFirstChild(
+        "HumanoidRootPart"
+    )
+
+    if not Root then
+        return false
+    end
+
+    AutomationSettings.SavedPosition =
+        Root.CFrame
+
+    return true
+
+end
+
+local function GetSavedPosition()
+
+    return AutomationSettings.SavedPosition
+
+end
+
+--==================================================
+-- TASK 3 : AUTO CHECKPOINT
+--==================================================
+
+local function CheckCheckpoint()
+
+    local Character = Player.Character
+
+    local Root = Character and Character:FindFirstChild(
+        "HumanoidRootPart"
+    )
+
+    if not Root then
+        return
+    end
+
+    -- قراءة موضع اللاعب فقط.
+    -- نظام الحفظ الفعلي يجب أن يكون
+    -- مربوطاً بنظام Checkpoints في لعبتك.
+
+    local Position = Root.Position
+
+    AutomationSettings.LastCheckpointPosition =
+        Position
+
+end
+
+--==================================================
+-- TASK 4 : AUTO NOTIFICATION
+--==================================================
+
+local function Notify(Message)
+
+    pcall(function()
+
+        game:GetService("StarterGui"):SetCore(
+            "SendNotification",
+            {
+                Title = "ALAWI MEGA HUB",
+                Text = Message,
+                Duration = 3
+            }
+        )
+
+    end)
+
+end
+
+--==================================================
+-- TASK 5 : AUTO RESPAWN
+--==================================================
+
+local function RequestRespawn()
+
+    local Humanoid = GetHumanoid()
+
+    if not Humanoid then
+        return
+    end
+
+    if Humanoid.Health <= 0 then
+        return
+    end
+
+    -- إعادة الظهور التلقائية تحتاج
+    -- نظام Respawn مصرحاً به من السيرفر.
+
+    Notify("Respawn request requires game server support")
+
+end
+
+--==================================================
+-- AUTOMATION TAB
+--==================================================
+
+AddLabel(
+    AutomationTab,
+    "AUTOMATIC SYSTEMS"
+)
+
+AddToggle(
+    AutomationTab,
+    "Auto Equip",
+    false,
+    function(Value)
+
+        AutomationSettings.AutoEquip = Value
+
+        SetTaskState("Auto Equip", Value)
+
+        if not Value then
+            return
+        end
+
+        AutoEquip()
+
+    end
+)
+
+AddToggle(
+    AutomationTab,
+    "Auto Save Position",
+    false,
+    function(Value)
+
+        AutomationSettings.AutoSavePosition = Value
+
+        SetTaskState("Auto Save Position", Value)
+
+        if Value then
+            SaveCurrentPosition()
+        end
+
+    end
+)
+
+AddToggle(
+    AutomationTab,
+    "Auto Checkpoint",
+    false,
+    function(Value)
+
+        AutomationSettings.AutoCheckpoint = Value
+
+        SetTaskState("Auto Checkpoint", Value)
+
+    end
+)
+
+AddToggle(
+    AutomationTab,
+    "Auto Notification",
+    false,
+    function(Value)
+
+        AutomationSettings.AutoNotification = Value
+
+        SetTaskState("Auto Notification", Value)
+
+        if Value then
+            Notify("Automation enabled")
+        end
+
+    end
+)
+
+AddToggle(
+    AutomationTab,
+    "Auto Respawn Monitor",
+    false,
+    function(Value)
+
+        AutomationSettings.AutoRespawn = Value
+
+        SetTaskState("Auto Respawn", Value)
+
+    end
+)
+
+--==================================================
+-- POSITION ACTIONS
+--==================================================
+
+AddButton(
+    AutomationTab,
+    "Save Current Position",
+    function()
+
+        if SaveCurrentPosition() then
+
+            Notify("Position saved")
+
+        end
+
+    end
+)
+
+AddButton(
+    AutomationTab,
+    "Print Saved Position",
+    function()
+
+        local Position = GetSavedPosition()
+
+        if Position then
+
+            print("Saved Position:", Position)
+
+        else
+
+            warn("No saved position")
+
+        end
+
+    end
+)
+
+AddButton(
+    AutomationTab,
+    "Clear Saved Position",
+    function()
+
+        AutomationSettings.SavedPosition = nil
+
+        Notify("Saved position cleared")
+
+    end
+)
+
+--==================================================
+-- TASK MANAGER
+--==================================================
+
+AddLabel(
+    TaskManagerTab,
+    "TASK OVERVIEW"
+)
+
+local TaskStatusLabel = AddLabel(
+    TaskManagerTab,
+    "Tasks are ready"
+)
+
+local function UpdateTaskList()
+
+    local Text = ""
+
+    for _, Task in ipairs(TaskList) do
+
+        Text = Text ..
+            Task.Name ..
+            " : " ..
+            (Task.Enabled and "ON" or "OFF") ..
+            "\n"
+
+    end
+
+    TaskStatusLabel.Text = Text
+
+    UpdateAutomationStatus()
+
+end
+
+AddButton(
+    TaskManagerTab,
+    "Refresh Task Status",
+    UpdateTaskList
+)
+
+--==================================================
+-- TASK INTERVAL
+--==================================================
+
+CreateInput(
+    TaskManagerTab,
+    "Task Interval",
+    5,
+    function(Value)
+
+        AutomationSettings.CheckInterval =
+            math.clamp(Value, 1, 60)
+
+    end
+)
+
+--==================================================
+-- MAIN AUTOMATION LOOP
+--==================================================
+
+local AutomationRunning = true
+
+task.spawn(function()
+
+    while AutomationRunning do
+
+        task.wait(
+            AutomationSettings.CheckInterval
+        )
+
+        if not Screen.Parent then
+            break
+        end
+
+        if AutomationSettings.AutoEquip then
+
+            pcall(AutoEquip)
+
+        end
+
+        if AutomationSettings.AutoSavePosition then
+
+            pcall(SaveCurrentPosition)
+
+        end
+
+        if AutomationSettings.AutoCheckpoint then
+
+            pcall(CheckCheckpoint)
+
+        end
+
+        if AutomationSettings.AutoRespawn then
+
+            pcall(RequestRespawn)
+
+        end
+
+        if AutomationSettings.AutoNotification then
+
+            -- لا ترسل إشعارات متكررة.
+            -- يتم إعلام المستخدم عند تفعيل النظام فقط.
+
+        end
+
+    end
+
+end)
+
+--==================================================
+-- STOP ALL AUTOMATION
+--==================================================
+
+local function StopAllAutomation()
+
+    AutomationSettings.AutoRespawn = false
+    AutomationSettings.AutoEquip = false
+    AutomationSettings.AutoCheckpoint = false
+    AutomationSettings.AutoNotification = false
+    AutomationSettings.AutoSavePosition = false
+
+    for _, Task in ipairs(TaskList) do
+
+        Task.Enabled = false
+
+    end
+
+    UpdateTaskList()
+
+    Notify("All automation stopped")
+
+end
+
+AddButton(
+    TaskManagerTab,
+    "STOP ALL AUTOMATION",
+    StopAllAutomation
+)
+
+AddButton(
+    TaskManagerTab,
+    "Refresh All Tasks",
+    UpdateTaskList
+)
+
+--==================================================
+-- CHARACTER SUPPORT
+--==================================================
+
+Player.CharacterAdded:Connect(function()
+
+    task.wait(1)
+
+    if AutomationSettings.AutoEquip then
+
+        AutoEquip()
+
+    end
+
+    if AutomationSettings.AutoSavePosition then
+
+        SaveCurrentPosition()
+
+    end
+
+end)
+
+--==================================================
+-- INITIAL UPDATE
+--==================================================
+
+UpdateTaskList()
+
+print("ALAWI MEGA HUB PART 7 LOADED")
+
+--==================================================
+-- ALAWI MEGA HUB
+-- PART 8 : PLAYER MANAGER
+--==================================================
+
+local PMPlayers = game:GetService("Players")
+local PMTeams = game:GetService("Teams")
+
+local PlayerManagerTab = CreateTab(
+    "Player Manager",
+    "👥"
+)
+
+local TeamManagerTab = CreateTab(
+    "Team Manager",
+    "🛡️"
+)
+
+local PMTargetName = ""
+local PMTarget = nil
+local PMOriginalCameraSubject = nil
+
+local PMPlayerInfoLabel = AddLabel(
+    PlayerManagerTab,
+    "Player Information: None"
+)
+
+local PMStatusLabel = AddLabel(
+    PlayerManagerTab,
+    "Status: Ready"
+)
+
+local PMTeamInfoLabel = AddLabel(
+    TeamManagerTab,
+    "Team Information"
+)
+
+--==================================================
+-- PLAYER SEARCH
+--==================================================
+
+local function FindPlayerByName(Name)
+
+    if not Name or Name == "" then
+        return nil
+    end
+
+    Name = string.lower(Name)
+
+    for _, Target in ipairs(PMPlayers:GetPlayers()) do
+
+        if string.lower(Target.Name) == Name then
+            return Target
+        end
+
+        if string.sub(
+            string.lower(Target.Name),
+            1,
+            #Name
+        ) == Name then
+
+            return Target
+
+        end
+
+        if string.sub(
+            string.lower(Target.DisplayName),
+            1,
+            #Name
+        ) == Name then
+
+            return Target
+
+        end
+
+    end
+
+    return nil
+
+end
+
+--==================================================
+-- PLAYER INFORMATION
+--==================================================
+
+local function GetPlayerInformation(Target)
+
+    if not Target then
+        return "No player selected"
+    end
+
+    local Character = Target.Character
+
+    local Humanoid = Character and
+        Character:FindFirstChildOfClass("Humanoid")
+
+    local Root = Character and
+        Character:FindFirstChild("HumanoidRootPart")
+
+    local TeamName = "No Team"
+
+    if Target.Team then
+        TeamName = Target.Team.Name
+    end
+
+    local Health = "Unknown"
+    local MaxHealth = "Unknown"
+    local Speed = "Unknown"
+    local Jump = "Unknown"
+
+    if Humanoid then
+
+        Health = math.floor(Humanoid.Health)
+        MaxHealth = math.floor(Humanoid.MaxHealth)
+
+        Speed = Humanoid.WalkSpeed
+        Jump = Humanoid.UseJumpPower
+            and Humanoid.JumpPower
+            or Humanoid.JumpHeight
+
+    end
+
+    local Position = "Unknown"
+
+    if Root then
+
+        Position = string.format(
+            "%.1f, %.1f, %.1f",
+            Root.Position.X,
+            Root.Position.Y,
+            Root.Position.Z
+        )
+
+    end
+
+    return table.concat({
+
+        "Username: " .. Target.Name,
+        "Display Name: " .. Target.DisplayName,
+        "User ID: " .. Target.UserId,
+        "Account Age: " .. Target.AccountAge .. " Days",
+        "Team: " .. TeamName,
+        "Health: " .. Health .. "/" .. MaxHealth,
+        "WalkSpeed: " .. Speed,
+        "Jump: " .. Jump,
+        "Position: " .. Position
+
+    }, "\n")
+
+end
+
+local function RefreshPlayerInformation()
+
+    if not PMTarget or not PMTarget.Parent then
+
+        PMPlayerInfoLabel.Text =
+            "Player Information: None"
+
+        return
+
+    end
+
+    PMPlayerInfoLabel.Text =
+        GetPlayerInformation(PMTarget)
+
+end
+
+--==================================================
+-- PLAYER INPUT
+--==================================================
+
+CreateInput(
+    PlayerManagerTab,
+    "Enter Player Username",
+    "",
+    function(Value)
+
+        PMTargetName = tostring(Value)
+
+    end
+)
+
+--==================================================
+-- SELECT PLAYER
+--==================================================
+
+AddButton(
+    PlayerManagerTab,
+    "Search Player",
+    function()
+
+        local Target = FindPlayerByName(PMTargetName)
+
+        if not Target then
+
+            PMStatusLabel.Text = "Player not found"
+
+            return
+
+        end
+
+        PMTarget = Target
+
+        PMStatusLabel.Text =
+            "Selected: " .. Target.Name
+
+        RefreshPlayerInformation()
+
+    end
+)
+
+--==================================================
+-- PLAYER INFORMATION BUTTONS
+--==================================================
+
+AddButton(
+    PlayerManagerTab,
+    "Refresh Player Information",
+    function()
+
+        RefreshPlayerInformation()
+
+    end
+)
+
+AddButton(
+    PlayerManagerTab,
+    "Show Selected Player",
+    function()
+
+        if not PMTarget then
+            return
+        end
+
+        print(GetPlayerInformation(PMTarget))
+
+        PMStatusLabel.Text =
+            "Information printed to Output"
+
+    end
+)
+
+AddButton(
+    PlayerManagerTab,
+    "Clear Selected Player",
+    function()
+
+        PMTarget = nil
+
+        PMPlayerInfoLabel.Text =
+            "Player Information: None"
+
+        PMStatusLabel.Text = "Selection cleared"
+
+    end
+)
+
+--==================================================
+-- SPECTATE SYSTEM
+--==================================================
+
+local function StartPlayerSpectate()
+
+    if not PMTarget then
+        PMStatusLabel.Text = "Select a player first"
+        return
+    end
+
+    local Character = PMTarget.Character
+
+    local Humanoid = Character and
+        Character:FindFirstChildOfClass("Humanoid")
+
+    local Camera = workspace.CurrentCamera
+
+    if not Humanoid or not Camera then
+        PMStatusLabel.Text = "Target character unavailable"
+        return
+    end
+
+    if not PMOriginalCameraSubject then
+
+        local OwnCharacter = Player.Character
+
+        PMOriginalCameraSubject =
+            OwnCharacter and
+            OwnCharacter:FindFirstChildOfClass("Humanoid")
+            or Camera.CameraSubject
+
+    end
+
+    Camera.CameraSubject = Humanoid
+
+    PMStatusLabel.Text =
+        "Spectating: " .. PMTarget.Name
+
+end
+
+local function StopPlayerSpectate()
+
+    local Camera = workspace.CurrentCamera
+
+    if not Camera then
+        return
+    end
+
+    local OwnCharacter = Player.Character
+
+    local OwnHumanoid = OwnCharacter and
+        OwnCharacter:FindFirstChildOfClass("Humanoid")
+
+    Camera.CameraSubject =
+        OwnHumanoid or PMOriginalCameraSubject
+
+    PMOriginalCameraSubject = nil
+
+    PMStatusLabel.Text = "Spectate stopped"
+
+end
+
+AddButton(
+    PlayerManagerTab,
+    "Spectate Selected Player",
+    StartPlayerSpectate
+)
+
+AddButton(
+    PlayerManagerTab,
+    "Stop Spectate",
+    StopPlayerSpectate
+)
+
+--==================================================
+-- PLAYER COUNTER
+--==================================================
+
+local PMCountLabel = AddLabel(
+    PlayerManagerTab,
+    "Players: 0"
+)
+
+local function RefreshPlayerCount()
+
+    PMCountLabel.Text =
+        "Players: " .. #PMPlayers:GetPlayers()
+
+end
+
+AddButton(
+    PlayerManagerTab,
+    "Refresh Player Count",
+    RefreshPlayerCount
+)
+
+PMPlayers.PlayerAdded:Connect(function()
+
+    RefreshPlayerCount()
+
+end)
+
+PMPlayers.PlayerRemoving:Connect(function(Target)
+
+    if PMTarget == Target then
+
+        PMTarget = nil
+
+        PMPlayerInfoLabel.Text =
+            "Selected player left the game"
+
+        StopPlayerSpectate()
+
+    end
+
+    RefreshPlayerCount()
+
+end)
+
+--==================================================
+-- TEAM MANAGER
+--==================================================
+
+local function GetTeamInformation()
+
+    local Output = {}
+
+    for _, Team in ipairs(PMTeams:GetTeams()) do
+
+        local Count = 0
+        local Members = {}
+
+        for _, Target in ipairs(PMPlayers:GetPlayers()) do
+
+            if Target.Team == Team then
+
+                Count += 1
+
+                table.insert(
+                    Members,
+                    Target.Name
+                )
+
+            end
+
+        end
+
+        table.insert(
+            Output,
+            "Team: " .. Team.Name ..
+            "\nPlayers: " .. Count ..
+            "\nMembers: " ..
+            (#Members > 0 and table.concat(Members, ", ") or "None")
+        )
+
+    end
+
+    if #Output == 0 then
+
+        return "No teams found"
+
+    end
+
+    return table.concat(Output, "\n\n")
+
+end
+
+local function RefreshTeamInformation()
+
+    PMTeamInfoLabel.Text =
+        GetTeamInformation()
+
+end
+
+AddButton(
+    TeamManagerTab,
+    "Refresh Teams",
+    RefreshTeamInformation
+)
+
+AddButton(
+    TeamManagerTab,
+    "Print Team Information",
+    function()
+
+        print(GetTeamInformation())
+
+    end
+)
+
+AddLabel(
+    TeamManagerTab,
+    "Team assignment requires an authorized server system."
+)
+
+--==================================================
+-- CHARACTER RESPAWN SUPPORT
+--==================================================
+
+Player.CharacterAdded:Connect(function(Character)
+
+    task.wait(1)
+
+    if PMOriginalCameraSubject then
+
+        local Camera = workspace.CurrentCamera
+
+        if Camera and PMTarget then
+
+            local TargetCharacter = PMTarget.Character
+
+            local TargetHumanoid = TargetCharacter
+                and TargetCharacter:FindFirstChildOfClass("Humanoid")
+
+            if TargetHumanoid then
+
+                Camera.CameraSubject = TargetHumanoid
+
+            end
+
+        end
+
+    end
+
+end)
+
+--==================================================
+-- INITIAL UPDATE
+--==================================================
+
+RefreshPlayerCount()
+RefreshTeamInformation()
+
+print("ALAWI MEGA HUB PART 8 LOADED")
+
+--==================================================
+-- ALAWI MEGA HUB
+-- PART 10 : SERVER UTILITIES
+--==================================================
+
+local ServerTab = CreateTab("Server Utilities", "🌐")
+local TeleportTab = CreateTab("Teleport", "📍")
+
+local ServerPlayers = game:GetService("Players")
+local ServerWorkspace = game:GetService("Workspace")
+
+local ServerStartTime = os.clock()
+
+local ServerInfoLabel = AddLabel(
+    ServerTab,
+    "Server Information"
+)
+
+local ServerPlayerList = AddLabel(
+    ServerTab,
+    "Players List"
+)
+
+local ServerStatusLabel = AddLabel(
+    ServerTab,
+    "Status: Ready"
+)
+
+--==================================================
+-- SERVER INFORMATION
+--==================================================
+
+local function RefreshServerInformation()
+
+    local CurrentPlayers = #ServerPlayers:GetPlayers()
+
+    local MaximumPlayers = ServerPlayers.MaxPlayers
+
+    local Elapsed = math.floor(
+        os.clock() - ServerStartTime
+    )
+
+    local Minutes = math.floor(Elapsed / 60)
+
+    local Seconds = Elapsed % 60
+
+    ServerInfoLabel.Text = table.concat({
+
+        "Place ID: " .. game.PlaceId,
+
+        "Game ID: " .. game.GameId,
+
+        "Job ID: " .. game.JobId,
+
+        "Players: " ..
+            CurrentPlayers .. "/" .. MaximumPlayers,
+
+        "Server Uptime: " ..
+            Minutes .. "m " .. Seconds .. "s",
+
+        "Creator ID: " .. game.CreatorId
+
+    }, "\n")
+
+end
+
+local function RefreshServerPlayers()
+
+    local Names = {}
+
+    for _, Target in ipairs(ServerPlayers:GetPlayers()) do
+
+        table.insert(
+            Names,
+            Target.Name
+        )
+
+    end
+
+    ServerPlayerList.Text =
+        "Players:\n" ..
+        (#Names > 0 and table.concat(Names, "\n") or "None")
+
+end
+
+AddButton(
+    ServerTab,
+    "Refresh Server Information",
+    function()
+
+        RefreshServerInformation()
+        RefreshServerPlayers()
+
+        ServerStatusLabel.Text = "Information updated"
+
+    end
+)
+
+AddButton(
+    ServerTab,
+    "Print Server Information",
+    function()
+
+        print("Place ID:", game.PlaceId)
+        print("Game ID:", game.GameId)
+        print("Job ID:", game.JobId)
+
+        print("Players:", #ServerPlayers:GetPlayers())
+
+    end
+)
+
+--==================================================
+-- PLAYER LIST UPDATES
+--==================================================
+
+ServerPlayers.PlayerAdded:Connect(function()
+
+    RefreshServerInformation()
+    RefreshServerPlayers()
+
+end)
+
+ServerPlayers.PlayerRemoving:Connect(function()
+
+    task.defer(function()
+
+        RefreshServerInformation()
+        RefreshServerPlayers()
+
+    end)
+
+end)
+
+--==================================================
+-- TELEPORT SYSTEM
+--==================================================
+
+local SavedTeleportPosition = nil
+
+local TeleportStatus = AddLabel(
+    TeleportTab,
+    "Teleport Status: Ready"
+)
+
+local function GetLocalRoot()
+
+    local Character = Player.Character
+
+    return Character and Character:FindFirstChild(
+        "HumanoidRootPart"
+    )
+
+end
+
+local function SaveTeleportPosition()
+
+    local Root = GetLocalRoot()
+
+    if not Root then
+        return false
+    end
+
+    SavedTeleportPosition = Root.CFrame
+
+    return true
+
+end
+
+local function ReturnToSavedPosition()
+
+    local Root = GetLocalRoot()
+
+    if not Root or not SavedTeleportPosition then
+        return false
+    end
+
+    Root.CFrame = SavedTeleportPosition
+
+    return true
+
+end
+
+AddButton(
+    TeleportTab,
+    "Save Current Position",
+    function()
+
+        if SaveTeleportPosition() then
+
+            TeleportStatus.Text = "Position saved"
+
+        else
+
+            TeleportStatus.Text = "Character unavailable"
+
+        end
+
+    end
+)
+
+AddButton(
+    TeleportTab,
+    "Return To Saved Position",
+    function()
+
+        if ReturnToSavedPosition() then
+
+            TeleportStatus.Text = "Returned to saved position"
+
+        else
+
+            TeleportStatus.Text = "No saved position"
+
+        end
+
+    end
+)
+
+AddButton(
+    TeleportTab,
+    "Clear Saved Position",
+    function()
+
+        SavedTeleportPosition = nil
+
+        TeleportStatus.Text = "Saved position cleared"
+
+    end
+)
+
+--==================================================
+-- SPAWN INFORMATION
+--==================================================
+
+local function GetSpawnLocations()
+
+    local Spawns = {}
+
+    for _, Object in ipairs(ServerWorkspace:GetDescendants()) do
+
+        if Object:IsA("SpawnLocation") then
+
+            table.insert(Spawns, Object)
+
+        end
+
+    end
+
+    return Spawns
+
+end
+
+AddButton(
+    TeleportTab,
+    "List Spawn Locations",
+    function()
+
+        local Spawns = GetSpawnLocations()
+
+        print("Spawn Locations:", #Spawns)
+
+        for Index, Spawn in ipairs(Spawns) do
+
+            print(
+                Index,
+                Spawn.Name,
+                Spawn.Position
+            )
+
+        end
+
+        TeleportStatus.Text =
+            "Found " .. #Spawns .. " spawn locations"
+
+    end
+)
+
+--==================================================
+-- CAMERA RESET
+--==================================================
+
+AddButton(
+    TeleportTab,
+    "Reset Camera",
+    function()
+
+        local Camera = ServerWorkspace.CurrentCamera
+
+        local Character = Player.Character
+
+        local Humanoid = Character and
+            Character:FindFirstChildOfClass("Humanoid")
+
+        if Camera and Humanoid then
+
+            Camera.CameraSubject = Humanoid
+
+            Camera.CameraType = Enum.CameraType.Custom
+
+            TeleportStatus.Text = "Camera restored"
+
+        end
+
+    end
+)
+
+--==================================================
+-- PLAYER TELEPORT PREVIEW
+--==================================================
+
+local TeleportTargetName = ""
+
+CreateInput(
+    TeleportTab,
+    "Player Username",
+    "",
+    function(Value)
+
+        TeleportTargetName = tostring(Value)
+
+    end
+)
+
+AddButton(
+    TeleportTab,
+    "Find Player Position",
+    function()
+
+        local Target = FindPlayerByName(
+            TeleportTargetName
+        )
+
+        if not Target then
+
+            TeleportStatus.Text = "Player not found"
+
+            return
+
+        end
+
+        local Root = Target.Character and
+            Target.Character:FindFirstChild("HumanoidRootPart")
+
+        if not Root then
+
+            TeleportStatus.Text = "Target unavailable"
+
+            return
+
+        end
+
+        print(
+            "Target Position:",
+            Root.Position
+        )
+
+        TeleportStatus.Text =
+            "Position found: " .. Target.Name
+
+    end
+)
+
+--==================================================
+-- AUTOMATIC SERVER REFRESH
+--==================================================
+
+task.spawn(function()
+
+    while Screen.Parent do
+
+        task.wait(5)
+
+        RefreshServerInformation()
+        RefreshServerPlayers()
+
+    end
+
+end)
+
+--==================================================
+-- INITIALIZATION
+--==================================================
+
+RefreshServerInformation()
+RefreshServerPlayers()
+
+print("ALAWI MEGA HUB PART 10 LOADED")
+
+--==================================================
+-- ALAWI MEGA HUB
+-- PART 11 : BUILDER SYSTEM
+--==================================================
+
+local BuilderTab = CreateTab("Builder", "🧱")
+local ObjectEditorTab = CreateTab("Object Editor", "🛠️")
+
+local BuilderWorkspace = game:GetService("Workspace")
+
+local BuilderObjects = {}
+
+local BuilderSettings = {
+    Size = 5,
+    Transparency = 0,
+    Color = Color3.fromRGB(255, 60, 60),
+    Material = Enum.Material.SmoothPlastic,
+    Anchored = true,
+    CanCollide = true,
+    Shape = Enum.PartType.Block
+}
+
+local SelectedBuilderObject = nil
+
+--==================================================
+-- BUILDER STATUS
+--==================================================
+
+local BuilderStatus = AddLabel(
+    BuilderTab,
+    "Builder: Ready"
+)
+
+local BuilderCountLabel = AddLabel(
+    BuilderTab,
+    "Created Objects: 0"
+)
+
+local EditorStatus = AddLabel(
+    ObjectEditorTab,
+    "Editor: No object selected"
+)
+
+local function UpdateBuilderCount()
+
+    BuilderCountLabel.Text =
+        "Created Objects: " .. #BuilderObjects
+
+end
+
+--==================================================
+-- CHARACTER POSITION
+--==================================================
+
+local function GetBuilderPosition()
+
+    local Character = Player.Character
+
+    local Root = Character and
+        Character:FindFirstChild("HumanoidRootPart")
+
+    if not Root then
+        return nil
+    end
+
+    return Root.Position + Root.CFrame.LookVector * 10
+
+end
+
+--==================================================
+-- CREATE PART
+--==================================================
+
+local function CreateBuilderPart(Shape)
+
+    local Position = GetBuilderPosition()
+
+    if not Position then
+
+        BuilderStatus.Text = "Character unavailable"
+
+        return nil
+
+    end
+
+    local Part = Instance.new("Part")
+
+    Part.Name = "AlawiBuildPart"
+
+    Part.Shape = Shape or BuilderSettings.Shape
+
+    Part.Size = Vector3.new(
+        BuilderSettings.Size,
+        BuilderSettings.Size,
+        BuilderSettings.Size
+    )
+
+    Part.Position = Position
+
+    Part.Color = BuilderSettings.Color
+
+    Part.Transparency =
+        BuilderSettings.Transparency
+
+    Part.Material =
+        BuilderSettings.Material
+
+    Part.Anchored =
+        BuilderSettings.Anchored
+
+    Part.CanCollide =
+        BuilderSettings.CanCollide
+
+    Part.Parent = BuilderWorkspace
+
+    table.insert(
+        BuilderObjects,
+        Part
+    )
+
+    SelectedBuilderObject = Part
+
+    UpdateBuilderCount()
+
+    BuilderStatus.Text =
+        "Created: " .. Part.Name
+
+    EditorStatus.Text =
+        "Selected: " .. Part.Name
+
+    return Part
+
+end
+
+--==================================================
+-- CREATE BUTTONS
+--==================================================
+
+AddButton(
+    BuilderTab,
+    "Create Block",
+    function()
+
+        CreateBuilderPart(Enum.PartType.Block)
+
+    end
+)
+
+AddButton(
+    BuilderTab,
+    "Create Ball",
+    function()
+
+        CreateBuilderPart(Enum.PartType.Ball)
+
+    end
+)
+
+AddButton(
+    BuilderTab,
+    "Create Cylinder",
+    function()
+
+        CreateBuilderPart(Enum.PartType.Cylinder)
+
+    end
+)
+
+AddButton(
+    BuilderTab,
+    "Create Small Block",
+    function()
+
+        BuilderSettings.Size = 2
+
+        CreateBuilderPart(Enum.PartType.Block)
+
+    end
+)
+
+AddButton(
+    BuilderTab,
+    "Create Large Block",
+    function()
+
+        BuilderSettings.Size = 10
+
+        CreateBuilderPart(Enum.PartType.Block)
+
+    end
+)
+
+--==================================================
+-- SIZE SETTINGS
+--==================================================
+
+CreateInput(
+    BuilderTab,
+    "Part Size",
+    5,
+    function(Value)
+
+        local Size = tonumber(Value)
+
+        if not Size then
+            return
+        end
+
+        BuilderSettings.Size =
+            math.clamp(Size, 1, 100)
+
+        BuilderStatus.Text =
+            "Size: " .. BuilderSettings.Size
+
+    end
+)
+
+--==================================================
+-- COLOR SETTINGS
+--==================================================
+
+local BuilderColors = {
+    {
+        Name = "Red",
+        Color = Color3.fromRGB(255, 0, 0)
+    },
+    {
+        Name = "Blue",
+        Color = Color3.fromRGB(0, 100, 255)
+    },
+    {
+        Name = "Green",
+        Color = Color3.fromRGB(0, 255, 100)
+    },
+    {
+        Name = "Yellow",
+        Color = Color3.fromRGB(255, 255, 0)
+    },
+    {
+        Name = "Purple",
+        Color = Color3.fromRGB(150, 0, 255)
+    },
+    {
+        Name = "White",
+        Color = Color3.fromRGB(255, 255, 255)
+    },
+    {
+        Name = "Black",
+        Color = Color3.fromRGB(20, 20, 20)
+    }
+}
+
+for _, ColorData in ipairs(BuilderColors) do
+
+    AddButton(
+        BuilderTab,
+        "Color: " .. ColorData.Name,
+        function()
+
+            BuilderSettings.Color =
+                ColorData.Color
+
+            BuilderStatus.Text =
+                "Selected Color: " .. ColorData.Name
+
+        end
+    )
+
+end
+
+--==================================================
+-- MATERIAL SETTINGS
+--==================================================
+
+AddButton(
+    BuilderTab,
+    "Material: Neon",
+    function()
+
+        BuilderSettings.Material = Enum.Material.Neon
+
+    end
+)
+
+AddButton(
+    BuilderTab,
+    "Material: Plastic",
+    function()
+
+        BuilderSettings.Material = Enum.Material.Plastic
+
+    end
+)
+
+AddButton(
+    BuilderTab,
+    "Material: Glass",
+    function()
+
+        BuilderSettings.Material = Enum.Material.Glass
+
+    end
+)
+
+AddButton(
+    BuilderTab,
+    "Material: Metal",
+    function()
+
+        BuilderSettings.Material = Enum.Material.Metal
+
+    end
+)
+
+--==================================================
+-- OBJECT SETTINGS
+--==================================================
+
+AddToggle(
+    BuilderTab,
+    "Anchored",
+    true,
+    function(Value)
+
+        BuilderSettings.Anchored = Value
+
+    end
+)
+
+AddToggle(
+    BuilderTab,
+    "Can Collide",
+    true,
+    function(Value)
+
+        BuilderSettings.CanCollide = Value
+
+    end
+)
+
+CreateInput(
+    BuilderTab,
+    "Transparency (0-1)",
+    0,
+    function(Value)
+
+        local Number = tonumber(Value)
+
+        if Number then
+
+            BuilderSettings.Transparency =
+                math.clamp(Number, 0, 1)
+
+        end
+
+    end
+)
+
+--==================================================
+-- SELECT LAST OBJECT
+--==================================================
+
+AddButton(
+    ObjectEditorTab,
+    "Select Last Created Object",
+    function()
+
+        SelectedBuilderObject =
+            BuilderObjects[#BuilderObjects]
+
+        if SelectedBuilderObject then
+
+            EditorStatus.Text =
+                "Selected: " .. SelectedBuilderObject.Name
+
+        else
+
+            EditorStatus.Text = "No objects available"
+
+        end
+
+    end
+)
+
+--==================================================
+-- EDIT SELECTED OBJECT
+--==================================================
+
+AddButton(
+    ObjectEditorTab,
+    "Apply Selected Color",
+    function()
+
+        if SelectedBuilderObject
+            and SelectedBuilderObject.Parent then
+
+            SelectedBuilderObject.Color =
+                BuilderSettings.Color
+
+            EditorStatus.Text = "Color updated"
+
+        end
+
+    end
+)
+
+AddButton(
+    ObjectEditorTab,
+    "Apply Selected Size",
+    function()
+
+        if SelectedBuilderObject
+            and SelectedBuilderObject.Parent then
+
+            local Size = BuilderSettings.Size
+
+            SelectedBuilderObject.Size =
+                Vector3.new(Size, Size, Size)
+
+            EditorStatus.Text = "Size updated"
+
+        end
+
+    end
+)
+
+AddButton(
+    ObjectEditorTab,
+    "Apply Selected Material",
+    function()
+
+        if SelectedBuilderObject
+            and SelectedBuilderObject.Parent then
+
+            SelectedBuilderObject.Material =
+                BuilderSettings.Material
+
+            EditorStatus.Text = "Material updated"
+
+        end
+
+    end
+)
+
+AddButton(
+    ObjectEditorTab,
+    "Apply Selected Transparency",
+    function()
+
+        if SelectedBuilderObject
+            and SelectedBuilderObject.Parent then
+
+            SelectedBuilderObject.Transparency =
+                BuilderSettings.Transparency
+
+            EditorStatus.Text = "Transparency updated"
+
+        end
+
+    end
+)
+
+AddButton(
+    ObjectEditorTab,
+    "Move Selected In Front",
+    function()
+
+        if not SelectedBuilderObject
+            or not SelectedBuilderObject.Parent then
+            return
+        end
+
+        local Position = GetBuilderPosition()
+
+        if Position then
+
+            SelectedBuilderObject.Position = Position
+
+        end
+
+    end
+)
+
+--==================================================
+-- DELETE OBJECTS
+--==================================================
+
+AddButton(
+    ObjectEditorTab,
+    "Delete Selected Object",
+    function()
+
+        if SelectedBuilderObject
+            and SelectedBuilderObject.Parent then
+
+            SelectedBuilderObject:Destroy()
+
+            for Index, Object in ipairs(BuilderObjects) do
+
+                if Object == SelectedBuilderObject then
+
+                    table.remove(BuilderObjects, Index)
+
+                    break
+
+                end
+
+            end
+
+            SelectedBuilderObject = nil
+
+            UpdateBuilderCount()
+
+            EditorStatus.Text = "Object deleted"
+
+        end
+
+    end
+)
+
+AddButton(
+    BuilderTab,
+    "Delete Last Created Object",
+    function()
+
+        local Object = table.remove(BuilderObjects)
+
+        if Object and Object.Parent then
+
+            Object:Destroy()
+
+        end
+
+        SelectedBuilderObject = nil
+
+        UpdateBuilderCount()
+
+        BuilderStatus.Text = "Last object deleted"
+
+    end
+)
+
+AddButton(
+    BuilderTab,
+    "Delete All Created Objects",
+    function()
+
+        for _, Object in ipairs(BuilderObjects) do
+
+            if Object and Object.Parent then
+
+                Object:Destroy()
+
+            end
+
+        end
+
+        table.clear(BuilderObjects)
+
+        SelectedBuilderObject = nil
+
+        UpdateBuilderCount()
+
+        BuilderStatus.Text = "All created objects deleted"
+
+    end
+)
+
+--==================================================
+-- BUILDER INFORMATION
+--==================================================
+
+AddButton(
+    BuilderTab,
+    "Print Builder Objects",
+    function()
+
+        for Index, Object in ipairs(BuilderObjects) do
+
+            if Object and Object.Parent then
+
+                print(
+                    Index,
+                    Object.Name,
+                    Object.Position,
+                    Object.Size
+                )
+
+            end
+
+        end
+
+    end
+)
+
+UpdateBuilderCount()
+
+print("ALAWI MEGA HUB PART 11 LOADED")
+
+--==================================================
+-- ALAWI MEGA HUB
+-- PART 12 : UI SETTINGS
+--==================================================
+
+local UISettingsTab = CreateTab("UI Settings", "🎨")
+
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local UISettings = {
+    RGB = false,
+    Transparency = 0.08,
+    Scale = 1,
+    BorderColor = Color3.fromRGB(255, 60, 60),
+    Theme = "Red"
+}
+
+local DefaultUISettings = {
+    Transparency = 0.08,
+    Scale = 1,
+    BorderColor = Color3.fromRGB(255, 60, 60),
+    Theme = "Red"
+}
+
+local ThemeColors = {
+    Red = Color3.fromRGB(255, 60, 60),
+    Blue = Color3.fromRGB(45, 130, 255),
+    Purple = Color3.fromRGB(160, 80, 255),
+    Green = Color3.fromRGB(40, 220, 120),
+    Orange = Color3.fromRGB(255, 145, 40),
+    Pink = Color3.fromRGB(255, 80, 170),
+    White = Color3.fromRGB(255, 255, 255)
+}
+
+local UIStatus = AddLabel(
+    UISettingsTab,
+    "UI Settings: Ready"
+)
+
+--==================================================
+-- THEME APPLICATION
+--==================================================
+
+local function ApplyTheme(Color)
+
+    UISettings.BorderColor = Color
+
+    -- تحديث لون العناصر الأساسية
+    pcall(function()
+
+        Header.BackgroundColor3 = Color
+
+        Close.BackgroundColor3 = Color
+
+        OpenButton.BackgroundColor3 = Color
+
+        for _, Tab in ipairs(Tabs) do
+
+            if Tab.Button then
+                Tab.Button.BackgroundColor3 = Color
+            end
+
+        end
+
+    end)
+
+    -- تحديث العناصر المسجلة
+    for _, Object in ipairs(Screen:GetDescendants()) do
+
+        if Object:IsA("UIStroke") then
+
+            Object.Color = Color
+
+        end
+
+    end
+
+end
+
+local function SetTheme(ThemeName)
+
+    local Color = ThemeColors[ThemeName]
+
+    if not Color then
+        return
+    end
+
+    UISettings.Theme = ThemeName
+
+    ApplyTheme(Color)
+
+    UIStatus.Text =
+        "Theme changed: " .. ThemeName
+
+end
+
+--==================================================
+-- THEME BUTTONS
+--==================================================
+
+AddLabel(
+    UISettingsTab,
+    "COLOR THEMES"
+)
+
+for Name, Color in pairs(ThemeColors) do
+
+    AddButton(
+        UISettingsTab,
+        "Theme: " .. Name,
+        function()
+
+            SetTheme(Name)
+
+        end
+    )
+
+end
+
+--==================================================
+-- TRANSPARENCY
+--==================================================
+
+local function ApplyTransparency(Value)
+
+    UISettings.Transparency =
+        math.clamp(Value, 0, 0.8)
+
+    Main.BackgroundTransparency =
+        UISettings.Transparency
+
+    UIStatus.Text =
+        "Transparency: " ..
+        tostring(UISettings.Transparency)
+
+end
+
+CreateInput(
+    UISettingsTab,
+    "Transparency (0-0.8)",
+    0.08,
+    function(Value)
+
+        local Number = tonumber(Value)
+
+        if Number then
+
+            ApplyTransparency(Number)
+
+        end
+
+    end
+)
+
+--==================================================
+-- UI SCALE
+--==================================================
+
+local UIScaleObject = Main:FindFirstChildOfClass(
+    "UIScale"
+)
+
+if not UIScaleObject then
+
+    UIScaleObject = Instance.new("UIScale")
+
+    UIScaleObject.Scale = 1
+
+    UIScaleObject.Parent = Main
+
+end
+
+local function SetUIScale(Value)
+
+    Value = math.clamp(Value, 0.65, 1.3)
+
+    UISettings.Scale = Value
+
+    UIScaleObject.Scale = Value
+
+    UIStatus.Text =
+        "UI Scale: " .. tostring(Value)
+
+end
+
+CreateInput(
+    UISettingsTab,
+    "UI Scale (0.65-1.3)",
+    1,
+    function(Value)
+
+        local Number = tonumber(Value)
+
+        if Number then
+
+            SetUIScale(Number)
+
+        end
+
+    end
+)
+
+AddButton(
+    UISettingsTab,
+    "Small UI",
+    function()
+
+        SetUIScale(0.8)
+
+    end
+)
+
+AddButton(
+    UISettingsTab,
+    "Normal UI",
+    function()
+
+        SetUIScale(1)
+
+    end
+)
+
+AddButton(
+    UISettingsTab,
+    "Large UI",
+    function()
+
+        SetUIScale(1.2)
+
+    end
+)
+
+--==================================================
+-- RGB EFFECT
+--==================================================
+
+local RGBConnection = nil
+
+local function StartRGB()
+
+    if RGBConnection then
+        return
+    end
+
+    UISettings.RGB = true
+
+    local Hue = 0
+
+    RGBConnection = RunService.RenderStepped:Connect(
+        function(DeltaTime)
+
+            Hue = (Hue + DeltaTime * 0.25) % 1
+
+            local Color = Color3.fromHSV(
+                Hue,
+                0.9,
+                1
+            )
+
+            ApplyTheme(Color)
+
+        end
+    )
+
+    UIStatus.Text = "RGB Effect: ON"
+
+end
+
+local function StopRGB()
+
+    UISettings.RGB = false
+
+    if RGBConnection then
+
+        RGBConnection:Disconnect()
+
+        RGBConnection = nil
+
+    end
+
+    SetTheme(UISettings.Theme)
+
+    UIStatus.Text = "RGB Effect: OFF"
+
+end
+
+AddToggle(
+    UISettingsTab,
+    "RGB Theme",
+    false,
+    function(Value)
+
+        if Value then
+
+            StartRGB()
+
+        else
+
+            StopRGB()
+
+        end
+
+    end
+)
+
+--==================================================
+-- MENU VISIBILITY
+--==================================================
+
+AddButton(
+    UISettingsTab,
+    "Hide Menu",
+    function()
+
+        Main.Visible = false
+
+    end
+)
+
+AddButton(
+    UISettingsTab,
+    "Show Menu",
+    function()
+
+        Main.Visible = true
+
+    end
+)
+
+AddButton(
+    UISettingsTab,
+    "Toggle Open Button",
+    function()
+
+        OpenButton.Visible =
+            not OpenButton.Visible
+
+    end
+)
+
+--==================================================
+-- HEADER CUSTOMIZATION
+--==================================================
+
+AddButton(
+    UISettingsTab,
+    "Red Header",
+    function()
+
+        SetTheme("Red")
+
+    end
+)
+
+AddButton(
+    UISettingsTab,
+    "Blue Header",
+    function()
+
+        SetTheme("Blue")
+
+    end
+)
+
+AddButton(
+    UISettingsTab,
+    "Purple Header",
+    function()
+
+        SetTheme("Purple")
+
+    end
+)
+
+--==================================================
+-- RESET SETTINGS
+--==================================================
+
+AddButton(
+    UISettingsTab,
+    "Reset UI Settings",
+    function()
+
+        StopRGB()
+
+        SetUIScale(DefaultUISettings.Scale)
+
+        ApplyTransparency(
+            DefaultUISettings.Transparency
+        )
+
+        SetTheme("Red")
+
+        Main.Visible = true
+
+        OpenButton.Visible = true
+
+        UIStatus.Text =
+            "UI settings restored"
+
+    end
+)
+
+--==================================================
+-- INITIALIZATION
+--==================================================
+
+SetTheme("Red")
+
+ApplyTransparency(0.08)
+
+SetUIScale(1)
+
+print("ALAWI MEGA HUB PART 12 LOADED")
+
+--==================================================
+-- ALAWI MEGA HUB
+-- PART 13 : EXTRA SYSTEMS
+--==================================================
+
+local ExtraTab = CreateTab("Extra Systems", "⚡")
+
+local StatsService = game:GetService("Stats")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+
+local ExtraSettings = {
+    FPS = true,
+    Ping = true,
+    Clock = true,
+    Health = true,
+    Position = true,
+    WorldCount = true
+}
+
+local ExtraStatus = AddLabel(
+    ExtraTab,
+    "Extra Systems: Ready"
+)
+
+--==================================================
+-- FPS COUNTER
+--==================================================
+
+local FPSLabel = AddLabel(
+    ExtraTab,
+    "FPS: Calculating..."
+)
+
+local CurrentFPS = 0
+local FrameCounter = 0
+local FPSTimer = 0
+
+local FPSConnection
+
+FPSConnection = RunService.RenderStepped:Connect(
+    function(DeltaTime)
+
+        if not ExtraSettings.FPS then
+            return
+        end
+
+        FrameCounter += 1
+        FPSTimer += DeltaTime
+
+        if FPSTimer >= 1 then
+
+            CurrentFPS = FrameCounter
+
+            FPSLabel.Text =
+                "FPS: " .. CurrentFPS
+
+            FrameCounter = 0
+            FPSTimer = 0
+
+        end
+
+    end
+)
+
+AddToggle(
+    ExtraTab,
+    "FPS Counter",
+    true,
+    function(Value)
+
+        ExtraSettings.FPS = Value
+
+        FPSLabel.Visible = Value
+
+    end
+)
+
+--==================================================
+-- PING COUNTER
+--==================================================
+
+local PingLabel = AddLabel(
+    ExtraTab,
+    "Ping: Calculating..."
+)
+
+local function GetPing()
+
+    local Success, Result = pcall(function()
+
+        return StatsService.Network.ServerStatsItem[
+            "Data Ping"
+        ]:GetValue()
+
+    end)
+
+    if Success then
+        return math.floor(Result)
+    end
+
+    return nil
+
+end
+
+local function UpdatePing()
+
+    local Ping = GetPing()
+
+    if Ping then
+
+        PingLabel.Text =
+            "Ping: " .. Ping .. " ms"
+
+    else
+
+        PingLabel.Text = "Ping: Unavailable"
+
+    end
+
+end
+
+AddToggle(
+    ExtraTab,
+    "Ping Counter",
+    true,
+    function(Value)
+
+        ExtraSettings.Ping = Value
+
+        PingLabel.Visible = Value
+
+    end
+)
+
+--==================================================
+-- CLOCK
+--==================================================
+
+local ClockLabel = AddLabel(
+    ExtraTab,
+    "Time: --:--:--"
+)
+
+local function UpdateClock()
+
+    ClockLabel.Text =
+        "Time: " .. os.date("%H:%M:%S")
+
+end
+
+AddToggle(
+    ExtraTab,
+    "Clock",
+    true,
+    function(Value)
+
+        ExtraSettings.Clock = Value
+
+        ClockLabel.Visible = Value
+
+    end
+)
+
+--==================================================
+-- HEALTH MONITOR
+--==================================================
+
+local HealthLabel = AddLabel(
+    ExtraTab,
+    "Health: Unknown"
+)
+
+local function UpdateHealth()
+
+    local Humanoid = GetHumanoid()
+
+    if not Humanoid then
+
+        HealthLabel.Text = "Health: Unavailable"
+
+        return
+
+    end
+
+    HealthLabel.Text =
+        "Health: " ..
+        math.floor(Humanoid.Health) ..
+        "/" ..
+        math.floor(Humanoid.MaxHealth)
+
+end
+
+AddToggle(
+    ExtraTab,
+    "Health Monitor",
+    true,
+    function(Value)
+
+        ExtraSettings.Health = Value
+
+        HealthLabel.Visible = Value
+
+    end
+)
+
+--==================================================
+-- POSITION MONITOR
+--==================================================
+
+local PositionLabel = AddLabel(
+    ExtraTab,
+    "Position: Unknown"
+)
+
+local CurrentPosition = nil
+
+local function UpdatePosition()
+
+    local Root = GetLocalRoot()
+
+    if not Root then
+
+        PositionLabel.Text = "Position: Unknown"
+
+        return
+
+    end
+
+    CurrentPosition = Root.Position
+
+    PositionLabel.Text = string.format(
+        "Position: %.1f, %.1f, %.1f",
+        CurrentPosition.X,
+        CurrentPosition.Y,
+        CurrentPosition.Z
+    )
+
+end
+
+AddToggle(
+    ExtraTab,
+    "Position Monitor",
+    true,
+    function(Value)
+
+        ExtraSettings.Position = Value
+
+        PositionLabel.Visible = Value
+
+    end
+)
+
+AddButton(
+    ExtraTab,
+    "Print Coordinates",
+    function()
+
+        UpdatePosition()
+
+        if CurrentPosition then
+
+            print(
+                "Coordinates:",
+                CurrentPosition
+            )
+
+        end
+
+    end
+)
+
+AddButton(
+    ExtraTab,
+    "Copy Coordinates",
+    function()
+
+        UpdatePosition()
+
+        if CurrentPosition then
+
+            local Text = string.format(
+                "%.2f, %.2f, %.2f",
+                CurrentPosition.X,
+                CurrentPosition.Y,
+                CurrentPosition.Z
+            )
+
+            -- Clipboard APIs are not available
+            -- in a normal Roblox LocalScript.
+
+            ExtraStatus.Text =
+                "Coordinates printed to Output"
+
+            print(Text)
+
+        end
+
+    end
+)
+
+--==================================================
+-- WALK SPEED MONITOR
+--==================================================
+
+local SpeedLabel = AddLabel(
+    ExtraTab,
+    "WalkSpeed: Unknown"
+)
+
+local function UpdateWalkSpeed()
+
+    local Humanoid = GetHumanoid()
+
+    if Humanoid then
+
+        SpeedLabel.Text =
+            "WalkSpeed: " .. Humanoid.WalkSpeed
+
+    else
+
+        SpeedLabel.Text = "WalkSpeed: Unknown"
+
+    end
+
+end
+
+--==================================================
+-- WORLD COUNTER
+--==================================================
+
+local WorldCountLabel = AddLabel(
+    ExtraTab,
+    "Workspace Objects: Calculating..."
+)
+
+local function UpdateWorldCount()
+
+    local Objects = workspace:GetDescendants()
+
+    local Parts = 0
+    local Models = 0
+    local Tools = 0
+
+    for _, Object in ipairs(Objects) do
+
+        if Object:IsA("BasePart") then
+
+            Parts += 1
+
+        elseif Object:IsA("Model") then
+
+            Models += 1
+
+        elseif Object:IsA("Tool") then
+
+            Tools += 1
+
+        end
+
+    end
+
+    WorldCountLabel.Text = table.concat({
+
+        "Workspace Objects: " .. #Objects,
+        "Parts: " .. Parts,
+        "Models: " .. Models,
+        "Tools: " .. Tools
+
+    }, "\n")
+
+end
+
+AddToggle(
+    ExtraTab,
+    "World Counter",
+    true,
+    function(Value)
+
+        ExtraSettings.WorldCount = Value
+
+        WorldCountLabel.Visible = Value
+
+    end
+)
+
+--==================================================
+-- CAMERA INFORMATION
+--==================================================
+
+local CameraInfoLabel = AddLabel(
+    ExtraTab,
+    "Camera Information"
+)
+
+local function UpdateCameraInformation()
+
+    local Camera = workspace.CurrentCamera
+
+    if not Camera then
+        return
+    end
+
+    CameraInfoLabel.Text = table.concat({
+
+        "Camera FOV: " .. math.floor(Camera.FieldOfView),
+
+        "Camera Type: " .. tostring(Camera.CameraType),
+
+        "Viewport: " ..
+            tostring(Camera.ViewportSize)
+
+    }, "\n")
+
+end
+
+--==================================================
+-- REFRESH BUTTON
+--==================================================
+
+AddButton(
+    ExtraTab,
+    "Refresh All Information",
+    function()
+
+        UpdatePing()
+        UpdateClock()
+        UpdateHealth()
+        UpdatePosition()
+        UpdateWalkSpeed()
+        UpdateWorldCount()
+        UpdateCameraInformation()
+
+        ExtraStatus.Text = "Information refreshed"
+
+    end
+)
+
+--==================================================
+-- UPDATE LOOP
+--==================================================
+
+task.spawn(function()
+
+    while Screen.Parent do
+
         task.wait(1)
-        print("Scan Complete")
-    end
-})
 
-TerminalTab:AddButton({
-    Name = "Show Console Info",
-    Callback = function()
-        print("ALAWI HUB V2")
-        print("System Ready")
+        if ExtraSettings.Ping then
+            UpdatePing()
+        end
+
+        if ExtraSettings.Clock then
+            UpdateClock()
+        end
+
+        if ExtraSettings.Health then
+            UpdateHealth()
+        end
+
+        if ExtraSettings.Position then
+            UpdatePosition()
+        end
+
+        UpdateWalkSpeed()
+
+        if ExtraSettings.WorldCount then
+            UpdateWorldCount()
+        end
+
+        UpdateCameraInformation()
+
     end
-})
+
+end)
 
 --==================================================
--- 10 SETTINGS
+-- INITIAL UPDATE
 --==================================================
 
-local SettingsTab = Window:MakeTab({"الإعدادات", "settings"})
+UpdatePing()
+UpdateClock()
+UpdateHealth()
+UpdatePosition()
+UpdateWalkSpeed()
+UpdateWorldCount()
+UpdateCameraInformation()
 
-SettingsTab:AddSection({"Hub Settings"})
+print("ALAWI MEGA HUB PART 13 LOADED")
 
-SettingsTab:AddButton({
-    Name = "Reset Character",
-    Callback = function()
-        UpdateCharacter()
+--==================================================
+-- ALAWI MEGA HUB
+-- PART 15 : FINAL INTEGRATION
+--==================================================
+
+local FinalTab = CreateTab(
+    "System Check",
+    "🔧"
+)
+
+local FinalStatus = AddLabel(
+    FinalTab,
+    "ALAWI MEGA HUB: Initializing..."
+)
+
+local FinalResults = AddLabel(
+    FinalTab,
+    "System Check: Waiting"
+)
+
+local FinalSettings = {
+    Version = "1.0",
+    Build = "FINAL",
+    Debug = true
+}
+
+--==================================================
+-- SYSTEM CHECK
+--==================================================
+
+local function CheckSystem(Name, Condition)
+
+    local Status = Condition and "READY" or "MISSING"
+
+    print(
+        "[ALAWI CHECK]",
+        Name,
+        Status
+    )
+
+    return Name .. ": " .. Status
+
+end
+
+local function RunSystemCheck()
+
+    local Results = {}
+
+    table.insert(
+        Results,
+        CheckSystem(
+            "Main GUI",
+            Screen ~= nil and Screen.Parent ~= nil
+        )
+    )
+
+    table.insert(
+        Results,
+        CheckSystem(
+            "Player",
+            Player ~= nil and Player.Parent ~= nil
+        )
+    )
+
+    table.insert(
+        Results,
+        CheckSystem(
+            "Character",
+            GetCharacter() ~= nil
+        )
+    )
+
+    table.insert(
+        Results,
+        CheckSystem(
+            "Movement System",
+            MovementSettings ~= nil
+        )
+    )
+
+    table.insert(
+        Results,
+        CheckSystem(
+            "ESP System",
+            ESPSettings ~= nil
+        )
+    )
+
+    table.insert(
+        Results,
+        CheckSystem(
+            "Builder System",
+            BuilderObjects ~= nil
+        )
+    )
+
+    table.insert(
+        Results,
+        CheckSystem(
+            "Automation System",
+            AutomationSettings ~= nil
+        )
+    )
+
+    table.insert(
+        Results,
+        CheckSystem(
+            "Configuration System",
+            ConfigRemote ~= nil
+        )
+    )
+
+    local Camera = workspace.CurrentCamera
+
+    table.insert(
+        Results,
+        CheckSystem(
+            "Camera",
+            Camera ~= nil
+        )
+    )
+
+    FinalResults.Text =
+        table.concat(Results, "\n")
+
+    FinalStatus.Text =
+        "System Check Completed"
+
+end
+
+AddButton(
+    FinalTab,
+    "Run Full System Check",
+    function()
+
+        local Success, Error = pcall(
+            RunSystemCheck
+        )
+
+        if not Success then
+
+            FinalStatus.Text =
+                "Check Error: " .. tostring(Error)
+
+        end
+
+    end
+)
+
+--==================================================
+-- SERVER CONNECTION CHECK
+--==================================================
+
+AddButton(
+    FinalTab,
+    "Check Admin Server",
+    function()
+
+        local Remote =
+            game:GetService("ReplicatedStorage")
+            :FindFirstChild("AlawiAdminRemote")
+
+        if Remote and Remote:IsA("RemoteEvent") then
+
+            FinalStatus.Text =
+                "Admin Server: Connected"
+
+        else
+
+            FinalStatus.Text =
+                "Admin Server: Not Found"
+
+        end
+
+    end
+)
+
+AddButton(
+    FinalTab,
+    "Check Config Server",
+    function()
+
+        local Remote =
+            game:GetService("ReplicatedStorage")
+            :FindFirstChild("AlawiConfigRemote")
+
+        if Remote and Remote:IsA("RemoteFunction") then
+
+            FinalStatus.Text =
+                "Config Server: Connected"
+
+        else
+
+            FinalStatus.Text =
+                "Config Server: Not Found"
+
+        end
+
+    end
+)
+
+--==================================================
+-- SYSTEM INFORMATION
+--==================================================
+
+AddButton(
+    FinalTab,
+    "Show Hub Information",
+    function()
+
+        print("==============================")
+        print("ALAWI MEGA HUB")
+        print("Version:", FinalSettings.Version)
+        print("Build:", FinalSettings.Build)
+        print("Place ID:", game.PlaceId)
+        print("Player:", Player.Name)
+        print("User ID:", Player.UserId)
+        print("==============================")
+
+        FinalStatus.Text =
+            "Hub information printed"
+
+    end
+)
+
+--==================================================
+-- CLEANUP
+--==================================================
+
+local function CleanupExtraSystems()
+
+    -- Stop RGB
+    if RGBConnection then
+
+        RGBConnection:Disconnect()
+
+        RGBConnection = nil
+
+    end
+
+    -- Stop FPS counter
+    if FPSConnection then
+
+        FPSConnection:Disconnect()
+
+        FPSConnection = nil
+
+    end
+
+    -- Stop automation loop
+    if AutomationSettings then
+
+        AutomationRunning = false
+
+    end
+
+    -- Restore camera
+    if workspace.CurrentCamera then
+
+        local Humanoid = GetHumanoid()
+
         if Humanoid then
-            Humanoid.Health = 0
+
+            workspace.CurrentCamera.CameraSubject =
+                Humanoid
+
+            workspace.CurrentCamera.CameraType =
+                Enum.CameraType.Custom
+
         end
+
     end
-})
 
-SettingsTab:AddButton({
-    Name = "Reset All Movement",
-    Callback = function()
-        UpdateCharacter()
+    print("ALAWI MEGA HUB CLEANUP COMPLETE")
 
-        if Humanoid then
-            Humanoid.WalkSpeed = 16
-            Humanoid.JumpPower = 50
-        end
+end
 
-        Camera.FieldOfView = 70
+AddButton(
+    FinalTab,
+    "Stop Extra Systems",
+    function()
+
+        CleanupExtraSystems()
+
+        FinalStatus.Text =
+            "Extra systems stopped"
+
     end
-})
-
-SettingsTab:AddButton({
-    Name = "Clear ESP",
-    Callback = function()
-        ESPEnabled = false
-        ClearESP()
-    end
-})
-
-SettingsTab:AddButton({
-    Name = "إغلاق",
-    Callback = function()
-        ClearESP()
-
-        if NoclipConnection then
-            NoclipConnection:Disconnect()
-        end
-
-        if JumpConnection then
-            JumpConnection:Disconnect()
-        end
-
-        if FlyConnection then
-            FlyConnection:Disconnect()
-        end
-
-        print("Alawi Hub Closed")
-    end
-})
-
-SettingsTab:AddParagraph({
-    "Developer",
-    "by .مطور علاوي | hdhjjlawe"
-})
+)
 
 --==================================================
--- FINISH
+-- RESET HUB UI
 --==================================================
 
-Window:SelectTab(MainTab)
+AddButton(
+    FinalTab,
+    "Restore Main Menu",
+    function()
+
+        if Main then
+
+            Main.Visible = true
+
+        end
+
+        if OpenButton then
+
+            OpenButton.Visible = true
+
+        end
+
+        FinalStatus.Text =
+            "Main menu restored"
+
+    end
+)
+
+--==================================================
+-- FINAL STARTUP
+--==================================================
+
+RunSystemCheck()
+
+FinalStatus.Text =
+    "ALAWI MEGA HUB FINAL BUILD READY"
 
 print("================================")
-print("ALAWI HACKER HUB V2 LOADED")
+print("ALAWI MEGA HUB FINAL BUILD")
+print("Version:", FinalSettings.Version)
+print("All 15 parts loaded")
 print("================================")
+
+--==================================================
+-- CLEANUP WHEN GUI IS DESTROYED
+--==================================================
+
+Screen.Destroying:Connect(function()
+
+    CleanupExtraSystems()
+
+end)
