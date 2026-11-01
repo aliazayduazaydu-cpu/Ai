@@ -45,7 +45,7 @@ end})
 
 --_________________________________
 
-local Tab1 = Window:MakeTab({"قائمة رئيسيه", ""})
+local Tab1 = Window:MakeTab({"قائمة ادوات", ""})
 
 Tab1:AddButton({"اخذ تفاحه", function(Value)
 print("Hello World!")
@@ -73,3 +73,88 @@ Toggle1:Callback(function(Value)
             end)
         end
 end)
+
+Tab1:AddButton({"اخذ بيزا", function(Value)
+print("Hello World!")
+local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+Event:FireServer(
+    "Pizza3"
+)
+end})
+
+
+Tab1:AddButton({"اخذ ببسي", function(Value)
+print("Hello World!")
+local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+Event:FireServer(
+    "BloxyCola"
+)
+end})
+
+local Toggle1 = Tab1:AddToggle({
+  Name = "اوتو اخذ ببسي",
+  Description = "",
+  Default = false 
+})
+Toggle1:Callback(function(Value)
+         Running = Value
+
+        if Value then
+            task.spawn(function()
+                while Running do
+                    local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+                    Event:FireServer("BloxyCola")
+                    task.wait()
+                end
+            end)
+        end
+end)
+
+Tab1:AddButton({"اخذ كوكيز", function(Value)
+print("Hello World!")
+local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+Event:FireServer(
+    "Cookie"
+)
+end})
+
+local Toggle1 = Tab1:AddToggle({
+  Name = "اوتو اخذ كوكيز",
+  Description = "",
+  Default = false 
+})
+Toggle1:Callback(function(Value)
+         Running = Value
+
+        if Value then
+            task.spawn(function()
+                while Running do
+                    local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+                    Event:FireServer("Cookie")
+                    task.wait()
+                end
+            end)
+        end
+end)
+
+
+Tab1:AddButton({"اخذ جبس", function(Value)
+print("Hello World!")
+local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+Event:FireServer(
+    "Chips"
+)
+end})
+
+Tab1:AddButton({"اخذ سلاح", function(Value)
+print("Hello World!")
+local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+Event:FireServer(
+    "Bat"
+)
+end})
+--____________________________________________________
+--____________________________________________________
+--____________________________________________________
+
+local Tab1 = Window:MakeTab({"قائمة esp", ""})
