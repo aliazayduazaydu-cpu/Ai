@@ -24,57 +24,21 @@ Window:SelectTab(Tab1)
 
 local Section = Tab1:AddSection({"قائمة رئيسيه"})
 
-local Paragraph = Tab1:AddParagraph({"Paragraph", "This is a Paragraph\nSecond Line"})
-
-  
+local Paragraph = Tab1:AddParagraph({"حسابي : hdjjlawe", "اذا كنت تبي ضيفني"})
   Tab1:AddButton({"Print", function(Value)
 print("Hello World!")
 end})
 
-local Toggle1 = Tab1:AddToggle({
-  Name = "Toggle",
-  Description = "This is a <font color='rgb(88, 101, 242)'>Toggle</font> Example",
-  Default = false 
-})
-Toggle1:Callback(function(Value)
- 
-end)
+local Section = Tab1:AddSection({"قائمة رئيسيه"})
 
-Tab1:AddToggle({
-    Name = "Toggle",
-    Default = false,
-    Callback = function(v)
+local Paragraph = Tab1:AddParagraph({"حسابي في يوتيوب : مطور علاوي", "اشترك"})
+  Tab1:AddButton({"Print", function(Value)
+print("Hello World!")
+end})
 
-    end
-})
+local Section = Tab1:AddSection({"قائمة رئيسيه"})
 
-Tab1:AddSlider({
-  Name = "Speed",
-  Min = 1,
-  Max = 100,
-  Increase = 1,
-  Default = 16,
-  Callback = function(Value)
-  
-  end
-})
-
-local Dropdown = Tab1:AddDropdown({
-  Name = "Players List",
-  Description = "Select the <font color='rgb(88, 101, 242)'>Number</font>",
-  Options = {"one", "two", "three"},
-  Default = "two",
-  Flag = "dropdown teste",
-  Callback = function(Value)
-    
-  end
-})
-
-Tab1:AddTextBox({
-  Name = "Name item",
-  Description = "1 Item on 1 Server", 
-  PlaceholderText = "item only",
-  Callback = function(Value)
-    
-  end
-})
+local Paragraph = Tab1:AddParagraph({"سكربت لماب story 1", "يشتغل فقط في ذا ماب"})
+  Tab1:AddButton({"Print", function(Value)
+print("Hello World!")
+end})
