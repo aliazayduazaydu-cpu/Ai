@@ -1,0 +1,825 @@
+--==================================================
+-- ALAWI HACKER HUB V2
+-- REDZ LIBRARY
+-- BY .مطور علاوي
+--==================================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local UIS = game:GetService("UserInputService")
+local Stats = game:GetService("Stats")
+
+local Player = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local redzlib = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"
+))()
+
+local Window = redzlib:MakeWindow({
+    Title = "Alawi Hacker Hub V2",
+    SubTitle = "by .مطور علاوي",
+    SaveFolder = "AlawiHubV2"
+})
+
+Window:AddMinimizeButton({
+    Button = {
+        Image = "rbxassetid://11028318025",
+        BackgroundTransparency = 0
+    },
+    Corner = {
+        CornerRadius = UDim.new(35, 1)
+    }
+})
+
+--==================================================
+-- VARIABLES
+--==================================================
+
+local Character
+local Humanoid
+local Root
+
+local ESPEnabled = false
+local ESPObjects = {}
+local NoclipEnabled = false
+local InfiniteJump = false
+local FullBright = false
+local NightMode = false
+local FlyEnabled = false
+local FlySpeed = 50
+local FlyConnection
+local NoclipConnection
+local JumpConnection
+local SelectedPlayer
+local OriginalLighting = {
+    Brightness = Lighting.Brightness,
+    ClockTime = Lighting.ClockTime,
+    FogEnd = Lighting.FogEnd
+}
+
+local function UpdateCharacter()
+    Character = Player.Character
+    if Character then
+        Humanoid = Character:FindFirstChildOfClass("Humanoid")
+        Root = Character:FindFirstChild("HumanoidRootPart")
+    end
+end
+
+UpdateCharacter()
+
+Player.CharacterAdded:Connect(function()
+    task.wait(1)
+    UpdateCharacter()
+end)
+
+local function GetPlayers()
+    local list = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= Player then
+            table.insert(list, p.Name)
+        end
+    end
+    return list
+end
+
+local function GetPlayer(name)
+    return Players:FindFirstChild(name)
+end
+
+local function Notify(title, message)
+    print("[ALAWI] " .. title .. ": " .. message)
+end
+
+--==================================================
+-- 1 MAIN
+--==================================================
+
+local MainTab = Window:MakeTab({"الرئيسية", "home"})
+
+MainTab:AddSection({"ALAWI SYSTEM"})
+
+MainTab:AddParagraph({
+    "ALAWI HACKER HUB",
+    "Version 2.0 | Expanded Edition"
+})
+
+MainTab:AddParagraph({
+    "Player",
+    Player.Name
+})
+
+MainTab:AddParagraph({
+    "User ID",
+    tostring(Player.UserId)
+})
+
+MainTab:AddParagraph({
+    "Game",
+    game.Name
+})
+
+MainTab:AddParagraph({
+    "Place ID",
+    tostring(game.PlaceId)
+})
+
+MainTab:AddButton({
+    Name = "تحديث الشخصية",
+    Callback = function()
+        UpdateCharacter()
+        Notify("Character", "Updated")
+    end
+})
+
+MainTab:AddButton({
+    Name = "تحديث قائمة اللاعبين",
+    Callback = function()
+        Notify("Players", tostring(#Players:GetPlayers()))
+    end
+})
+
+MainTab:AddButton({
+    Name = "معلومات النظام",
+    Callback = function()
+        print("ALAWI HUB V2")
+        print("Players: " .. #Players:GetPlayers())
+        print("Place: " .. game.PlaceId)
+        print("Job: " .. game.JobId)
+    end
+})
+
+--==================================================
+-- 2 PLAYER
+--==================================================
+
+local PlayerTab = Window:MakeTab({"اللاعب", "user"})
+
+PlayerTab:AddSection({"Movement"})
+
+PlayerTab:AddSlider({
+    Name = "WalkSpeed",
+    Min = 16,
+    Max = 250,
+    Increase = 1,
+    Default = 16,
+    Callback = function(v)
+        UpdateCharacter()
+        if Humanoid then
+            Humanoid.WalkSpeed = v
+        end
+    end
+})
+
+PlayerTab:AddTextBox({
+    Name = "كتابة السرعة",
+    PlaceholderText = "16",
+    Callback = function(v)
+        local n = tonumber(v)
+        if n and Humanoid then
+            Humanoid.WalkSpeed = math.clamp(n, 0, 250)
+        end
+    end
+})
+
+PlayerTab:AddSlider({
+    Name = "Jump Power",
+    Min = 50,
+    Max = 300,
+    Increase = 5,
+    Default = 50,
+    Callback = function(v)
+        UpdateCharacter()
+        if Humanoid then
+            Humanoid.UseJumpPower = true
+            Humanoid.JumpPower = v
+        end
+    end
+})
+
+PlayerTab:AddTextBox({
+    Name = "كتابة قوة القفز",
+    PlaceholderText = "50",
+    Callback = function(v)
+        local n = tonumber(v)
+        if n and Humanoid then
+            Humanoid.UseJumpPower = true
+            Humanoid.JumpPower = math.clamp(n, 0, 300)
+        end
+    end
+})
+
+PlayerTab:AddSlider({
+    Name = "Field Of View",
+    Min = 40,
+    Max = 120,
+    Increase = 1,
+    Default = 70,
+    Callback = function(v)
+        Camera.FieldOfView = v
+    end
+})
+
+PlayerTab:AddToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    Callback = function(v)
+        InfiniteJump = v
+        if JumpConnection then
+            JumpConnection:Disconnect()
+            JumpConnection = nil
+        end
+
+        if v then
+            JumpConnection = UIS.JumpRequest:Connect(function()
+                if Humanoid then
+                    Humanoid:ChangeState(
+                        Enum.HumanoidStateType.Jumping
+                    )
+                end
+            end)
+        end
+    end
+})
+
+PlayerTab:AddToggle({
+    Name = "Noclip",
+    Default = false,
+    Callback = function(v)
+        NoclipEnabled = v
+
+        if NoclipConnection then
+            NoclipConnection:Disconnect()
+            NoclipConnection = nil
+        end
+
+        if v then
+            NoclipConnection = RunService.Stepped:Connect(function()
+                UpdateCharacter()
+                if Character then
+                    for _, part in ipairs(Character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        else
+            UpdateCharacter()
+            if Character then
+                for _, part in ipairs(Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = true
+                    end
+                end
+            end
+        end
+    end
+})
+
+PlayerTab:AddButton({
+    Name = "Reset Movement",
+    Callback = function()
+        UpdateCharacter()
+        if Humanoid then
+            Humanoid.WalkSpeed = 16
+            Humanoid.JumpPower = 50
+            Humanoid.UseJumpPower = true
+        end
+    end
+})
+
+PlayerTab:AddButton({
+    Name = "Reset FOV",
+    Callback = function()
+        Camera.FieldOfView = 70
+    end
+})
+
+--==================================================
+-- 3 ESP
+--==================================================
+
+local ESPTab = Window:MakeTab({"ESP", "eye"})
+
+ESPTab:AddSection({"Player ESP"})
+
+local function ClearESP()
+    for _, obj in pairs(ESPObjects) do
+        if obj then
+            obj:Destroy()
+        end
+    end
+    table.clear(ESPObjects)
+end
+
+local function RefreshESP()
+    ClearESP()
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= Player and p.Character then
+            local highlight = Instance.new("Highlight")
+            highlight.Name = "AlawiESP"
+            highlight.FillColor = Color3.fromRGB(255, 0, 0)
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+            highlight.FillTransparency = 0.65
+            highlight.Parent = p.Character
+
+            ESPObjects[p] = highlight
+        end
+    end
+end
+
+ESPTab:AddToggle({
+    Name = "Player Highlight ESP",
+    Default = false,
+    Callback = function(v)
+        ESPEnabled = v
+        if v then
+            RefreshESP()
+        else
+            ClearESP()
+        end
+    end
+})
+
+ESPTab:AddButton({
+    Name = "Refresh ESP",
+    Callback = function()
+        if ESPEnabled then
+            RefreshESP()
+        end
+    end
+})
+
+ESPTab:AddButton({
+    Name = "Clear ESP",
+    Callback = function()
+        ClearESP()
+        ESPEnabled = false
+    end
+})
+
+ESPTab:AddDropdown({
+    Name = "لون ESP",
+    Options = {"Red", "Green", "Blue", "Purple", "White"},
+    Default = "Red",
+    Callback = function(v)
+        local colors = {
+            Red = Color3.fromRGB(255, 0, 0),
+            Green = Color3.fromRGB(0, 255, 0),
+            Blue = Color3.fromRGB(0, 100, 255),
+            Purple = Color3.fromRGB(170, 0, 255),
+            White = Color3.fromRGB(255, 255, 255)
+        }
+
+        for _, obj in pairs(ESPObjects) do
+            if obj then
+                obj.FillColor = colors[v]
+            end
+        end
+    end
+})
+
+--==================================================
+-- 4 SPECTATE
+--==================================================
+
+local SpectateTab = Window:MakeTab({"المشاهدة", "video"})
+
+SpectateTab:AddSection({"Player Camera"})
+
+SpectateTab:AddDropdown({
+    Name = "اختيار لاعب",
+    Options = GetPlayers(),
+    Default = nil,
+    Callback = function(v)
+        SelectedPlayer = GetPlayer(v)
+    end
+})
+
+SpectateTab:AddButton({
+    Name = "Spectate",
+    Callback = function()
+        if SelectedPlayer and SelectedPlayer.Character then
+            local h = SelectedPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if h then
+                Camera.CameraSubject = h
+            end
+        end
+    end
+})
+
+SpectateTab:AddButton({
+    Name = "Stop Spectate",
+    Callback = function()
+        UpdateCharacter()
+        if Humanoid then
+            Camera.CameraSubject = Humanoid
+        end
+    end
+})
+
+SpectateTab:AddButton({
+    Name = "Player Information",
+    Callback = function()
+        if SelectedPlayer then
+            print("Name: " .. SelectedPlayer.Name)
+            print("UserId: " .. SelectedPlayer.UserId)
+            print("DisplayName: " .. SelectedPlayer.DisplayName)
+        end
+    end
+})
+
+SpectateTab:AddButton({
+    Name = "تحديث القائمة",
+    Callback = function()
+        print("Players refreshed")
+        for _, p in ipairs(GetPlayers()) do
+            print(p)
+        end
+    end
+})
+
+--==================================================
+-- 5 TOOLS
+--==================================================
+
+local ToolsTab = Window:MakeTab({"الأدوات", "backpack"})
+
+ToolsTab:AddSection({"Inventory Scanner"})
+
+ToolsTab:AddButton({
+    Name = "عرض أدواتي",
+    Callback = function()
+        UpdateCharacter()
+
+        local backpack = Player:FindFirstChildOfClass("Backpack")
+
+        if backpack then
+            for _, tool in ipairs(backpack:GetChildren()) do
+                if tool:IsA("Tool") then
+                    print("Backpack: " .. tool.Name)
+                end
+            end
+        end
+
+        if Character then
+            for _, tool in ipairs(Character:GetChildren()) do
+                if tool:IsA("Tool") then
+                    print("Equipped: " .. tool.Name)
+                end
+            end
+        end
+    end
+})
+
+ToolsTab:AddButton({
+    Name = "عرض عناصر Workspace",
+    Callback = function()
+        local count = 0
+
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("Tool") then
+                count += 1
+                print(obj:GetFullName())
+            end
+        end
+
+        print("Total Tools: " .. count)
+    end
+})
+
+ToolsTab:AddTextBox({
+    Name = "البحث عن أداة",
+    PlaceholderText = "Tool Name",
+    Callback = function(v)
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("Tool") and string.find(
+                string.lower(obj.Name),
+                string.lower(v),
+                1,
+                true
+            ) then
+                print("Found: " .. obj:GetFullName())
+            end
+        end
+    end
+})
+
+ToolsTab:AddButton({
+    Name = "تحديث الأدوات",
+    Callback = function()
+        print("Inventory refreshed")
+    end
+})
+
+--==================================================
+-- 6 AUTO
+--==================================================
+
+local AutoTab = Window:MakeTab({"أوتو", "zap"})
+
+AutoTab:AddSection({"Automation"})
+
+AutoTab:AddToggle({
+    Name = "Auto Refresh ESP",
+    Default = false,
+    Callback = function(v)
+        ESPEnabled = v
+
+        if v then
+            task.spawn(function()
+                while ESPEnabled do
+                    RefreshESP()
+                    task.wait(3)
+                end
+            end)
+        else
+            ClearESP()
+        end
+    end
+})
+
+AutoTab:AddToggle({
+    Name = "Auto Refresh Player List",
+    Default = false,
+    Callback = function(v)
+        _G.AutoPlayerRefresh = v
+
+        if v then
+            task.spawn(function()
+                while _G.AutoPlayerRefresh do
+                    print("Players: " .. #Players:GetPlayers())
+                    task.wait(5)
+                end
+            end)
+        end
+    end
+})
+
+AutoTab:AddButton({
+    Name = "Refresh All",
+    Callback = function()
+        UpdateCharacter()
+        if ESPEnabled then
+            RefreshESP()
+        end
+        print("All refreshed")
+    end
+})
+
+--==================================================
+-- 7 SERVER
+--==================================================
+
+local ServerTab = Window:MakeTab({"السيرفر", "globe"})
+
+ServerTab:AddSection({"Server Information"})
+
+ServerTab:AddParagraph({
+    "Place ID",
+    tostring(game.PlaceId)
+})
+
+ServerTab:AddParagraph({
+    "Job ID",
+    game.JobId
+})
+
+ServerTab:AddParagraph({
+    "Player Count",
+    tostring(#Players:GetPlayers())
+})
+
+ServerTab:AddButton({
+    Name = "نسخ Job ID",
+    Callback = function()
+        if setclipboard then
+            setclipboard(game.JobId)
+        end
+    end
+})
+
+ServerTab:AddButton({
+    Name = "نسخ Place ID",
+    Callback = function()
+        if setclipboard then
+            setclipboard(tostring(game.PlaceId))
+        end
+    end
+})
+
+ServerTab:AddButton({
+    Name = "عرض اللاعبين",
+    Callback = function()
+        for _, p in ipairs(Players:GetPlayers()) do
+            print(p.Name, p.UserId)
+        end
+    end
+})
+
+--==================================================
+-- 8 VISUALS
+--==================================================
+
+local VisualTab = Window:MakeTab({"Visuals", "palette"})
+
+VisualTab:AddSection({"Graphics"})
+
+VisualTab:AddToggle({
+    Name = "Full Bright",
+    Default = false,
+    Callback = function(v)
+        FullBright = v
+
+        if v then
+            Lighting.Brightness = 3
+            Lighting.ClockTime = 14
+            Lighting.GlobalShadows = false
+        else
+            Lighting.Brightness = OriginalLighting.Brightness
+            Lighting.ClockTime = OriginalLighting.ClockTime
+            Lighting.GlobalShadows = true
+        end
+    end
+})
+
+VisualTab:AddToggle({
+    Name = "Night Mode",
+    Default = false,
+    Callback = function(v)
+        NightMode = v
+        Lighting.ClockTime = v and 0 or OriginalLighting.ClockTime
+    end
+})
+
+VisualTab:AddSlider({
+    Name = "Brightness",
+    Min = 0,
+    Max = 10,
+    Increase = 1,
+    Default = 3,
+    Callback = function(v)
+        Lighting.Brightness = v
+    end
+})
+
+VisualTab:AddSlider({
+    Name = "FOV",
+    Min = 40,
+    Max = 120,
+    Increase = 1,
+    Default = 70,
+    Callback = function(v)
+        Camera.FieldOfView = v
+    end
+})
+
+VisualTab:AddButton({
+    Name = "Reset Lighting",
+    Callback = function()
+        Lighting.Brightness = OriginalLighting.Brightness
+        Lighting.ClockTime = OriginalLighting.ClockTime
+        Lighting.FogEnd = OriginalLighting.FogEnd
+    end
+})
+
+--==================================================
+-- 9 TERMINAL
+--==================================================
+
+local TerminalTab = Window:MakeTab({"Terminal", "terminal"})
+
+TerminalTab:AddSection({"ALAWI COMMAND LINE"})
+
+TerminalTab:AddParagraph({
+    "Terminal",
+    "اكتب help لعرض الأوامر"
+})
+
+TerminalTab:AddTextBox({
+    Name = "Command Input",
+    PlaceholderText = "help",
+    Callback = function(v)
+        local command = string.lower(v)
+
+        if command == "help" then
+            print("help | info | players | tools | clear")
+
+        elseif command == "info" then
+            print("Game: " .. game.Name)
+            print("Place: " .. game.PlaceId)
+
+        elseif command == "players" then
+            print("Players: " .. #Players:GetPlayers())
+
+        elseif command == "tools" then
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("Tool") then
+                    print(obj.Name)
+                end
+            end
+
+        elseif command == "clear" then
+            print("Console cleared")
+
+        else
+            print("Unknown Command: " .. v)
+        end
+    end
+})
+
+TerminalTab:AddButton({
+    Name = "System Scan",
+    Callback = function()
+        print("Scanning...")
+        task.wait(1)
+        print("Scan Complete")
+    end
+})
+
+TerminalTab:AddButton({
+    Name = "Show Console Info",
+    Callback = function()
+        print("ALAWI HUB V2")
+        print("System Ready")
+    end
+})
+
+--==================================================
+-- 10 SETTINGS
+--==================================================
+
+local SettingsTab = Window:MakeTab({"الإعدادات", "settings"})
+
+SettingsTab:AddSection({"Hub Settings"})
+
+SettingsTab:AddButton({
+    Name = "Reset Character",
+    Callback = function()
+        UpdateCharacter()
+        if Humanoid then
+            Humanoid.Health = 0
+        end
+    end
+})
+
+SettingsTab:AddButton({
+    Name = "Reset All Movement",
+    Callback = function()
+        UpdateCharacter()
+
+        if Humanoid then
+            Humanoid.WalkSpeed = 16
+            Humanoid.JumpPower = 50
+        end
+
+        Camera.FieldOfView = 70
+    end
+})
+
+SettingsTab:AddButton({
+    Name = "Clear ESP",
+    Callback = function()
+        ESPEnabled = false
+        ClearESP()
+    end
+})
+
+SettingsTab:AddButton({
+    Name = "إغلاق",
+    Callback = function()
+        ClearESP()
+
+        if NoclipConnection then
+            NoclipConnection:Disconnect()
+        end
+
+        if JumpConnection then
+            JumpConnection:Disconnect()
+        end
+
+        if FlyConnection then
+            FlyConnection:Disconnect()
+        end
+
+        print("Alawi Hub Closed")
+    end
+})
+
+SettingsTab:AddParagraph({
+    "Developer",
+    "by .مطور علاوي | hdhjjlawe"
+})
+
+--==================================================
+-- FINISH
+--==================================================
+
+Window:SelectTab(MainTab)
+
+print("================================")
+print("ALAWI HACKER HUB V2 LOADED")
+print("================================")
