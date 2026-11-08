@@ -51,143 +51,84 @@ end})
 -- ALAWI FARM SYSTEM
 -- REDZ LIBRARY V5
 --==================================================
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local LocalPlayer = Player
 --==================================================
 -- ORB REMOTE TAB
 --==================================================
 
-Window:SelectTab(Tab1)
 
-local Section = Tab1:AddSection({"orb قائمة"})
+--==================================================
+-- ORB SYSTEM
+--==================================================
 
-local Toggle1 = Tab1:AddToggle({
-  Name = "orbs اوتو اخذ",
-  Description = "",
-  Default = false 
-})
-Toggle1:Callback(function(Value)
-         Running = Value
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local OrbEvent = ReplicatedStorage.rEvents.orbEvent
 
-        if Value then
-            task.spawn(function()
-                while Running do
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Blue Orb",
-"City"
-)
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Red Orb",
-"City"
-)
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Orange Orb",
-"City"
-)
-Event:FireServer(
-"collectOrb",
-"Blue Orb",
-"City"
-)
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Red Orb",
-"City"
-)
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Orange Orb",
-"City"
-)
-Event:FireServer(
-"collectOrb",
-"Blue Orb",
-"City"
-)
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Red Orb",
-"City"
-)
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Orange Orb",
-"City"
-)
-Event:FireServer(
-"collectOrb",
-"Blue Orb",
-"City"
-)
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Red Orb",
-"City"
-)
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Orange Orb",
-"City"
-)
+local OrbTab = Window:MakeTab({"ORB", "gem"})
 
-                    task.wait()
+local OrbEnabled = {
+    Blue = false,
+    Red = false,
+    Orange = false,
+    Gem = false
+}
+
+local function StartOrb(Key, OrbName)
+    task.spawn(function()
+        while OrbEnabled[Key] do
+            for _, Area in ipairs({"City", "Snow"}) do
+                if not OrbEnabled[Key] then
+                    break
                 end
-            end)
+
+                pcall(function()
+                    OrbEvent:FireServer(
+                        "collectOrb",
+                        OrbName,
+                        Area
+                    )
+                end)
+            end
+
+            task.wait(0.5)
         end
-end)
+    end)
+end
 
+OrbTab:AddSection({"تجميع الكرات"})
 
-local Toggle1 = Tab1:AddToggle({
-  Name = "gem اوتو اخذ",
-  Description = "",
-  Default = false 
+local function AddOrbToggle(Key, OrbName)
+    OrbTab:AddToggle({
+        Name = OrbName .. " Auto",
+        Description = "City + Snow",
+        Default = false,
+
+        Callback = function(Value)
+            OrbEnabled[Key] = Value
+
+            if Value then
+                StartOrb(Key, OrbName)
+            end
+        end
+    })
+end
+
+AddOrbToggle("Blue", "Blue Orb")
+AddOrbToggle("Red", "Red Orb")
+AddOrbToggle("Orange", "Orange Orb")
+AddOrbToggle("Gem", "Gem")
+
+OrbTab:AddButton({
+    Name = "إيقاف جميع Orb",
+    Callback = function()
+        for Key in pairs(OrbEnabled) do
+            OrbEnabled[Key] = false
+        end
+    end
 })
-Toggle1:Callback(function(Value)
-         Running = Value
 
-        if Value then
-            task.spawn(function()
-                while Running do
-                    local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Gem",
-"City"
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Gem",
-"City"
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Gem",
-"City"
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Gem",
-"City"
-local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-Event:FireServer(
-"collectOrb",
-"Gem",
-"City"
-                    task.wait()
-                end
-            end)
-        end
-end)
 
 --==================================================
 -- TOUCH FIRE TAB
