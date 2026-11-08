@@ -62,10 +62,10 @@ local OrbEvent = ReplicatedStorage.rEvents.orbEvent
 -- ORB REMOTE TAB
 --==================================================
 
-local OrbTab = Window:MakeTab({"Orb Remote", "gem"})
+local OrbTab = Window:MakeTab({"Orbs", "gem"})
 
 local Toggle1 = Tab1:AddToggle({
-  Name = "اوتو اخذ ببسي",
+  Name = "orbs اوتو اخذ",
   Description = "",
   Default = false 
 })
@@ -75,8 +75,119 @@ Toggle1:Callback(function(Value)
         if Value then
             task.spawn(function()
                 while Running do
-                    local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
-                    Event:FireServer("BloxyCola")
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Blue Orb",
+"City"
+)
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Red Orb",
+"City"
+)
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Orange Orb",
+"City"
+)
+Event:FireServer(
+"collectOrb",
+"Blue Orb",
+"City"
+)
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Red Orb",
+"City"
+)
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Orange Orb",
+"City"
+)
+Event:FireServer(
+"collectOrb",
+"Blue Orb",
+"City"
+)
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Red Orb",
+"City"
+)
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Orange Orb",
+"City"
+)
+Event:FireServer(
+"collectOrb",
+"Blue Orb",
+"City"
+)
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Red Orb",
+"City"
+)
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Orange Orb",
+"City"
+)
+
+                    task.wait()
+                end
+            end)
+        end
+end)
+
+
+local Toggle1 = Tab1:AddToggle({
+  Name = "gem اوتو اخذ",
+  Description = "",
+  Default = false 
+})
+Toggle1:Callback(function(Value)
+         Running = Value
+
+        if Value then
+            task.spawn(function()
+                while Running do
+                    local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Gem",
+"City"
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Gem",
+"City"
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Gem",
+"City"
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Gem",
+"City"
+local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
+Event:FireServer(
+"collectOrb",
+"Gem",
+"City"
                     task.wait()
                 end
             end)
