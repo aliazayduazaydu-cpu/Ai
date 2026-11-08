@@ -366,48 +366,6 @@ PlayerTab:AddToggle({
     end
 })
 
---==================================================
--- NOCLIP
---==================================================
-
-PlayerTab:AddToggle({
-    Name = "اختراق الجدران",
-    Description = "إيقاف التصادم مع الجدران",
-    Default = false,
-
-    Callback = function(Value)
-        NoclipEnabled = Value
-
-        if NoclipConnection then
-            NoclipConnection:Disconnect()
-            NoclipConnection = nil
-        end
-
-        if Value then
-            NoclipConnection = RunService.Stepped:Connect(function()
-                local Character = Player.Character
-
-                if Character then
-                    for _, Part in ipairs(Character:GetDescendants()) do
-                        if Part:IsA("BasePart") then
-                            Part.CanCollide = false
-                        end
-                    end
-                end
-            end)
-        else
-            local Character = Player.Character
-
-            if Character then
-                for _, Part in ipairs(Character:GetDescendants()) do
-                    if Part:IsA("BasePart") then
-                        Part.CanCollide = true
-                    end
-                end
-            end
-        end
-    end
-})
 
 --==================================================
 -- INFINITE JUMP
