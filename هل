@@ -1,0 +1,455 @@
+
+local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"))()
+
+local Window = redzlib:MakeWindow({
+  Title = "سكربت ali",
+  SubTitle = "by مطور علاوي",
+  SaveFolder = "testando | redz lib v5.lua"
+})
+Window:AddMinimizeButton({
+    Button = { Image = "rbxassetid://10528567042", BackgroundTransparency = 10528567042 },
+    Corner = { CornerRadius = UDim.new(35, 1) },
+})
+
+local Tab1 = Window:MakeTab({"قائمة رئيسيه", ""})
+
+Tab1:AddDiscordInvite({
+    Name = "story hub",
+    Description = "شكرا لستعمال سكربت",
+    Logo = "rbxassetid://5778263837",
+    Invite = "Link discord invite",
+})
+
+Window:SelectTab(Tab1)
+
+local Section = Tab1:AddSection({"قائمة رئيسيه"})
+
+local Paragraph = Tab1:AddParagraph({"حسابي : hdjjlawe", "اذا كنت تبي ضيفني"})
+  Tab1:AddButton({"", function(Value)
+print("Hello World!")
+end})
+
+local Section = Tab1:AddSection({"قائمة رئيسيه"})
+
+local Paragraph = Tab1:AddParagraph({"حسابي في يوتيوب : مطور علاوي", "اشترك"})
+  Tab1:AddButton({"", function(Value)
+print("Hello World!")
+end})
+
+local Section = Tab1:AddSection({"قائمة رئيسيه"})
+
+local Paragraph = Tab1:AddParagraph({"سكربت لماب story 1", "يشتغل فقط في ذا ماب"})
+  Tab1:AddButton({"", function(Value)
+print("Hello World!")
+end})
+
+
+--____________________________________________________
+--____________________________________________________
+--____________________________________________________
+
+
+--==================================================
+-- ESP SYSTEM - REDZ LIBRARY
+--==================================================
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local ESPTab = Window:MakeTab({"قائمة ESP", "eye"})
+
+local ESPEnabled = false
+local SelectedESP = false
+local SelectedPlayer = nil
+
+--==================================================
+-- CREATE ESP
+--==================================================
+
+local function CreateESP(Player)
+    if Player == LocalPlayer then return end
+
+    local Character = Player.Character
+    if not Character then return end
+
+    local Highlight = Character:FindFirstChild("PlayerESP")
+
+    if not Highlight then
+        Highlight = Instance.new("Highlight")
+        Highlight.Name = "PlayerESP"
+        Highlight.FillColor = Color3.fromRGB(255, 0, 0)
+        Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+        Highlight.FillTransparency = 0.5
+        Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        Highlight.Parent = Character
+    end
+end
+
+--==================================================
+-- REMOVE ESP
+--==================================================
+
+local function RemoveESP(Player)
+    if not Player.Character then return end
+
+    local Highlight = Player.Character:FindFirstChild("PlayerESP")
+
+    if Highlight then
+        Highlight:Destroy()
+    end
+end
+
+--==================================================
+-- UPDATE ALL
+--==================================================
+
+local function UpdateAllESP()
+    for _, Player in ipairs(Players:GetPlayers()) do
+        if ESPEnabled then
+            CreateESP(Player)
+        else
+            RemoveESP(Player)
+        end
+    end
+end
+
+--==================================================
+-- PLAYER LIST
+--==================================================
+
+local function RefreshPlayerList()
+    local Names = {}
+
+    for _, Player in ipairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer then
+            table.insert(Names, Player.Name)
+        end
+    end
+
+    return Names
+end
+
+--==================================================
+-- SECTION
+--==================================================
+
+ESPTab:AddSection({"ESP اللاعبين"})
+
+--==================================================
+-- ALL PLAYERS ESP
+--==================================================
+
+ESPTab:AddToggle({
+    Name = "ESP جميع اللاعبين",
+    Description = "إظهار جميع اللاعبين",
+    Default = false,
+
+    Callback = function(Value)
+        ESPEnabled = Value
+        UpdateAllESP()
+    end
+})
+
+--==================================================
+-- SELECT PLAYER
+--==================================================
+
+ESPTab:AddDropdown({
+    Name = "اختيار لاعب",
+    Description = "حدد لاعباً",
+    Options = RefreshPlayerList(),
+    Default = nil,
+
+    Callback = function(Value)
+        SelectedPlayer = Players:FindFirstChild(Value)
+
+        if SelectedESP and SelectedPlayer then
+            CreateESP(SelectedPlayer)
+        end
+    end
+})
+
+--==================================================
+-- SELECTED PLAYER ESP
+--==================================================
+
+ESPTab:AddToggle({
+    Name = "ESP اللاعب المحدد",
+    Description = "إظهار ESP للاعب المختار",
+    Default = false,
+
+    Callback = function(Value)
+        SelectedESP = Value
+
+        if SelectedPlayer then
+            if Value then
+                CreateESP(SelectedPlayer)
+            else
+                RemoveESP(SelectedPlayer)
+            end
+        end
+    end
+})
+
+--==================================================
+-- REFRESH BUTTON
+--==================================================
+
+ESPTab:AddButton({
+    Name = "تحديث قائمة اللاعبين",
+    Callback = function()
+        -- تحديث القائمة عند الضغط
+        -- أعد فتح القائمة لرؤية الأسماء الجديدة
+        RefreshPlayerList()
+    end
+})
+
+--==================================================
+-- PLAYER RESPAWN
+--==================================================
+
+local function SetupPlayer(Player)
+    Player.CharacterAdded:Connect(function()
+        task.wait(1)
+
+        if ESPEnabled or (SelectedESP and SelectedPlayer == Player) then
+            CreateESP(Player)
+        end
+    end)
+end
+
+for _, Player in ipairs(Players:GetPlayers()) do
+    SetupPlayer(Player)
+end
+
+Players.PlayerAdded:Connect(function(Player)
+    SetupPlayer(Player)
+end)
+
+--==================================================
+-- PLAYER LEAVING
+--==================================================
+
+Players.PlayerRemoving:Connect(function(Player)
+    if SelectedPlayer == Player then
+        SelectedPlayer = nil
+    end
+end)
+
+--____________________________________________________
+--____________________________________________________
+--____________________________________________________
+--____________________________________________________
+--____________________________________________________
+--____________________________________________________
+--==================================================
+
+--==================================================
+-- PLAYER SYSTEM - REDZ LIBRARY
+--==================================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local Player = Players.LocalPlayer
+
+local PlayerTab = Window:MakeTab({"اللاعب", "user"})
+
+-- VARIABLES
+local SpeedEnabled = false
+local JumpEnabled = false
+local NoclipEnabled = false
+local InfiniteJumpEnabled = false
+
+local SpeedValue = 50
+local JumpValue = 100
+
+local NoclipConnection
+
+--==================================================
+-- HUMANOID
+--==================================================
+
+local function GetHumanoid()
+    local Character = Player.Character
+    return Character and Character:FindFirstChildOfClass("Humanoid")
+end
+
+--==================================================
+-- SPEED INPUT
+--==================================================
+
+PlayerTab:AddTextBox({
+    Name = "سرعة الحركة",
+    Description = "اكتب السرعة المطلوبة",
+    PlaceholderText = "50",
+
+    Callback = function(Value)
+        local Number = tonumber(Value)
+
+        if Number and Number >= 0 and Number <= 250 then
+            SpeedValue = Number
+
+            local Humanoid = GetHumanoid()
+
+            if SpeedEnabled and Humanoid then
+                Humanoid.WalkSpeed = SpeedValue
+            end
+        end
+    end
+})
+
+--==================================================
+-- SPEED TOGGLE
+--==================================================
+
+PlayerTab:AddToggle({
+    Name = "تشغيل السرعة",
+    Description = "زيادة سرعة الحركة",
+    Default = false,
+
+    Callback = function(Value)
+        SpeedEnabled = Value
+
+        local Humanoid = GetHumanoid()
+
+        if Humanoid then
+            Humanoid.WalkSpeed = Value and SpeedValue or 16
+        end
+    end
+})
+
+--==================================================
+-- JUMP INPUT
+--==================================================
+
+PlayerTab:AddTextBox({
+    Name = "قوة القفز",
+    Description = "اكتب قوة القفز",
+    PlaceholderText = "100",
+
+    Callback = function(Value)
+        local Number = tonumber(Value)
+
+        if Number and Number >= 0 and Number <= 300 then
+            JumpValue = Number
+
+            local Humanoid = GetHumanoid()
+
+            if JumpEnabled and Humanoid then
+                Humanoid.UseJumpPower = true
+                Humanoid.JumpPower = JumpValue
+            end
+        end
+    end
+})
+
+--==================================================
+-- JUMP TOGGLE
+--==================================================
+
+PlayerTab:AddToggle({
+    Name = "تشغيل قوة القفز",
+    Description = "زيادة ارتفاع القفز",
+    Default = false,
+
+    Callback = function(Value)
+        JumpEnabled = Value
+
+        local Humanoid = GetHumanoid()
+
+        if Humanoid then
+            Humanoid.UseJumpPower = true
+            Humanoid.JumpPower = Value and JumpValue or 50
+        end
+    end
+})
+
+--==================================================
+-- NOCLIP
+--==================================================
+
+PlayerTab:AddToggle({
+    Name = "اختراق الجدران",
+    Description = "إيقاف التصادم مع الجدران",
+    Default = false,
+
+    Callback = function(Value)
+        NoclipEnabled = Value
+
+        if NoclipConnection then
+            NoclipConnection:Disconnect()
+            NoclipConnection = nil
+        end
+
+        if Value then
+            NoclipConnection = RunService.Stepped:Connect(function()
+                local Character = Player.Character
+
+                if Character then
+                    for _, Part in ipairs(Character:GetDescendants()) do
+                        if Part:IsA("BasePart") then
+                            Part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        else
+            local Character = Player.Character
+
+            if Character then
+                for _, Part in ipairs(Character:GetDescendants()) do
+                    if Part:IsA("BasePart") then
+                        Part.CanCollide = true
+                    end
+                end
+            end
+        end
+    end
+})
+
+--==================================================
+-- INFINITE JUMP
+--==================================================
+
+PlayerTab:AddToggle({
+    Name = "قفز لا نهائي",
+    Description = "القفز المتكرر",
+    Default = false,
+
+    Callback = function(Value)
+        InfiniteJumpEnabled = Value
+    end
+})
+
+UserInputService.JumpRequest:Connect(function()
+    if InfiniteJumpEnabled then
+        local Humanoid = GetHumanoid()
+
+        if Humanoid then
+            Humanoid:ChangeState(
+                Enum.HumanoidStateType.Jumping
+            )
+        end
+    end
+end)
+
+--==================================================
+-- RESPAWN SUPPORT
+--==================================================
+
+Player.CharacterAdded:Connect(function(Character)
+    local Humanoid = Character:WaitForChild("Humanoid")
+
+    task.wait(0.5)
+
+    if SpeedEnabled then
+        Humanoid.WalkSpeed = SpeedValue
+    end
+
+    if JumpEnabled then
+        Humanoid.UseJumpPower = true
+        Humanoid.JumpPower = JumpValue
+    end
+end)
