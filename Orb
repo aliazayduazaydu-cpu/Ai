@@ -51,18 +51,13 @@ end})
 -- ALAWI FARM SYSTEM
 -- REDZ LIBRARY V5
 --==================================================
-
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local Player = Players.LocalPlayer
-local OrbEvent = ReplicatedStorage.rEvents.orbEvent
-
 --==================================================
 -- ORB REMOTE TAB
 --==================================================
 
-local OrbTab = Window:MakeTab({"Orbs", "gem"})
+Window:SelectTab(Tab1)
+
+local Section = Tab1:AddSection({"orb قائمة"})
 
 local Toggle1 = Tab1:AddToggle({
   Name = "orbs اوتو اخذ",
