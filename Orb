@@ -64,120 +64,24 @@ local OrbEvent = ReplicatedStorage.rEvents.orbEvent
 
 local OrbTab = Window:MakeTab({"Orb Remote", "gem"})
 
-OrbTab:AddSection({"ORB FARM"})
+local Toggle1 = Tab1:AddToggle({
+  Name = "اوتو اخذ ببسي",
+  Description = "",
+  Default = false 
+})
+Toggle1:Callback(function(Value)
+         Running = Value
 
-local OrbEnabled = {
-    Gem = false,
-    Blue = false,
-    Red = false,
-    Orange = false
-}
-
-local OrbNames = {
-    Gem = "Gem",
-    Blue = "Blue Orb",
-    Red = "Red Orb",
-    Orange = "Orange Orb"
-}
-
-local Areas = {
-    "City",
-    "Snow"
-}
-
-local function StartOrb(Key)
-    task.spawn(function()
-        while OrbEnabled[Key] do
-
-            for _, Area in ipairs(Areas) do
-                if not OrbEnabled[Key] then
-                    break
+        if Value then
+            task.spawn(function()
+                while Running do
+                    local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+                    Event:FireServer("BloxyCola")
+                    task.wait()
                 end
-
-                pcall(function()
-                    OrbEvent:FireServer(
-                        "collectOrb",
-                        OrbNames[Key],
-                        Area
-                    )
-                end)
-            end
-
-            task.wait(0.5)
+            end)
         end
-    end)
-end
-
--- GEM
-OrbTab:AddToggle({
-    Name = "Gem",
-    Description = "City + Snow",
-    Default = false,
-
-    Callback = function(Value)
-        OrbEnabled.Gem = Value
-
-        if Value then
-            StartOrb("Gem")
-        end
-    end
-})
-
--- BLUE ORB
-OrbTab:AddToggle({
-    Name = "Blue Orb",
-    Description = "City + Snow",
-    Default = false,
-
-    Callback = function(Value)
-        OrbEnabled.Blue = Value
-
-        if Value then
-            StartOrb("Blue")
-        end
-    end
-})
-
--- RED ORB
-OrbTab:AddToggle({
-    Name = "Red Orb",
-    Description = "City + Snow",
-    Default = false,
-
-    Callback = function(Value)
-        OrbEnabled.Red = Value
-
-        if Value then
-            StartOrb("Red")
-        end
-    end
-})
-
--- ORANGE ORB
-OrbTab:AddToggle({
-    Name = "Orange Orb",
-    Description = "City + Snow",
-    Default = false,
-
-    Callback = function(Value)
-        OrbEnabled.Orange = Value
-
-        if Value then
-            StartOrb("Orange")
-        end
-    end
-})
-
--- STOP ALL
-OrbTab:AddButton({
-    Name = "إيقاف جميع Orb",
-
-    Callback = function()
-        for Key in pairs(OrbEnabled) do
-            OrbEnabled[Key] = false
-        end
-    end
-})
+end)
 
 --==================================================
 -- TOUCH FIRE TAB
