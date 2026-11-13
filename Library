@@ -1,0 +1,593 @@
+-- AliLib_Empty | LocalScript
+-- المطور: مطور علاوي
+-- قائمة فاضية. أنت تضيف التبويبات والعناصر والأوامر بنفسك من آخر الملف.
+--
+-- ترتيب الملف:
+--   0) أدوات مساعدة
+--   1) التحميل (Lib.Load)
+--   2) النافذة والتبويبات والعناصر
+--   3) الأوامر (Command + الشات)
+--   4) مكان إضافة الميزات (آخر الملف)
+
+--==== 0) أدوات مساعدة ====
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local TextChatService = game:GetService("TextChatService")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+
+local THEME = {
+	WindowTransparency = 0.8,   -- شفافية القائمة
+	ToggleTransparency = 0.6,   -- شفافية زر الفتح
+	BackgroundTransparency = 0.2, -- شفافية صورة الخلفية
+	DeveloperTransparency = 0.4,  -- شفافية اسم المطور
+	DescTransparency = 0.3,     -- شفافية الشرح
+	NameTransparency = 0,       -- شفافية الاسم
+}
+
+local Lib = {}
+Lib.__index = Lib
+
+local Tab = {}
+Tab.__index = Tab
+
+local function has(v)
+	return v ~= nil and v ~= ""
+end
+
+local function new(class, props, parent)
+	local o = Instance.new(class)
+	for k, v in pairs(props or {}) do
+		o[k] = v
+	end
+	o.Parent = parent
+	return o
+end
+
+local function corner(obj, r)
+	new("UICorner", {CornerRadius = UDim.new(0, r)}, obj)
+end
+
+-- يخلي الكتابة تشتغل حتى لو اختلفت الهمزات والتاء المربوطة والهاء
+local function norm(s)
+	s = s:lower()
+	s = s:gsub("ة", "ه")
+	s = s:gsub("أ", "ا")
+	s = s:gsub("إ", "ا")
+	s = s:gsub("آ", "ا")
+	s = s:gsub("ى", "ي")
+	return s
+end
+
+-- يفصل اسم الأمر عن الشرح: "سرعة [رقم] | افتراضي 16"
+local function splitUsage(usage)
+	local c, d = usage:match("^(.-)%s*[|(](.*)$")
+	if not c then return usage, "" end
+	d = d:gsub("%)%s*$", ""):gsub("^%s+", "")
+	c = c:gsub("%s+$", "")
+	return c, d
+end
+
+local function draggable(handle, target)
+	local dragging, startInput, startPos = false, nil, nil
+	handle.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			startInput = input.Position
+			startPos = target.Position
+			target:SetAttribute("Dragged", false)
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+	UIS.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local d = input.Position - startInput
+			if d.Magnitude > 5 then target:SetAttribute("Dragged", true) end
+			target.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+		end
+	end)
+end
+
+--==== 1) التحميل ====
+-- opts (كلها اختيارية):
+--   Name, Title, ToggleName, ToggleImage, CloseImage, BackgroundImage, Developer
+function Lib.Load(opts)
+	opts = opts or {}
+	local self = setmetatable({}, Lib)
+	self.gui = new("ScreenGui", {Name = opts.Name or "AliLib", ResetOnSpawn = false}, player:WaitForChild("PlayerGui"))
+	self.tabs = {}
+	self.toggleList = {}
+	self.commands = {}
+	self.logCount = 0
+	self.openImg = opts.ToggleImage
+	self.closeImg = opts.CloseImage
+
+	self:_buildWindow(opts)
+	self:_hookChat()
+	return self
+end
+
+--==== 2) النافذة والتبويبات والعناصر ====
+function Lib:_buildWindow(opts)
+	local gui = self.gui
+	local toggleName = has(opts.ToggleName) and opts.ToggleName or "Ali"
+	local useImage = has(opts.ToggleImage)
+
+	-- زر الفتح والإغلاق: صورة إذا حطيت رابط، وإلا نص
+	local btnProps = {
+		Name = toggleName,
+		AnchorPoint = Vector2.new(1, 0),
+		Size = UDim2.new(0.085, 0, 0.125, 0),
+		Position = UDim2.new(1, -10, 0, 10),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = THEME.ToggleTransparency,
+		AutoButtonColor = false,
+	}
+	if useImage then
+		btnProps.Image = opts.ToggleImage
+		btnProps.ScaleType = Enum.ScaleType.Fit
+		self.toggleBtn = new("ImageButton", btnProps, gui)
+	else
+		btnProps.Text = toggleName
+		btnProps.Font = Enum.Font.GothamBold
+		btnProps.TextScaled = true
+		btnProps.TextColor3 = Color3.new(0, 0, 0)
+		self.toggleBtn = new("TextButton", btnProps, gui)
+		new("UITextSizeConstraint", {MaxTextSize = 16}, self.toggleBtn)
+	end
+	corner(self.toggleBtn, 100)
+	draggable(self.toggleBtn, self.toggleBtn)
+	self.toggleBtn.MouseButton1Click:Connect(function()
+		if self.toggleBtn:GetAttribute("Dragged") then return end
+		self:SetOpen(not self.open)
+	end)
+
+	-- النافذة (تطلع من اليمين)
+	self.window = new("Frame", {
+		Name = "Window",
+		AnchorPoint = Vector2.new(1, 0),
+		Size = UDim2.new(0.336, 0, 0.627, 0),
+		Position = UDim2.new(1.5, 0, 0.2, 0),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = THEME.WindowTransparency,
+	}, gui)
+	corner(self.window, 30)
+	self.open = false
+
+	-- صورة خلفية اختيارية (شفافيتها 0.2) ما تسوي شي إذا ما حطيت رابط
+	if has(opts.BackgroundImage) then
+		local bg = new("ImageLabel", {
+			Name = "Background",
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Image = opts.BackgroundImage,
+			ImageTransparency = THEME.BackgroundTransparency,
+			ScaleType = Enum.ScaleType.Crop,
+			Active = false,
+			ZIndex = 0,
+		}, self.window)
+		corner(bg, 30)
+	end
+
+	-- العنوان (اختياري) يسحب النافذة
+	local header = new("Frame", {
+		Size = UDim2.new(0.951, 0, 0.06, 0),
+		Position = UDim2.new(0.0245, 0, 0.01, 0),
+		BackgroundTransparency = 1,
+		Active = true,
+	}, self.window)
+	if has(opts.Title) then
+		local title = new("TextLabel", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = opts.Title,
+			Font = Enum.Font.GothamBold,
+			TextScaled = true,
+			TextColor3 = Color3.new(0, 0, 0),
+		}, header)
+		new("UITextSizeConstraint", {MaxTextSize = 16}, title)
+	end
+	draggable(header, self.window)
+
+	-- شريط التبويبات
+	self.tabBar = new("ScrollingFrame", {
+		Size = UDim2.new(0.951, 0, 0.06, 0),
+		Position = UDim2.new(0.0245, 0, 0.08, 0),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 0,
+		ScrollingDirection = Enum.ScrollingDirection.X,
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		AutomaticCanvasSize = Enum.AutomaticSize.X,
+	}, self.window)
+	new("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		Padding = UDim.new(0, 4),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, self.tabBar)
+
+	-- مكان الصفحات
+	self.pageHolder = new("Frame", {
+		Size = UDim2.new(0.951, 0, 0.66, 0),
+		Position = UDim2.new(0.0245, 0, 0.15, 0),
+		BackgroundTransparency = 1,
+		ClipsDescendants = true,
+	}, self.window)
+
+	-- خانة الأوامر (الشات)
+	self.input = new("TextBox", {
+		Size = UDim2.new(0.7, 0, 0.07, 0),
+		Position = UDim2.new(0.0245, 0, 0.82, 0),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		ClearTextOnFocus = false,
+		PlaceholderText = "اكتب أمر...",
+		Text = "",
+		Font = Enum.Font.GothamSemibold,
+		TextScaled = true,
+		TextColor3 = Color3.new(0, 0, 0),
+		PlaceholderColor3 = Color3.new(0.4, 0.4, 0.4),
+	}, self.window)
+	corner(self.input, 14)
+	new("UITextSizeConstraint", {MaxTextSize = 14}, self.input)
+
+	local send = new("TextButton", {
+		Size = UDim2.new(0.2255, 0, 0.07, 0),
+		Position = UDim2.new(0.75, 0, 0.82, 0),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		AutoButtonColor = false,
+		Text = "إرسال",
+		Font = Enum.Font.GothamBold,
+		TextScaled = true,
+		TextColor3 = Color3.new(0, 0, 0),
+	}, self.window)
+	corner(send, 14)
+	new("UITextSizeConstraint", {MaxTextSize = 14}, send)
+	send.MouseButton1Click:Connect(function()
+		self:_submit()
+	end)
+	self.input.FocusLost:Connect(function(enter)
+		if enter then self:_submit() end
+	end)
+
+	-- اسم المطور: يمين تحت، شفافية 0.4
+	if has(opts.Developer) then
+		local dev = new("TextLabel", {
+			Name = "Developer",
+			Size = UDim2.new(0.47, 0, 0.06, 0),
+			Position = UDim2.new(0.5, 0, 0.92, 0),
+			BackgroundTransparency = 1,
+			Text = opts.Developer,
+			Font = Enum.Font.GothamBold,
+			TextScaled = true,
+			TextXAlignment = Enum.TextXAlignment.Right,
+			TextColor3 = Color3.new(0, 0, 0),
+			TextTransparency = THEME.DeveloperTransparency,
+		}, self.window)
+		new("UITextSizeConstraint", {MaxTextSize = 13}, dev)
+	end
+end
+
+function Lib:SetOpen(open)
+	self.open = open
+	-- إذا حاطيت صورة إغلاق، تتبدل الصورة
+	if self.toggleBtn:IsA("ImageButton") and has(self.closeImg) then
+		self.toggleBtn.Image = open and self.closeImg or self.openImg
+	end
+	TweenService:Create(self.window, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+		Position = open and UDim2.new(1, -10, 0.2, 0) or UDim2.new(1.5, 0, 0.2, 0),
+	}):Play()
+end
+
+function Lib:_submit()
+	local text = self.input.Text
+	self.input.Text = ""
+	if text ~= "" then self:_run(text) end
+end
+
+-- إنشاء تبويب جديد
+function Lib:Tab(name)
+	local page = new("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 4,
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		Visible = false,
+	}, self.pageHolder)
+	new("UIListLayout", {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder}, page)
+
+	local btn = new("TextButton", {
+		Size = UDim2.new(0, 90, 1, 0),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = 0.6,
+		AutoButtonColor = false,
+		Text = name,
+		Font = Enum.Font.GothamBold,
+		TextScaled = true,
+		TextColor3 = Color3.new(0, 0, 0),
+		LayoutOrder = #self.tabs + 1,
+	}, self.tabBar)
+	corner(btn, 10)
+	new("UITextSizeConstraint", {MaxTextSize = 13}, btn)
+
+	local tab = setmetatable({lib = self, page = page, btn = btn, order = 0}, Tab)
+	btn.MouseButton1Click:Connect(function()
+		self:_showTab(tab)
+	end)
+	table.insert(self.tabs, tab)
+	-- أول تبويب يطلع تلقائياً
+	if #self.tabs == 1 then self:_showTab(tab) end
+	return tab
+end
+
+function Lib:_showTab(tab)
+	for _, t in ipairs(self.tabs) do
+		t.page.Visible = (t == tab)
+		t.btn.BackgroundTransparency = (t == tab) and 0 or 0.6
+	end
+end
+
+-- صف أساسي داخل التبويب
+local function row(tab, h)
+	tab.order = tab.order + 1
+	local r = new("Frame", {
+		Size = UDim2.new(1, -6, 0, h),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = 0,
+		LayoutOrder = tab.order,
+	}, tab.page)
+	corner(r, 12)
+	return r
+end
+
+-- الشرح يسار بشفافية 0.3، والاسم يمين بشفافية 0
+local function labelPair(r, name, desc)
+	local left = new("TextLabel", {
+		Size = UDim2.new(0.55, 0, 1, 0),
+		Position = UDim2.new(0, 8, 0, 0),
+		BackgroundTransparency = 1,
+		TextWrapped = true,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Font = Enum.Font.Gotham,
+		TextSize = 12,
+		TextColor3 = Color3.new(0, 0, 0),
+		TextTransparency = THEME.DescTransparency,
+		Text = desc or "",
+	}, r)
+	local right = new("TextLabel", {
+		Size = UDim2.new(0.45, -8, 1, 0),
+		Position = UDim2.new(0.55, 0, 0, 0),
+		BackgroundTransparency = 1,
+		TextWrapped = true,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Font = Enum.Font.GothamBold,
+		TextSize = 13,
+		TextColor3 = Color3.new(0, 0, 0),
+		TextTransparency = THEME.NameTransparency,
+		Text = name or "",
+	}, r)
+	return left, right
+end
+
+-- نص عادي
+function Tab:Label(text)
+	local r = row(self, 50)
+	new("TextLabel", {
+		Size = UDim2.new(1, -12, 1, 0),
+		Position = UDim2.new(0, 6, 0, 0),
+		BackgroundTransparency = 1,
+		TextWrapped = true,
+		Text = text,
+		Font = Enum.Font.Gotham,
+		TextSize = 12,
+		TextColor3 = Color3.new(0, 0, 0),
+		TextXAlignment = Enum.TextXAlignment.Right,
+	}, r)
+	return r
+end
+
+-- زر: يرجع الزر نفسه
+function Tab:Button(name, desc, callback)
+	local r = row(self, 40)
+	labelPair(r, name, desc)
+	local hit = new("TextButton", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1,
+		Text = "",
+		AutoButtonColor = false,
+		ZIndex = 2,
+	}, r)
+	hit.MouseButton1Click:Connect(function()
+		if callback then callback() end
+	end)
+	return hit
+end
+
+-- مفتاح تشغيل/إيقاف: يرجع Set و Get
+function Tab:Toggle(name, default, callback)
+	local state = default == true
+	local r = row(self, 40)
+	local status = labelPair(r, name, state and "مفعل" or "متوقف")
+	local hit = new("TextButton", {
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundTransparency = 1,
+		Text = "",
+		AutoButtonColor = false,
+		ZIndex = 2,
+	}, r)
+
+	local function set(v)
+		state = v and true or false
+		status.Text = state and "مفعل" or "متوقف"
+		if callback then callback(state) end
+	end
+
+	hit.MouseButton1Click:Connect(function()
+		set(not state)
+	end)
+	table.insert(self.lib.toggleList, {get = function() return state end, set = set})
+	return {Set = set, Get = function() return state end}
+end
+
+-- خانة إدخال: تستدعي callback بالنص لما تخلص الكتابة
+function Tab:Input(name, default, callback)
+	local r = row(self, 40)
+	local box = new("TextBox", {
+		Size = UDim2.new(0.42, 0, 0.7, 0),
+		Position = UDim2.new(0, 8, 0.15, 0),
+		BackgroundColor3 = Color3.fromRGB(235, 235, 235),
+		ClearTextOnFocus = false,
+		Text = tostring(default or ""),
+		PlaceholderText = "...",
+		Font = Enum.Font.GothamSemibold,
+		TextScaled = true,
+		TextColor3 = Color3.new(0, 0, 0),
+	}, r)
+	corner(box, 8)
+	new("TextLabel", {
+		Size = UDim2.new(0.5, -8, 1, 0),
+		Position = UDim2.new(0.5, 0, 0, 0),
+		BackgroundTransparency = 1,
+		TextWrapped = true,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Font = Enum.Font.GothamBold,
+		TextSize = 13,
+		TextColor3 = Color3.new(0, 0, 0),
+		Text = name,
+	}, r)
+	box.FocusLost:Connect(function()
+		if callback then callback(box.Text) end
+	end)
+	return box
+end
+
+--==== 3) الأوامر ====
+-- تبويب الأوامر ينشأ تلقائياً أول مرة تسجل فيها أمر
+function Lib:_getCmdTab()
+	if not self.cmdTab then
+		self.cmdTab = self:Tab("الأوامر")
+		local box = new("TextBox", {
+			Size = UDim2.new(1, -6, 0, 36),
+			BackgroundColor3 = Color3.fromRGB(235, 235, 235),
+			ClearTextOnFocus = false,
+			PlaceholderText = "ابحث عن أمر...",
+			Text = "",
+			Font = Enum.Font.GothamSemibold,
+			TextScaled = true,
+			TextColor3 = Color3.new(0, 0, 0),
+			LayoutOrder = 0,
+		}, self.cmdTab.page)
+		corner(box, 12)
+		box:GetPropertyChangedSignal("Text"):Connect(function()
+			local q = norm(box.Text)
+			for _, child in ipairs(self.cmdTab.page:GetChildren()) do
+				local s = child:GetAttribute("Search")
+				if s then
+					child.Visible = (q == "") or (s:find(q, 1, true) ~= nil)
+				end
+			end
+		end)
+		self.cmdSearch = box
+	end
+	return self.cmdTab
+end
+
+-- يسجل أمر: names = الأسماء، usage = الشرح، fn = الدالة (تستقبل النص اللي بعد الأمر)
+function Lib:Command(names, usage, fn)
+	for _, n in ipairs(names) do
+		self.commands[norm(n)] = fn
+	end
+	local cmdPart, desc = splitUsage(usage)
+	local lib = self
+	local b = self:_getCmdTab():Button(cmdPart, desc, function()
+		lib.input.Text = names[1] .. " "
+		lib.input:CaptureFocus()
+	end)
+	b.Parent:SetAttribute("Search", norm(cmdPart .. " " .. desc))
+end
+
+-- رسالة في تبويب السجل (ينشأ أول مرة)، وإشعار اختياري
+function Lib:Notify(text, popup)
+	if not self.logTab then
+		self.logTab = self:Tab("السجل")
+	end
+	self.logCount = self.logCount + 1
+	local l = new("TextLabel", {
+		Size = UDim2.new(1, -6, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = 0,
+		TextWrapped = true,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Font = Enum.Font.Gotham,
+		TextSize = 13,
+		TextColor3 = Color3.new(0, 0, 0),
+		Text = tostring(text),
+		LayoutOrder = self.logCount,
+	}, self.logTab.page)
+	corner(l, 10)
+	if popup then
+		pcall(function()
+			StarterGui:SetCore("SendNotification", {Title = "AliLib", Text = tostring(text), Duration = 3})
+		end)
+	end
+end
+
+-- ينفذ النص (يتجاهل ; و / في البداية، ويقبل الأسماء بمسافات)
+function Lib:_run(text)
+	text = (text or ""):match("^%s*[;/]?%s*(.-)%s*$") or ""
+	if text == "" then return end
+	local lower = norm(text)
+	local best = nil
+	for name in pairs(self.commands) do
+		if lower == name or lower:sub(1, #name + 1) == name .. " " then
+			if not best or #name > #best then best = name end
+		end
+	end
+	if not best then
+		self:Notify("أمر غير معروف: " .. text, true)
+		return
+	end
+	local arg = text:sub(#best + 2):match("^%s*(.-)%s*$") or ""
+	local ok, err = pcall(self.commands[best], arg)
+	if not ok then self:Notify("خطأ: " .. tostring(err), true) end
+end
+
+-- الأوامر المكتوبة في الشات (تبدأ بـ ; أو /)
+function Lib:_hookChat()
+	TextChatService.MessageReceived:Connect(function(msg)
+		if msg.TextSource and msg.TextSource.UserId == player.UserId and msg.Text:match("^%s*[;/]") then
+			self:_run(msg.Text)
+		end
+	end)
+	player.Chatted:Connect(function(msg)
+		if msg:match("^%s*[;/]") then self:_run(msg) end
+	end)
+end
+
+--==== 4) مكان إضافة الميزات ====
+-- هنا تبدأ إضافتك. القائمة فاضية الحين.
+-- مثال: حط روابط الصور بين "" بعد ما تبيها
+local lib = Lib.Load({
+	Title = "",                 -- عنوان (اتركه فاضي إذا ما تبيه)
+	ToggleName = "Ali",         -- اسم زر الفتح
+	ToggleImage = "",           -- صورة زر الفتح، مثال: "rbxassetid://123456"
+	CloseImage = "",            -- صورة زر الإغلاق (اختياري)
+	BackgroundImage = "",       -- صورة خلفية القائمة (اختياري)
+	Developer = "مطور علاوي",   -- يطلع يمين تحت
+})
+
+-- أمثلة (احذفها أو عدّلها):
+-- local main = lib:Tab("الحركة")
+-- main:Label("نص عادي")
+-- main:Button("سرعة 100", "يخليك تمشي سريع", function() end)
+-- main:Toggle("طيران", false, function(on) end)
+-- main:Input("قفز", 50, function(v) end)
+-- lib:Command({"سرعة"}, "سرعة [رقم]  |  يغير سرعة المشي", function(arg) end)
