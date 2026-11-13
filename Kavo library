@@ -1,0 +1,252 @@
+
+--==================================================
+-- ALI KAVO HUB | MOBILE LIBRARY
+-- Developer: مطور علاوي
+--==================================================
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+local WINDOW_NAME = "ALI KAVO HUB"
+local KAVO_URL = "https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"
+
+--==================================================
+-- CLEAN OLD GUI
+--==================================================
+
+for _, name in ipairs({"ALI_HUB_FLOAT"}) do
+    local old = CoreGui:FindFirstChild(name)
+    if old then old:Destroy() end
+end
+
+--==================================================
+-- LOAD KAVO
+--==================================================
+
+local success, Library = pcall(function()
+    return loadstring(game:HttpGet(KAVO_URL))()
+end)
+
+if not success or not Library then
+    warn("ALI HUB: Kavo failed to load")
+    return
+end
+
+--==================================================
+-- WINDOW
+--==================================================
+
+local Window = Library.CreateLib(WINDOW_NAME, "BloodTheme")
+
+local MainTab = Window:NewTab("الرئيسية")
+local Section = MainTab:NewSection("ALI HUB")
+
+Section:NewLabel("ALI KAVO HUB")
+
+Section:NewButton("اختبار", "اختبار عمل القائمة", function()
+    print("ALI HUB: Working")
+end)
+
+--==================================================
+-- FIND KAVO WINDOW
+--==================================================
+
+local MainFrame
+local MainHeader
+
+local function FindWindow()
+    for _, object in ipairs(CoreGui:GetDescendants()) do
+        if object:IsA("Frame") and object.Name == "Main" then
+            local header = object:FindFirstChild("MainHeader")
+            local title = header and header:FindFirstChild("title")
+
+            if title and title:IsA("TextLabel")
+            and title.Text == WINDOW_NAME then
+                MainFrame = object
+                MainHeader = header
+                return true
+            end
+        end
+    end
+    return false
+end
+
+for i = 1, 30 do
+    if FindWindow() then break end
+    task.wait(0.2)
+end
+
+if not MainFrame or not MainHeader then
+    warn("ALI HUB: Window not found")
+    return
+end
+
+--==================================================
+-- MENU DRAG
+-- InputChanged method
+--==================================================
+
+local Dragging = false
+local DragInput
+local DragStart
+local StartPosition
+
+MainHeader.Active = true
+
+MainHeader.InputBegan:Connect(function(input)
+    local inputType = input.UserInputType
+
+    if inputType == Enum.UserInputType.Touch
+    or inputType == Enum.UserInputType.MouseButton1 then
+
+        Dragging = true
+        DragStart = input.Position
+        StartPosition = MainFrame.Position
+
+        if inputType == Enum.UserInputType.Touch then
+            DragInput = input
+        else
+            DragInput = nil
+        end
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if not Dragging then return end
+
+    if DragInput and input == DragInput then
+        local delta = input.Position - DragStart
+
+        MainFrame.Position = UDim2.new(
+            StartPosition.X.Scale,
+            StartPosition.X.Offset + delta.X,
+            StartPosition.Y.Scale,
+            StartPosition.Y.Offset + delta.Y
+        )
+
+    elseif not DragInput
+    and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - DragStart
+
+        MainFrame.Position = UDim2.new(
+            StartPosition.X.Scale,
+            StartPosition.X.Offset + delta.X,
+            StartPosition.Y.Scale,
+            StartPosition.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Dragging = false
+        DragInput = nil
+        DragStart = nil
+        StartPosition = nil
+    end
+end)
+
+--==================================================
+-- FLOATING BUTTON
+--==================================================
+
+local ButtonGui = Instance.new("ScreenGui")
+ButtonGui.Name = "ALI_HUB_FLOAT"
+ButtonGui.ResetOnSpawn = false
+ButtonGui.DisplayOrder = 999
+ButtonGui.Parent = CoreGui
+
+local OpenButton = Instance.new("TextButton")
+OpenButton.Name = "ALI_HUB_BUTTON"
+OpenButton.Size = UDim2.fromOffset(68, 68)
+OpenButton.Position = UDim2.new(0, 20, 0.4, 0)
+OpenButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+OpenButton.BorderSizePixel = 0
+OpenButton.Text = "ALI HUB"
+OpenButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+OpenButton.TextSize = 13
+OpenButton.Font = Enum.Font.GothamBold
+OpenButton.AutoButtonColor = false
+OpenButton.Active = true
+OpenButton.Parent = ButtonGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 5)
+corner.Parent = OpenButton
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(255, 0, 0)
+stroke.Thickness = 1.5
+stroke.Parent = OpenButton
+
+--==================================================
+-- BUTTON DRAG + CLICK
+--==================================================
+
+local ButtonDragging = false
+local ButtonMoved = false
+local ButtonInput
+local ButtonStart
+local ButtonPosition
+
+OpenButton.InputBegan:Connect(function(input)
+    local typeInput = input.UserInputType
+
+    if typeInput == Enum.UserInputType.Touch
+    or typeInput == Enum.UserInputType.MouseButton1 then
+
+        ButtonDragging = true
+        ButtonMoved = false
+        ButtonInput = typeInput == Enum.UserInputType.Touch and input or nil
+        ButtonStart = input.Position
+        ButtonPosition = OpenButton.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if not ButtonDragging then return end
+
+    local validTouch = ButtonInput and input == ButtonInput
+    local validMouse = not ButtonInput
+        and input.UserInputType == Enum.UserInputType.MouseMovement
+
+    if validTouch or validMouse then
+        local delta = input.Position - ButtonStart
+
+        if delta.Magnitude > 6 then
+            ButtonMoved = true
+        end
+
+        OpenButton.Position = UDim2.new(
+            ButtonPosition.X.Scale,
+            ButtonPosition.X.Offset + delta.X,
+            ButtonPosition.Y.Scale,
+            ButtonPosition.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        ButtonDragging = false
+        ButtonInput = nil
+    end
+end)
+
+--==================================================
+-- OPEN / CLOSE
+--==================================================
+
+OpenButton.Activated:Connect(function()
+    if ButtonMoved then
+        ButtonMoved = false
+        return
+    end
+
+    Library:ToggleUI()
+end)
+
+print("ALI KAVO HUB LOADED")
