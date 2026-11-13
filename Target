@@ -1,0 +1,2271 @@
+--[[
+	Ali Hub - Modified Version
+	Only Character + Target sections with OPFinality pages
+]]
+if game.CoreGui:FindFirstChild("SysBroker") then
+	game:GetService("StarterGui"):SetCore("SendNotification", {Title = "System Broken",Text = "GUI Already loaded, rejoin to re-execute",Duration = 5;})
+	return
+end
+local version = 3
+--VARIABLES
+_G.AntiFlingToggled = false
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Light = game:GetService("Lighting")
+local HttpService = game:GetService("HttpService")
+local mouse = plr:GetMouse()
+local ScriptWhitelist = {}
+local ForceWhitelist = {}
+local TargetedPlayer = nil
+local FlySpeed = 50
+local SavedCheckpoint = nil
+local FreeEmotesEnabled = false
+
+--FUNCTIONS
+_G.shield = function(id)
+	if not table.find(ForceWhitelist,id) then
+		table.insert(ForceWhitelist, id)
+	end
+end
+
+local function RandomChar()
+	local length = math.random(1,5)
+	local array = {}
+	for i = 1, length do
+		array[i] = string.char(math.random(32, 126))
+	end
+	return table.concat(array)
+end
+
+local function ChangeToggleColor(Button)
+	led = Button.Ticket_Asset
+	if led.ImageColor3 == Color3.fromRGB(255, 0, 0) then
+		led.ImageColor3 = Color3.fromRGB(0, 255, 0)
+	else
+		led.ImageColor3 = Color3.fromRGB(255, 0, 0)
+	end
+end
+
+local function GetPing()
+	return (game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())/1000
+end
+
+local function GetPlayer(UserDisplay)
+	if UserDisplay ~= "" then
+        for i,v in pairs(Players:GetPlayers()) do
+            if v.Name:lower():match(UserDisplay) or v.DisplayName:lower():match(UserDisplay) then
+                return v
+            end
+        end
+		return nil
+	else
+		return nil
+    end
+end
+
+local function GetCharacter(Player)
+	if Player.Character then
+		return Player.Character
+	end
+end
+
+local function GetRoot(Player)
+	if GetCharacter(Player):FindFirstChild("HumanoidRootPart") then
+		return GetCharacter(Player).HumanoidRootPart
+	end
+end
+
+local function TeleportTO(posX,posY,posZ,player,method)
+	pcall(function()
+		if method == "safe" then
+			task.spawn(function()
+				for i = 1,30 do
+					task.wait()
+					GetRoot(plr).Velocity = Vector3.new(0,0,0)
+					if player == "pos" then
+						GetRoot(plr).CFrame = CFrame.new(posX,posY,posZ)
+					else
+						GetRoot(plr).CFrame = CFrame.new(GetRoot(player).Position)+Vector3.new(0,2,0)
+					end
+				end
+			end)
+		else
+			GetRoot(plr).Velocity = Vector3.new(0,0,0)
+			if player == "pos" then
+				GetRoot(plr).CFrame = CFrame.new(posX,posY,posZ)
+			else
+				GetRoot(plr).CFrame = CFrame.new(GetRoot(player).Position)+Vector3.new(0,2,0)
+			end
+		end
+	end)
+end
+
+local function PredictionTP(player,method)
+	local root = GetRoot(player)
+	local pos = root.Position
+	local vel = root.Velocity
+	GetRoot(plr).CFrame = CFrame.new((pos.X)+(vel.X)*(GetPing()*3.5),(pos.Y)+(vel.Y)*(GetPing()*2),(pos.Z)+(vel.Z)*(GetPing()*3.5))
+	if method == "safe" then
+		task.wait()
+		GetRoot(plr).CFrame = CFrame.new(pos)
+		task.wait()
+		GetRoot(plr).CFrame = CFrame.new((pos.X)+(vel.X)*(GetPing()*3.5),(pos.Y)+(vel.Y)*(GetPing()*2),(pos.Z)+(vel.Z)*(GetPing()*3.5))
+	end
+end
+
+local function SendNotify(title, message, duration)
+	game:GetService("StarterGui"):SetCore("SendNotification", {Title = title,Text = message,Duration = duration;})
+end
+
+--GUI
+local SysBroker = Instance.new("ScreenGui")
+local Background = Instance.new("ImageLabel")
+local TitleBarLabel = Instance.new("TextLabel")
+local SectionList = Instance.new("Frame")
+local Character_Section_Button = Instance.new("TextButton")
+local Target_Section_Button = Instance.new("TextButton")
+local Game_Section = Instance.new("ScrollingFrame")
+local Target_Section = Instance.new("ScrollingFrame")
+local Character_Section = Instance.new("ScrollingFrame")
+local Assets = Instance.new("Folder")
+local Ticket_Asset = Instance.new("ImageButton")
+local Click_Asset = Instance.new("ImageButton")
+
+local function CreateToggle(Button)
+	local NewToggle = Ticket_Asset:Clone()
+	NewToggle.Parent = Button
+end
+local function CreateClicker(Button)
+	local NewClicker = Click_Asset:Clone()
+	NewClicker.Parent = Button
+end
+
+-- إعدادات GUI الأساسية (نفس الكود القديم)
+SysBroker.Name = "SysBroker"
+SysBroker.Parent = game.CoreGui
+SysBroker.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+Background.Name = "Background"
+Background.Parent = SysBroker
+Background.AnchorPoint = Vector2.new(0.5, 0.5)
+Background.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Background.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Background.BorderSizePixel = 0
+Background.Position = UDim2.new(0.5, 0, 0.5, 0)
+Background.Size = UDim2.new(0, 500, 0, 350)
+Background.ZIndex = 9
+Background.Image = "rbxassetid://115978964346924"
+Background.ImageColor3 = Color3.fromRGB(0, 255, 255)
+Background.ImageTransparency = 0.600
+Background.ScaleType = Enum.ScaleType.Stretch
+Background.Active = true
+Background.Draggable = true
+
+TitleBarLabel.Name = "TitleBarLabel"
+TitleBarLabel.Parent = Background
+TitleBarLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+TitleBarLabel.BackgroundTransparency = 0.250
+TitleBarLabel.BorderSizePixel = 0
+TitleBarLabel.Size = UDim2.new(1, 0, 0, 30)
+TitleBarLabel.Font = Enum.Font.Unknown
+TitleBarLabel.Text = "Ali hub - Modified"
+TitleBarLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+TitleBarLabel.TextScaled = true
+TitleBarLabel.TextSize = 14
+TitleBarLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+SectionList.Name = "SectionList"
+SectionList.Parent = Background
+SectionList.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+SectionList.BackgroundTransparency = 0.500
+SectionList.BorderSizePixel = 0
+SectionList.Position = UDim2.new(0, 0, 0, 30)
+SectionList.Size = UDim2.new(0, 105, 0, 320)
+
+-- زر Character فقط
+Character_Section_Button.Name = "Character_Section_Button"
+Character_Section_Button.Parent = SectionList
+Character_Section_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+Character_Section_Button.BackgroundTransparency = 0.500
+Character_Section_Button.BorderSizePixel = 0
+Character_Section_Button.Position = UDim2.new(0, 0, 0, 25)
+Character_Section_Button.Size = UDim2.new(0, 105, 0, 30)
+Character_Section_Button.Font = Enum.Font.Oswald
+Character_Section_Button.Text = "Character"
+Character_Section_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+Character_Section_Button.TextScaled = true
+
+-- زر Target
+Target_Section_Button.Name = "Target_Section_Button"
+Target_Section_Button.Parent = SectionList
+Target_Section_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+Target_Section_Button.BackgroundTransparency = 0.500
+Target_Section_Button.BorderSizePixel = 0
+Target_Section_Button.Position = UDim2.new(0, 0, 0, 65)
+Target_Section_Button.Size = UDim2.new(0, 105, 0, 30)
+Target_Section_Button.Font = Enum.Font.Oswald
+Target_Section_Button.Text = "Target"
+Target_Section_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+Target_Section_Button.TextScaled = true
+
+-- Character Section
+Character_Section.Name = "Character_Section"
+Character_Section.Parent = Background
+Character_Section.Active = true
+Character_Section.BackgroundTransparency = 1
+Character_Section.Position = UDim2.new(0, 105, 0, 30)
+Character_Section.Size = UDim2.new(0, 395, 0, 320)
+Character_Section.Visible = true
+Character_Section.CanvasSize = UDim2.new(0, 0, 1, 0)
+
+-- WalkSpeed
+local WalkSpeed_Button = Instance.new("TextButton")
+WalkSpeed_Button.Name = "WalkSpeed_Button"
+WalkSpeed_Button.Parent = Character_Section
+WalkSpeed_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+WalkSpeed_Button.BackgroundTransparency = 0.5
+WalkSpeed_Button.Position = UDim2.new(0, 25, 0, 25)
+WalkSpeed_Button.Size = UDim2.new(0, 150, 0, 30)
+WalkSpeed_Button.Font = Enum.Font.Oswald
+WalkSpeed_Button.Text = "Walk Speed"
+WalkSpeed_Button.TextColor3 = Color3.fromRGB(0,0,0)
+WalkSpeed_Button.TextScaled = true
+
+local WalkSpeed_Input = Instance.new("TextBox")
+WalkSpeed_Input.Name = "WalkSpeed_Input"
+WalkSpeed_Input.Parent = Character_Section
+WalkSpeed_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+WalkSpeed_Input.Position = UDim2.new(0, 210, 0, 25)
+WalkSpeed_Input.Size = UDim2.new(0, 175, 0, 30)
+WalkSpeed_Input.Font = Enum.Font.Gotham
+WalkSpeed_Input.PlaceholderText = "Number"
+WalkSpeed_Input.Text = ""
+WalkSpeed_Input.TextColor3 = Color3.fromRGB(20,20,20)
+WalkSpeed_Input.TextSize = 14
+
+-- JumpPower
+local JumpPower_Button = Instance.new("TextButton")
+JumpPower_Button.Name = "JumpPower_Button"
+JumpPower_Button.Parent = Character_Section
+JumpPower_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+JumpPower_Button.BackgroundTransparency = 0.5
+JumpPower_Button.Position = UDim2.new(0, 25, 0, 75)
+JumpPower_Button.Size = UDim2.new(0, 150, 0, 30)
+JumpPower_Button.Font = Enum.Font.Oswald
+JumpPower_Button.Text = "Jump Power"
+JumpPower_Button.TextColor3 = Color3.fromRGB(0,0,0)
+JumpPower_Button.TextScaled = true
+
+local JumpPower_Input = Instance.new("TextBox")
+JumpPower_Input.Name = "JumpPower_Input"
+JumpPower_Input.Parent = Character_Section
+JumpPower_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+JumpPower_Input.Position = UDim2.new(0, 210, 0, 75)
+JumpPower_Input.Size = UDim2.new(0, 175, 0, 30)
+JumpPower_Input.Font = Enum.Font.Gotham
+JumpPower_Input.PlaceholderText = "Number"
+JumpPower_Input.Text = ""
+JumpPower_Input.TextColor3 = Color3.fromRGB(20,20,20)
+JumpPower_Input.TextSize = 14
+
+-- Fly
+local Fly_Button = Instance.new("TextButton")
+Fly_Button.Name = "Fly_Button"
+Fly_Button.Parent = Character_Section
+Fly_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+Fly_Button.BackgroundTransparency = 0.5
+Fly_Button.Position = UDim2.new(0, 25, 0, 125)
+Fly_Button.Size = UDim2.new(0, 150, 0, 30)
+Fly_Button.Font = Enum.Font.Oswald
+Fly_Button.Text = "Fly"
+Fly_Button.TextColor3 = Color3.fromRGB(0,0,0)
+Fly_Button.TextScaled = true
+
+local FlySpeed_Input = Instance.new("TextBox")
+FlySpeed_Input.Name = "FlySpeed_Input"
+FlySpeed_Input.Parent = Character_Section
+FlySpeed_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+FlySpeed_Input.Position = UDim2.new(0, 210, 0, 125)
+FlySpeed_Input.Size = UDim2.new(0, 175, 0, 30)
+FlySpeed_Input.Font = Enum.Font.Gotham
+FlySpeed_Input.PlaceholderText = "Fly Speed"
+FlySpeed_Input.Text = ""
+FlySpeed_Input.TextColor3 = Color3.fromRGB(20,20,20)
+FlySpeed_Input.TextSize = 14
+
+-- Respawn
+local Respawn_Button = Instance.new("TextButton")
+Respawn_Button.Name = "Respawn_Button"
+Respawn_Button.Parent = Character_Section
+Respawn_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+Respawn_Button.BackgroundTransparency = 0.5
+Respawn_Button.Position = UDim2.new(0, 25, 0, 175)
+Respawn_Button.Size = UDim2.new(0, 150, 0, 30)
+Respawn_Button.Font = Enum.Font.Oswald
+Respawn_Button.Text = "Respawn"
+Respawn_Button.TextColor3 = Color3.fromRGB(0,0,0)
+Respawn_Button.TextScaled = true
+
+-- Save/Clear Checkpoint
+local SaveCheckpoint_Button = Instance.new("TextButton")
+SaveCheckpoint_Button.Name = "SaveCheckpoint_Button"
+SaveCheckpoint_Button.Parent = Character_Section
+SaveCheckpoint_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+SaveCheckpoint_Button.BackgroundTransparency = 0.5
+SaveCheckpoint_Button.Position = UDim2.new(0, 210, 0, 175)
+SaveCheckpoint_Button.Size = UDim2.new(0, 150, 0, 30)
+SaveCheckpoint_Button.Font = Enum.Font.Oswald
+SaveCheckpoint_Button.Text = "Save Checkpoint"
+SaveCheckpoint_Button.TextColor3 = Color3.fromRGB(0,0,0)
+SaveCheckpoint_Button.TextScaled = true
+
+-- === Target Section مع صفحات من OPFinality ===
+Target_Section.Name = "Target_Section"
+Target_Section.Parent = Background
+Target_Section.Active = true
+Target_Section.BackgroundTransparency = 1
+Target_Section.Position = UDim2.new(0, 105, 0, 30)
+Target_Section.Size = UDim2.new(0, 395, 0, 320)
+Target_Section.Visible = false
+Target_Section.CanvasSize = UDim2.new(0, 0, 4, 0)
+
+-- ==== Abusive Page (Fling, Bring, LoopFling, Weld, ToolKill, LoopTKill) ====
+local AbusiveLabel = Instance.new("TextLabel")
+AbusiveLabel.Parent = Target_Section
+AbusiveLabel.BackgroundColor3 = Color3.fromRGB(30,30,30)
+AbusiveLabel.Position = UDim2.new(0, 25, 0, 25)
+AbusiveLabel.Size = UDim2.new(0, 335, 0, 30)
+AbusiveLabel.Font = Enum.Font.Oswald
+AbusiveLabel.Text = "=== Abusive ==="
+AbusiveLabel.TextColor3 = Color3.fromRGB(0,255,255)
+AbusiveLabel.TextSize = 18
+
+local function CreateTargetButton(name, text, yPos)
+	local btn = Instance.new("TextButton")
+	btn.Name = name
+	btn.Parent = Target_Section
+	btn.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+	btn.BackgroundTransparency = 0.5
+	btn.Position = UDim2.new(0, 25, 0, yPos)
+	btn.Size = UDim2.new(0, 150, 0, 30)
+	btn.Font = Enum.Font.Oswald
+	btn.Text = text
+	btn.TextColor3 = Color3.fromRGB(0,0,0)
+	btn.TextScaled = true
+	return btn
+end
+
+local FlingTarget_Button = CreateTargetButton("FlingTarget_Button", "Fling", 60)
+local Bring_Button = CreateTargetButton("Bring_Button", "Bring", 95)
+local LoopFling_Button = CreateTargetButton("LoopFling_Button", "Loop Fling", 130)
+local Weld_Button = CreateTargetButton("Weld_Button", "Weld", 165)
+local ToolKill_Button = CreateTargetButton("ToolKill_Button", "Tool Kill", 200)
+local LoopTKill_Button = CreateTargetButton("LoopTKill_Button", "Loop T-Kill", 235)
+
+-- ==== Others Page ====
+local OthersLabel = Instance.new("TextLabel")
+OthersLabel.Parent = Target_Section
+OthersLabel.BackgroundColor3 = Color3.fromRGB(30,30,30)
+OthersLabel.Position = UDim2.new(0, 25, 0, 275)
+OthersLabel.Size = UDim2.new(0, 335, 0, 30)
+OthersLabel.Font = Enum.Font.Oswald
+OthersLabel.Text = "=== Others ==="
+OthersLabel.TextColor3 = Color3.fromRGB(0,255,255)
+OthersLabel.TextSize = 18
+
+local Follow_Button = CreateTargetButton("Follow_Button", "Follow", 310)
+local TeleportTo_Button = CreateTargetButton("TeleportTo_Button", "Teleport To", 345)
+local View_Button = CreateTargetButton("View_Button", "View", 380)
+local Orbit_Button = CreateTargetButton("Orbit_Button", "Orbit", 415)
+local LookAt_Button = CreateTargetButton("LookAt_Button", "Look At", 450)
+local PathFollow_Button = CreateTargetButton("PathFollow_Button", "Path Follow", 485)
+
+-- ==== Welding Page ====
+local WeldLabel = Instance.new("TextLabel")
+WeldLabel.Parent = Target_Section
+WeldLabel.BackgroundColor3 = Color3.fromRGB(30,30,30)
+WeldLabel.Position = UDim2.new(0, 25, 0, 525)
+WeldLabel.Size = UDim2.new(0, 335, 0, 30)
+WeldLabel.Font = Enum.Font.Oswald
+WeldLabel.Text = "=== Welding ==="
+WeldLabel.TextColor3 = Color3.fromRGB(0,255,255)
+WeldLabel.TextSize = 18
+
+local Elevator_Button = CreateTargetButton("Elevator_Button", "Elevator", 560)
+local NoJump_Button = CreateTargetButton("NoJump_Button", "No Jump", 595)
+local Annoy_Button = CreateTargetButton("Annoy_Button", "Annoy", 630)
+local InfJump_Button = CreateTargetButton("InfJump_Button", "Inf Jump", 665)
+local HeadStand_Button = CreateTargetButton("HeadStand_Button", "Head Stand", 700)
+local Carpet_Button = CreateTargetButton("Carpet_Button", "Carpet", 735)
+local Weird_Button = CreateTargetButton("Weird_Button", "Weird", 770)
+local Invert_Button = CreateTargetButton("Invert_Button", "Invert", 805)
+local Platform_Button = CreateTargetButton("Platform_Button", "Platform", 840)
+local Speed3_Button = CreateTargetButton("Speed3_Button", "Speed 3", 875)
+local Speed5_Button = CreateTargetButton("Speed5_Button", "Speed 5", 910)
+local Speed10_Button = CreateTargetButton("Speed10_Button", "Speed 10", 945)
+
+-- ==== Misc/Inspect Page ====
+local MiscLabel = Instance.new("TextLabel")
+MiscLabel.Parent = Target_Section
+MiscLabel.BackgroundColor3 = Color3.fromRGB(30,30,30)
+MiscLabel.Position = UDim2.new(0, 25, 0, 985)
+MiscLabel.Size = UDim2.new(0, 335, 0, 30)
+MiscLabel.Font = Enum.Font.Oswald
+MiscLabel.Text = "=== Inspect / Misc ==="
+MiscLabel.TextColor3 = Color3.fromRGB(0,255,255)
+MiscLabel.TextSize = 18
+
+local Inspect_Button = CreateTargetButton("Inspect_Button", "Inspect", 1020)
+local Age_Button = CreateTargetButton("Age_Button", "Age", 1055)
+local JoinDate_Button = CreateTargetButton("JoinDate_Button", "Join Date", 1090)
+local CopyTools_Button = CreateTargetButton("CopyTools_Button", "Copy Tools", 1125)
+local CopyAnims_Button = CreateTargetButton("CopyAnims_Button", "Copy Anims", 1160)
+local CopyID_Button = CreateTargetButton("CopyID_Button", "Copy ID", 1195)
+local Health_Button = CreateTargetButton("Health_Button", "Health", 1230)
+local FullName_Button = CreateTargetButton("FullName_Button", "Full Name", 1265)
+local SimRadius_Button = CreateTargetButton("SimRadius_Button", "Sim Radius", 1300)
+local Friends_Button = CreateTargetButton("Friends_Button", "Friends", 1335)
+local Team_Button = CreateTargetButton("Team_Button", "Team", 1370)
+local Membership_Button = CreateTargetButton("Membership_Button", "Membership", 1405)
+
+-- Target Input و Preview
+local TargetName_Input = Instance.new("TextBox")
+TargetName_Input.Name = "TargetName_Input"
+TargetName_Input.Parent = Target_Section
+TargetName_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+TargetName_Input.Position = UDim2.new(0, 210, 0, 25)
+TargetName_Input.Size = UDim2.new(0, 175, 0, 30)
+TargetName_Input.Font = Enum.Font.Gotham
+TargetName_Input.PlaceholderText = "@target..."
+TargetName_Input.Text = ""
+TargetName_Input.TextColor3 = Color3.fromRGB(20,20,20)
+TargetName_Input.TextSize = 14
+TargetName_Input.ZIndex = 2
+
+-- Assets
+Assets.Name = "Assets"
+Assets.Parent = SysBroker
+
+Ticket_Asset.Name = "Ticket_Asset"
+Ticket_Asset.Parent = Assets
+Ticket_Asset.AnchorPoint = Vector2.new(0, 0.5)
+Ticket_Asset.BackgroundTransparency = 1
+Ticket_Asset.Position = UDim2.new(1, 5, 0.5, 0)
+Ticket_Asset.Size = UDim2.new(0, 25, 0, 25)
+Ticket_Asset.ZIndex = 2
+Ticket_Asset.Image = "rbxassetid://3926305904"
+Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
+Ticket_Asset.ImageRectOffset = Vector2.new(424, 4)
+Ticket_Asset.ImageRectSize = Vector2.new(36, 36)
+
+Click_Asset.Name = "Click_Asset"
+Click_Asset.Parent = Assets
+Click_Asset.AnchorPoint = Vector2.new(0, 0.5)
+Click_Asset.BackgroundTransparency = 1
+Click_Asset.Position = UDim2.new(1, 5, 0.5, 0)
+Click_Asset.Size = UDim2.new(0, 25, 0, 25)
+Click_Asset.ZIndex = 2
+Click_Asset.Image = "rbxassetid://3926305904"
+Click_Asset.ImageColor3 = Color3.fromRGB(100, 100, 100)
+Click_Asset.ImageRectOffset = Vector2.new(204, 964)
+Click_Asset.ImageRectSize = Vector2.new(36, 36)
+
+-- Toggles للأزرار
+CreateToggle(Fly_Button)
+CreateClicker(WalkSpeed_Button)
+CreateClicker(JumpPower_Button)
+CreateClicker(Respawn_Button)
+CreateClicker(SaveCheckpoint_Button)
+CreateToggle(FlingTarget_Button)
+CreateToggle(LoopFling_Button)
+CreateToggle(Follow_Button)
+CreateToggle(View_Button)
+CreateToggle(Orbit_Button)
+CreateToggle(LookAt_Button)
+CreateToggle(PathFollow_Button)
+CreateToggle(Elevator_Button)
+CreateToggle(NoJump_Button)
+CreateToggle(Annoy_Button)
+CreateToggle(InfJump_Button)
+CreateToggle(HeadStand_Button)
+CreateToggle(Carpet_Button)
+CreateToggle(Weird_Button)
+CreateToggle(Invert_Button)
+CreateToggle(Platform_Button)
+CreateToggle(Speed3_Button)
+CreateToggle(Speed5_Button)
+CreateToggle(Speed10_Button)
+CreateClicker(Bring_Button)
+CreateClicker(Weld_Button)
+CreateClicker(ToolKill_Button)
+CreateClicker(LoopTKill_Button)
+CreateClicker(TeleportTo_Button)
+CreateClicker(Inspect_Button)
+CreateClicker(Age_Button)
+CreateClicker(JoinDate_Button)
+CreateClicker(CopyTools_Button)
+CreateClicker(CopyAnims_Button)
+CreateClicker(CopyID_Button)
+CreateClicker(Health_Button)
+CreateClicker(FullName_Button)
+CreateClicker(SimRadius_Button)
+CreateClicker(Friends_Button)
+CreateClicker(Team_Button)
+CreateClicker(Membership_Button)
+
+-- Change Section
+local function ChangeSection(SectionClicked)
+	local SectionClickedName = string.split(SectionClicked.Name,"_")[1]
+	for i,v in pairs(SectionList:GetChildren()) do
+		if v:IsA("TextButton") then
+			v.BackgroundTransparency = v.Name == SectionClicked.Name and 0 or 0.5
+		end
+	end
+	for i,v in pairs(Background:GetChildren()) do
+		if v:IsA("ScrollingFrame") then
+			local SectionForName = string.split(v.Name,"_")[1]
+			v.Visible = (SectionForName == SectionClickedName)
+		end
+	end
+end
+
+--[[
+    Ali Hub Modified - Character + Target Only
+    Includes OPFinality pages: Abusive, Others, Welding, Inspect
+]]
+if game.CoreGui:FindFirstChild("SysBroker") then
+    game:GetService("StarterGui"):SetCore("SendNotification", {Title = "System Broken",Text = "GUI Already loaded, rejoin to re-execute",Duration = 5;})
+    return
+end
+local version = 3
+
+-- VARIABLES
+_G.AntiFlingToggled = false
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local mouse = plr:GetMouse()
+local ScriptWhitelist = {}
+local ForceWhitelist = {}
+local TargetedPlayer = nil
+local FlySpeed = 50
+local SavedCheckpoint = nil
+local UserInputService = game:GetService("UserInputService")
+
+-- FUNCTIONS
+local function ChangeToggleColor(Button)
+    local led = Button.Ticket_Asset
+    if led.ImageColor3 == Color3.fromRGB(255, 0, 0) then
+        led.ImageColor3 = Color3.fromRGB(0, 255, 0)
+    else
+        led.ImageColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end
+
+local function GetPing()
+    return (game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())/1000
+end
+
+local function GetPlayer(UserDisplay)
+    if UserDisplay ~= "" then
+        for i,v in pairs(Players:GetPlayers()) do
+            if v.Name:lower():match(UserDisplay) or v.DisplayName:lower():match(UserDisplay) then
+                return v
+            end
+        end
+        return nil
+    else
+        return nil
+    end
+end
+
+local function GetCharacter(Player)
+    if Player.Character then return Player.Character end
+end
+
+local function GetRoot(Player)
+    local c = GetCharacter(Player)
+    if c and c:FindFirstChild("HumanoidRootPart") then
+        return c.HumanoidRootPart
+    end
+end
+
+local function TeleportTO(posX,posY,posZ,player,method)
+    pcall(function()
+        if method == "safe" then
+            task.spawn(function()
+                for i = 1,30 do
+                    task.wait()
+                    GetRoot(plr).Velocity = Vector3.new(0,0,0)
+                    if player == "pos" then
+                        GetRoot(plr).CFrame = CFrame.new(posX,posY,posZ)
+                    else
+                        GetRoot(plr).CFrame = CFrame.new(GetRoot(player).Position)+Vector3.new(0,2,0)
+                    end
+                end
+            end)
+        else
+            GetRoot(plr).Velocity = Vector3.new(0,0,0)
+            if player == "pos" then
+                GetRoot(plr).CFrame = CFrame.new(posX,posY,posZ)
+            else
+                GetRoot(plr).CFrame = CFrame.new(GetRoot(player).Position)+Vector3.new(0,2,0)
+            end
+        end
+    end)
+end
+
+local function PredictionTP(player,method)
+    local root = GetRoot(player)
+    if not root then return end
+    local pos = root.Position
+    local vel = root.Velocity
+    GetRoot(plr).CFrame = CFrame.new((pos.X)+(vel.X)*(GetPing()*3.5),(pos.Y)+(vel.Y)*(GetPing()*2),(pos.Z)+(vel.Z)*(GetPing()*3.5))
+    if method == "safe" then
+        task.wait()
+        GetRoot(plr).CFrame = CFrame.new(pos)
+        task.wait()
+        GetRoot(plr).CFrame = CFrame.new((pos.X)+(vel.X)*(GetPing()*3.5),(pos.Y)+(vel.Y)*(GetPing()*2),(pos.Z)+(vel.Z)*(GetPing()*3.5))
+    end
+end
+
+local function SendNotify(title, message, duration)
+    game:GetService("StarterGui"):SetCore("SendNotification", {Title = title,Text = message,Duration = duration;})
+end
+
+-- CREATE GUI
+task.wait(0.1)
+local SysBroker = Instance.new("ScreenGui")
+local Background = Instance.new("ImageLabel")
+local TitleBarLabel = Instance.new("TextLabel")
+local SectionList = Instance.new("Frame")
+local Character_Section_Button = Instance.new("TextButton")
+local Target_Section_Button = Instance.new("TextButton")
+local Character_Section = Instance.new("ScrollingFrame")
+local Target_Section = Instance.new("ScrollingFrame")
+local Assets = Instance.new("Folder")
+local Ticket_Asset = Instance.new("ImageButton")
+local Click_Asset = Instance.new("ImageButton")
+local OpenClose = Instance.new("ImageButton")
+local UICornerOC = Instance.new("UICorner")
+
+local function CreateToggle(Button)
+    local NewToggle = Ticket_Asset:Clone()
+    NewToggle.Parent = Button
+end
+
+local function CreateClicker(Button)
+    local NewClicker = Click_Asset:Clone()
+    NewClicker.Parent = Button
+end
+
+-- MAIN GUI
+SysBroker.Name = "SysBroker"
+SysBroker.Parent = game.CoreGui
+SysBroker.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+Background.Name = "Background"
+Background.Parent = SysBroker
+Background.AnchorPoint = Vector2.new(0.5, 0.5)
+Background.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Background.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Background.BorderSizePixel = 0
+Background.Position = UDim2.new(0.5, 0, 0.5, 0)
+Background.Size = UDim2.new(0, 500, 0, 350)
+Background.ZIndex = 9
+Background.Image = "rbxassetid://115978964346924"
+Background.ImageColor3 = Color3.fromRGB(0, 255, 255)
+Background.ImageTransparency = 0.600
+Background.ScaleType = Enum.ScaleType.Stretch
+Background.Active = true
+Background.Draggable = true
+
+TitleBarLabel.Name = "TitleBarLabel"
+TitleBarLabel.Parent = Background
+TitleBarLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+TitleBarLabel.BackgroundTransparency = 0.250
+TitleBarLabel.BorderSizePixel = 0
+TitleBarLabel.Size = UDim2.new(1, 0, 0, 30)
+TitleBarLabel.Font = Enum.Font.Unknown
+TitleBarLabel.Text = "Ali Hub - Modified"
+TitleBarLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+TitleBarLabel.TextScaled = true
+TitleBarLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+SectionList.Name = "SectionList"
+SectionList.Parent = Background
+SectionList.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+SectionList.BackgroundTransparency = 0.500
+SectionList.BorderSizePixel = 0
+SectionList.Position = UDim2.new(0, 0, 0, 30)
+SectionList.Size = UDim2.new(0, 105, 0, 320)
+
+-- CHARACTER BUTTON
+Character_Section_Button.Name = "Character_Section_Button"
+Character_Section_Button.Parent = SectionList
+Character_Section_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+Character_Section_Button.BackgroundTransparency = 0.500
+Character_Section_Button.BorderSizePixel = 0
+Character_Section_Button.Position = UDim2.new(0, 0, 0, 25)
+Character_Section_Button.Size = UDim2.new(0, 105, 0, 30)
+Character_Section_Button.Font = Enum.Font.Oswald
+Character_Section_Button.Text = "Character"
+Character_Section_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+Character_Section_Button.TextScaled = true
+
+-- TARGET BUTTON
+Target_Section_Button.Name = "Target_Section_Button"
+Target_Section_Button.Parent = SectionList
+Target_Section_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+Target_Section_Button.BackgroundTransparency = 0.500
+Target_Section_Button.BorderSizePixel = 0
+Target_Section_Button.Position = UDim2.new(0, 0, 0, 65)
+Target_Section_Button.Size = UDim2.new(0, 105, 0, 30)
+Target_Section_Button.Font = Enum.Font.Oswald
+Target_Section_Button.Text = "Target"
+Target_Section_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+Target_Section_Button.TextScaled = true
+
+-- CHARACTER SECTION
+Character_Section.Name = "Character_Section"
+Character_Section.Parent = Background
+Character_Section.Active = true
+Character_Section.BackgroundTransparency = 1.000
+Character_Section.BorderSizePixel = 0
+Character_Section.Position = UDim2.new(0, 105, 0, 30)
+Character_Section.Size = UDim2.new(0, 395, 0, 320)
+Character_Section.Visible = true
+Character_Section.CanvasSize = UDim2.new(0, 0, 1, 0)
+Character_Section.ScrollBarThickness = 5
+
+-- Walk Speed
+local WalkSpeed_Button = Instance.new("TextButton")
+WalkSpeed_Button.Name = "WalkSpeed_Button"
+WalkSpeed_Button.Parent = Character_Section
+WalkSpeed_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+WalkSpeed_Button.BackgroundTransparency = 0.500
+WalkSpeed_Button.BorderSizePixel = 0
+WalkSpeed_Button.Position = UDim2.new(0, 25, 0, 25)
+WalkSpeed_Button.Size = UDim2.new(0, 150, 0, 30)
+WalkSpeed_Button.Font = Enum.Font.Oswald
+WalkSpeed_Button.Text = "Walk Speed"
+WalkSpeed_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+WalkSpeed_Button.TextScaled = true
+
+local WalkSpeed_Input = Instance.new("TextBox")
+WalkSpeed_Input.Name = "WalkSpeed_Input"
+WalkSpeed_Input.Parent = Character_Section
+WalkSpeed_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+WalkSpeed_Input.BackgroundTransparency = 0.300
+WalkSpeed_Input.BorderSizePixel = 0
+WalkSpeed_Input.Position = UDim2.new(0, 210, 0, 25)
+WalkSpeed_Input.Size = UDim2.new(0, 175, 0, 30)
+WalkSpeed_Input.Font = Enum.Font.Gotham
+WalkSpeed_Input.PlaceholderColor3 = Color3.fromRGB(0, 0, 0)
+WalkSpeed_Input.PlaceholderText = "Number [1-99999]"
+WalkSpeed_Input.Text = ""
+WalkSpeed_Input.TextColor3 = Color3.fromRGB(20, 20, 20)
+WalkSpeed_Input.TextSize = 14
+
+-- Jump Power
+local JumpPower_Button = Instance.new("TextButton")
+JumpPower_Button.Name = "JumpPower_Button"
+JumpPower_Button.Parent = Character_Section
+JumpPower_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+JumpPower_Button.BackgroundTransparency = 0.500
+JumpPower_Button.BorderSizePixel = 0
+JumpPower_Button.Position = UDim2.new(0, 25, 0, 75)
+JumpPower_Button.Size = UDim2.new(0, 150, 0, 30)
+JumpPower_Button.Font = Enum.Font.Oswald
+JumpPower_Button.Text = "Jump power"
+JumpPower_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+JumpPower_Button.TextScaled = true
+
+local JumpPower_Input = Instance.new("TextBox")
+JumpPower_Input.Name = "JumpPower_Input"
+JumpPower_Input.Parent = Character_Section
+JumpPower_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+JumpPower_Input.BackgroundTransparency = 0.300
+JumpPower_Input.BorderSizePixel = 0
+JumpPower_Input.Position = UDim2.new(0, 210, 0, 75)
+JumpPower_Input.Size = UDim2.new(0, 175, 0, 30)
+JumpPower_Input.Font = Enum.Font.Gotham
+JumpPower_Input.PlaceholderColor3 = Color3.fromRGB(0, 0, 0)
+JumpPower_Input.PlaceholderText = "Number [1-99999]"
+JumpPower_Input.Text = ""
+JumpPower_Input.TextColor3 = Color3.fromRGB(20, 20, 20)
+JumpPower_Input.TextSize = 14
+
+-- Fly Speed
+local FlySpeed_Button = Instance.new("TextButton")
+FlySpeed_Button.Name = "FlySpeed_Button"
+FlySpeed_Button.Parent = Character_Section
+FlySpeed_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+FlySpeed_Button.BackgroundTransparency = 0.500
+FlySpeed_Button.BorderSizePixel = 0
+FlySpeed_Button.Position = UDim2.new(0, 25, 0, 125)
+FlySpeed_Button.Size = UDim2.new(0, 150, 0, 30)
+FlySpeed_Button.Font = Enum.Font.Oswald
+FlySpeed_Button.Text = "Fly Speed"
+FlySpeed_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+FlySpeed_Button.TextScaled = true
+
+local FlySpeed_Input = Instance.new("TextBox")
+FlySpeed_Input.Name = "FlySpeed_Input"
+FlySpeed_Input.Parent = Character_Section
+FlySpeed_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+FlySpeed_Input.BackgroundTransparency = 0.300
+FlySpeed_Input.BorderSizePixel = 0
+FlySpeed_Input.Position = UDim2.new(0, 210, 0, 125)
+FlySpeed_Input.Size = UDim2.new(0, 175, 0, 30)
+FlySpeed_Input.Font = Enum.Font.Gotham
+FlySpeed_Input.PlaceholderColor3 = Color3.fromRGB(0, 0, 0)
+FlySpeed_Input.PlaceholderText = "Number [1-99999]"
+FlySpeed_Input.Text = ""
+FlySpeed_Input.TextColor3 = Color3.fromRGB(20, 20, 20)
+FlySpeed_Input.TextSize = 14
+
+-- Fly
+local Fly_Button = Instance.new("TextButton")
+Fly_Button.Name = "Fly_Button"
+Fly_Button.Parent = Character_Section
+Fly_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+Fly_Button.BackgroundTransparency = 0.500
+Fly_Button.BorderSizePixel = 0
+Fly_Button.Position = UDim2.new(0, 25, 0, 175)
+Fly_Button.Size = UDim2.new(0, 150, 0, 30)
+Fly_Button.Font = Enum.Font.Oswald
+Fly_Button.Text = "Fly"
+Fly_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+Fly_Button.TextScaled = true
+
+-- Respawn
+local Respawn_Button = Instance.new("TextButton")
+Respawn_Button.Name = "Respawn_Button"
+Respawn_Button.Parent = Character_Section
+Respawn_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+Respawn_Button.BackgroundTransparency = 0.500
+Respawn_Button.BorderSizePixel = 0
+Respawn_Button.Position = UDim2.new(0, 210, 0, 175)
+Respawn_Button.Size = UDim2.new(0, 150, 0, 30)
+Respawn_Button.Font = Enum.Font.Oswald
+Respawn_Button.Text = "Respawn"
+Respawn_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+Respawn_Button.TextScaled = true
+
+-- Save Checkpoint
+local SaveCheckpoint_Button = Instance.new("TextButton")
+SaveCheckpoint_Button.Name = "SaveCheckpoint_Button"
+SaveCheckpoint_Button.Parent = Character_Section
+SaveCheckpoint_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+SaveCheckpoint_Button.BackgroundTransparency = 0.500
+SaveCheckpoint_Button.BorderSizePixel = 0
+SaveCheckpoint_Button.Position = UDim2.new(0, 25, 0, 225)
+SaveCheckpoint_Button.Size = UDim2.new(0, 150, 0, 30)
+SaveCheckpoint_Button.Font = Enum.Font.Oswald
+SaveCheckpoint_Button.Text = "Save checkpoint"
+SaveCheckpoint_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+SaveCheckpoint_Button.TextScaled = true
+
+-- Clear Checkpoint
+local ClearCheckpoint_Button = Instance.new("TextButton")
+ClearCheckpoint_Button.Name = "ClearCheckpoint_Button"
+ClearCheckpoint_Button.Parent = Character_Section
+ClearCheckpoint_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+ClearCheckpoint_Button.BackgroundTransparency = 0.500
+ClearCheckpoint_Button.BorderSizePixel = 0
+ClearCheckpoint_Button.Position = UDim2.new(0, 210, 0, 225)
+ClearCheckpoint_Button.Size = UDim2.new(0, 150, 0, 30)
+ClearCheckpoint_Button.Font = Enum.Font.Oswald
+ClearCheckpoint_Button.Text = "Clear checkpoint"
+ClearCheckpoint_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+ClearCheckpoint_Button.TextScaled = true
+
+-- ============ TARGET SECTION ============
+Target_Section.Name = "Target_Section"
+Target_Section.Parent = Background
+Target_Section.Active = true
+Target_Section.BackgroundTransparency = 1.000
+Target_Section.BorderSizePixel = 0
+Target_Section.Position = UDim2.new(0, 105, 0, 30)
+Target_Section.Size = UDim2.new(0, 395, 0, 320)
+Target_Section.Visible = false
+Target_Section.CanvasSize = UDim2.new(0, 0, 4.5, 0)
+Target_Section.ScrollBarThickness = 5
+
+-- Target Input
+local TargetName_Input = Instance.new("TextBox")
+TargetName_Input.Name = "TargetName_Input"
+TargetName_Input.Parent = Target_Section
+TargetName_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+TargetName_Input.BackgroundTransparency = 0.300
+TargetName_Input.BorderSizePixel = 0
+TargetName_Input.Position = UDim2.new(0, 25, 0, 10)
+TargetName_Input.Size = UDim2.new(0, 200, 0, 30)
+TargetName_Input.Font = Enum.Font.Gotham
+TargetName_Input.PlaceholderColor3 = Color3.fromRGB(0, 0, 0)
+TargetName_Input.PlaceholderText = "Enter target name..."
+TargetName_Input.Text = ""
+TargetName_Input.TextColor3 = Color3.fromRGB(20, 20, 20)
+TargetName_Input.TextSize = 14
+
+local TargetStatus = Instance.new("TextLabel")
+TargetStatus.Name = "TargetStatus"
+TargetStatus.Parent = Target_Section
+TargetStatus.BackgroundTransparency = 1
+TargetStatus.Position = UDim2.new(0, 235, 0, 10)
+TargetStatus.Size = UDim2.new(0, 130, 0, 30)
+TargetStatus.Font = Enum.Font.Gotham
+TargetStatus.Text = "No target"
+TargetStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+TargetStatus.TextSize = 13
+TargetStatus.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Helper
+local function MakeLabel(text, yPos)
+    local lbl = Instance.new("TextLabel")
+    lbl.Parent = Target_Section
+    lbl.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    lbl.BorderSizePixel = 0
+    lbl.Position = UDim2.new(0, 25, 0, yPos)
+    lbl.Size = UDim2.new(0, 340, 0, 24)
+    lbl.Font = Enum.Font.Oswald
+    lbl.Text = "  "..text
+    lbl.TextColor3 = Color3.fromRGB(0, 220, 220)
+    lbl.TextSize = 14
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+end
+
+local function MakeBtn(text, xPos, yPos)
+    local btn = Instance.new("TextButton")
+    btn.Parent = Target_Section
+    btn.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+    btn.BackgroundTransparency = 0.5
+    btn.BorderSizePixel = 0
+    btn.Position = UDim2.new(0, xPos, 0, yPos)
+    btn.Size = UDim2.new(0, 105, 0, 30)
+    btn.Font = Enum.Font.Oswald
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    btn.TextScaled = true
+    return btn
+end
+
+-- ===== ABUSIVE =====
+MakeLabel("ABUSIVE", 50)
+local FlingTarget_Button = MakeBtn("Fling", 25, 78)
+local Bring_Button = MakeBtn("Bring", 140, 78)
+local LoopFling_Button = MakeBtn("Loop Fling", 255, 78)
+
+local Weld_Button = MakeBtn("Weld", 25, 112)
+local ToolKill_Button = MakeBtn("Tool Kill", 140, 112)
+local LoopTKill_Button = MakeBtn("Loop T-Kill", 255, 112)
+
+-- ===== OTHERS =====
+MakeLabel("OTHERS", 150)
+local Follow_Button = MakeBtn("Follow", 25, 178)
+local TeleportTo_Button = MakeBtn("Teleport To", 140, 178)
+local View_Button = MakeBtn("View", 255, 178)
+
+local Orbit_Button = MakeBtn("Orbit", 25, 212)
+local LookAt_Button = MakeBtn("Look At", 140, 212)
+local PathFollow_Button = MakeBtn("Path Follow", 255, 212)
+
+-- ===== WELDING =====
+MakeLabel("WELDING", 250)
+local Elevator_Button = MakeBtn("Elevator", 25, 278)
+local NoJump_Button = MakeBtn("No Jump", 140, 278)
+local Annoy_Button = MakeBtn("Annoy", 255, 278)
+
+local InfJump_Button = MakeBtn("Inf Jump", 25, 312)
+local HeadStand_Button = MakeBtn("Head Stand", 140, 312)
+local Carpet_Button = MakeBtn("Carpet", 255, 312)
+
+local Weird_Button = MakeBtn("Weird", 25, 346)
+local Invert_Button = MakeBtn("Invert", 140, 346)
+local Platform_Button = MakeBtn("Platform", 255, 346)
+
+local Speed3_Button = MakeBtn("Speed 3", 25, 380)
+local Speed5_Button = MakeBtn("Speed 5", 140, 380)
+local Speed10_Button = MakeBtn("Speed 10", 255, 380)
+
+-- ===== INSPECT =====
+MakeLabel("INSPECT / MISC", 418)
+local Inspect_Button = MakeBtn("Inspect", 25, 446)
+local Age_Button = MakeBtn("Age", 140, 446)
+local JoinDate_Button = MakeBtn("Join Date", 255, 446)
+
+local CopyTools_Button = MakeBtn("Copy Tools", 25, 480)
+local CopyAnims_Button = MakeBtn("Copy Anims", 140, 480)
+local CopyID_Button = MakeBtn("Copy ID", 255, 480)
+
+local Health_Button = MakeBtn("Health", 25, 514)
+local FullName_Button = MakeBtn("Full Name", 140, 514)
+local SimRadius_Button = MakeBtn("Sim Radius", 255, 514)
+
+local Friends_Button = MakeBtn("Friends", 25, 548)
+local Team_Button = MakeBtn("Team", 140, 548)
+local Membership_Button = MakeBtn("Membership", 255, 548)
+
+-- ASSETS
+Assets.Name = "Assets"
+Assets.Parent = SysBroker
+
+Ticket_Asset.Name = "Ticket_Asset"
+Ticket_Asset.Parent = Assets
+Ticket_Asset.AnchorPoint = Vector2.new(0, 0.5)
+Ticket_Asset.BackgroundTransparency = 1.000
+Ticket_Asset.BorderSizePixel = 0
+Ticket_Asset.Position = UDim2.new(1, -30, 0.5, 0)
+Ticket_Asset.Size = UDim2.new(0, 25, 0, 25)
+Ticket_Asset.ZIndex = 2
+Ticket_Asset.Image = "rbxassetid://3926305904"
+Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
+Ticket_Asset.ImageRectOffset = Vector2.new(424, 4)
+Ticket_Asset.ImageRectSize = Vector2.new(36, 36)
+
+Click_Asset.Name = "Click_Asset"
+Click_Asset.Parent = Assets
+Click_Asset.AnchorPoint = Vector2.new(0, 0.5)
+Click_Asset.BackgroundTransparency = 1.000
+Click_Asset.BorderSizePixel = 0
+Click_Asset.Position = UDim2.new(1, -30, 0.5, 0)
+Click_Asset.Size = UDim2.new(0, 25, 0, 25)
+Click_Asset.ZIndex = 2
+Click_Asset.Image = "rbxassetid://3926305904"
+Click_Asset.ImageColor3 = Color3.fromRGB(100, 100, 100)
+Click_Asset.ImageRectOffset = Vector2.new(204, 964)
+Click_Asset.ImageRectSize = Vector2.new(36, 36)
+
+-- ADD TOGGLES/CLICKERS
+CreateToggle(Fly_Button)
+CreateClicker(WalkSpeed_Button)
+CreateClicker(JumpPower_Button)
+CreateClicker(FlySpeed_Button)
+CreateClicker(Respawn_Button)
+CreateClicker(SaveCheckpoint_Button)
+CreateClicker(ClearCheckpoint_Button)
+
+CreateToggle(FlingTarget_Button)
+CreateToggle(LoopFling_Button)
+CreateToggle(Follow_Button)
+CreateToggle(View_Button)
+CreateToggle(Orbit_Button)
+CreateToggle(LookAt_Button)
+CreateToggle(PathFollow_Button)
+CreateToggle(Elevator_Button)
+CreateToggle(NoJump_Button)
+CreateToggle(Annoy_Button)
+CreateToggle(InfJump_Button)
+CreateToggle(HeadStand_Button)
+CreateToggle(Carpet_Button)
+CreateToggle(Weird_Button)
+CreateToggle(Invert_Button)
+CreateToggle(Platform_Button)
+CreateToggle(Speed3_Button)
+CreateToggle(Speed5_Button)
+CreateToggle(Speed10_Button)
+
+CreateClicker(Bring_Button)
+CreateClicker(Weld_Button)
+CreateClicker(ToolKill_Button)
+CreateClicker(LoopTKill_Button)
+CreateClicker(TeleportTo_Button)
+CreateClicker(Inspect_Button)
+CreateClicker(Age_Button)
+CreateClicker(JoinDate_Button)
+CreateClicker(CopyTools_Button)
+CreateClicker(CopyAnims_Button)
+CreateClicker(CopyID_Button)
+CreateClicker(Health_Button)
+CreateClicker(FullName_Button)
+CreateClicker(SimRadius_Button)
+CreateClicker(Friends_Button)
+CreateClicker(Team_Button)
+CreateClicker(Membership_Button)
+
+--[[
+    Ali Hub Modified v3 - Character + Target Only
+    Includes OPFinality pages: Abusive, Others, Welding, Inspect
+]]
+if game.CoreGui:FindFirstChild("SysBroker") then
+    game:GetService("StarterGui"):SetCore("SendNotification", {Title = "System Broken",Text = "GUI Already loaded, rejoin to re-execute",Duration = 5;})
+    return
+end
+local version = 3
+
+-- VARIABLES
+_G.AntiFlingToggled = false
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local mouse = plr:GetMouse()
+local ForceWhitelist = {}
+local TargetedPlayer = nil
+local FlySpeed = 50
+local SavedCheckpoint = nil
+local UserInputService = game:GetService("UserInputService")
+
+-- FUNCTIONS
+local function ChangeToggleColor(Button)
+    local led = Button.Ticket_Asset
+    if led.ImageColor3 == Color3.fromRGB(255, 0, 0) then
+        led.ImageColor3 = Color3.fromRGB(0, 255, 0)
+    else
+        led.ImageColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end
+
+local function GetPing()
+    return (game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())/1000
+end
+
+local function GetPlayer(UserDisplay)
+    if UserDisplay ~= "" then
+        for i,v in pairs(Players:GetPlayers()) do
+            if v.Name:lower():match(UserDisplay) or v.DisplayName:lower():match(UserDisplay) then
+                return v
+            end
+        end
+        return nil
+    else
+        return nil
+    end
+end
+
+local function GetRoot(Player)
+    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+        return Player.Character.HumanoidRootPart
+    end
+end
+
+local function TeleportTO(posX,posY,posZ,player,method)
+    pcall(function()
+        if method == "safe" then
+            task.spawn(function()
+                for i = 1,30 do
+                    task.wait()
+                    GetRoot(plr).Velocity = Vector3.new(0,0,0)
+                    if player == "pos" then
+                        GetRoot(plr).CFrame = CFrame.new(posX,posY,posZ)
+                    else
+                        GetRoot(plr).CFrame = CFrame.new(GetRoot(player).Position)+Vector3.new(0,2,0)
+                    end
+                end
+            end)
+        else
+            GetRoot(plr).Velocity = Vector3.new(0,0,0)
+            if player == "pos" then
+                GetRoot(plr).CFrame = CFrame.new(posX,posY,posZ)
+            else
+                GetRoot(plr).CFrame = CFrame.new(GetRoot(player).Position)+Vector3.new(0,2,0)
+            end
+        end
+    end)
+end
+
+local function PredictionTP(player,method)
+    local root = GetRoot(player)
+    if not root then return end
+    local pos = root.Position
+    local vel = root.Velocity
+    GetRoot(plr).CFrame = CFrame.new((pos.X)+(vel.X)*(GetPing()*3.5),(pos.Y)+(vel.Y)*(GetPing()*2),(pos.Z)+(vel.Z)*(GetPing()*3.5))
+    if method == "safe" then
+        task.wait()
+        GetRoot(plr).CFrame = CFrame.new(pos)
+        task.wait()
+        GetRoot(plr).CFrame = CFrame.new((pos.X)+(vel.X)*(GetPing()*3.5),(pos.Y)+(vel.Y)*(GetPing()*2),(pos.Z)+(vel.Z)*(GetPing()*3.5))
+    end
+end
+
+local function SendNotify(title, message, duration)
+    game:GetService("StarterGui"):SetCore("SendNotification", {Title = title,Text = message,Duration = duration;})
+end
+
+-- CREATE GUI
+task.wait(0.1)
+local SysBroker = Instance.new("ScreenGui")
+local Background = Instance.new("ImageLabel")
+local TitleBarLabel = Instance.new("TextLabel")
+local SectionList = Instance.new("Frame")
+local Character_Section_Button = Instance.new("TextButton")
+local Target_Section_Button = Instance.new("TextButton")
+local Character_Section = Instance.new("ScrollingFrame")
+local Target_Section = Instance.new("ScrollingFrame")
+local Assets = Instance.new("Folder")
+local Ticket_Asset = Instance.new("ImageButton")
+local Click_Asset = Instance.new("ImageButton")
+local OpenClose = Instance.new("ImageButton")
+local UICornerOC = Instance.new("UICorner")
+
+local function CreateToggle(Button)
+    local NewToggle = Ticket_Asset:Clone()
+    NewToggle.Parent = Button
+end
+
+local function CreateClicker(Button)
+    local NewClicker = Click_Asset:Clone()
+    NewClicker.Parent = Button
+end
+
+-- MAIN GUI
+SysBroker.Name = "SysBroker"
+SysBroker.Parent = game.CoreGui
+SysBroker.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+Background.Name = "Background"
+Background.Parent = SysBroker
+Background.AnchorPoint = Vector2.new(0.5, 0.5)
+Background.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Background.BorderSizePixel = 0
+Background.Position = UDim2.new(0.5, 0, 0.5, 0)
+Background.Size = UDim2.new(0, 500, 0, 350)
+Background.ZIndex = 9
+Background.Image = "rbxassetid://115978964346924"
+Background.ImageColor3 = Color3.fromRGB(0, 255, 255)
+Background.ImageTransparency = 0.600
+Background.ScaleType = Enum.ScaleType.Stretch
+Background.Active = true
+Background.Draggable = true
+
+TitleBarLabel.Name = "TitleBarLabel"
+TitleBarLabel.Parent = Background
+TitleBarLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+TitleBarLabel.BackgroundTransparency = 0.250
+TitleBarLabel.BorderSizePixel = 0
+TitleBarLabel.Size = UDim2.new(1, 0, 0, 30)
+TitleBarLabel.Font = Enum.Font.Unknown
+TitleBarLabel.Text = "Ali Hub - Modified"
+TitleBarLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+TitleBarLabel.TextScaled = true
+TitleBarLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+SectionList.Name = "SectionList"
+SectionList.Parent = Background
+SectionList.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+SectionList.BackgroundTransparency = 0.500
+SectionList.BorderSizePixel = 0
+SectionList.Position = UDim2.new(0, 0, 0, 30)
+SectionList.Size = UDim2.new(0, 105, 0, 320)
+
+Character_Section_Button.Name = "Character_Section_Button"
+Character_Section_Button.Parent = SectionList
+Character_Section_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+Character_Section_Button.BackgroundTransparency = 0.500
+Character_Section_Button.BorderSizePixel = 0
+Character_Section_Button.Position = UDim2.new(0, 0, 0, 25)
+Character_Section_Button.Size = UDim2.new(0, 105, 0, 30)
+Character_Section_Button.Font = Enum.Font.Oswald
+Character_Section_Button.Text = "Character"
+Character_Section_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+Character_Section_Button.TextScaled = true
+
+Target_Section_Button.Name = "Target_Section_Button"
+Target_Section_Button.Parent = SectionList
+Target_Section_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+Target_Section_Button.BackgroundTransparency = 0.500
+Target_Section_Button.BorderSizePixel = 0
+Target_Section_Button.Position = UDim2.new(0, 0, 0, 65)
+Target_Section_Button.Size = UDim2.new(0, 105, 0, 30)
+Target_Section_Button.Font = Enum.Font.Oswald
+Target_Section_Button.Text = "Target"
+Target_Section_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+Target_Section_Button.TextScaled = true
+
+Character_Section.Name = "Character_Section"
+Character_Section.Parent = Background
+Character_Section.Active = true
+Character_Section.BackgroundTransparency = 1.000
+Character_Section.BorderSizePixel = 0
+Character_Section.Position = UDim2.new(0, 105, 0, 30)
+Character_Section.Size = UDim2.new(0, 395, 0, 320)
+Character_Section.Visible = true
+Character_Section.CanvasSize = UDim2.new(0, 0, 1, 0)
+Character_Section.ScrollBarThickness = 5
+
+local WalkSpeed_Button = Instance.new("TextButton")
+WalkSpeed_Button.Name = "WalkSpeed_Button"
+WalkSpeed_Button.Parent = Character_Section
+WalkSpeed_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+WalkSpeed_Button.BackgroundTransparency = 0.500
+WalkSpeed_Button.BorderSizePixel = 0
+WalkSpeed_Button.Position = UDim2.new(0, 25, 0, 25)
+WalkSpeed_Button.Size = UDim2.new(0, 150, 0, 30)
+WalkSpeed_Button.Font = Enum.Font.Oswald
+WalkSpeed_Button.Text = "Walk Speed"
+WalkSpeed_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+WalkSpeed_Button.TextScaled = true
+
+local WalkSpeed_Input = Instance.new("TextBox")
+WalkSpeed_Input.Name = "WalkSpeed_Input"
+WalkSpeed_Input.Parent = Character_Section
+WalkSpeed_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+WalkSpeed_Input.BackgroundTransparency = 0.300
+WalkSpeed_Input.BorderSizePixel = 0
+WalkSpeed_Input.Position = UDim2.new(0, 210, 0, 25)
+WalkSpeed_Input.Size = UDim2.new(0, 175, 0, 30)
+WalkSpeed_Input.Font = Enum.Font.Gotham
+WalkSpeed_Input.PlaceholderText = "Number"
+WalkSpeed_Input.Text = ""
+WalkSpeed_Input.TextColor3 = Color3.fromRGB(20, 20, 20)
+WalkSpeed_Input.TextSize = 14
+
+local JumpPower_Button = Instance.new("TextButton")
+JumpPower_Button.Name = "JumpPower_Button"
+JumpPower_Button.Parent = Character_Section
+JumpPower_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+JumpPower_Button.BackgroundTransparency = 0.500
+JumpPower_Button.BorderSizePixel = 0
+JumpPower_Button.Position = UDim2.new(0, 25, 0, 75)
+JumpPower_Button.Size = UDim2.new(0, 150, 0, 30)
+JumpPower_Button.Font = Enum.Font.Oswald
+JumpPower_Button.Text = "Jump power"
+JumpPower_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+JumpPower_Button.TextScaled = true
+
+local JumpPower_Input = Instance.new("TextBox")
+JumpPower_Input.Name = "JumpPower_Input"
+JumpPower_Input.Parent = Character_Section
+JumpPower_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+JumpPower_Input.BackgroundTransparency = 0.300
+JumpPower_Input.BorderSizePixel = 0
+JumpPower_Input.Position = UDim2.new(0, 210, 0, 75)
+JumpPower_Input.Size = UDim2.new(0, 175, 0, 30)
+JumpPower_Input.Font = Enum.Font.Gotham
+JumpPower_Input.PlaceholderText = "Number"
+JumpPower_Input.Text = ""
+JumpPower_Input.TextColor3 = Color3.fromRGB(20, 20, 20)
+JumpPower_Input.TextSize = 14
+
+local FlySpeed_Button = Instance.new("TextButton")
+FlySpeed_Button.Name = "FlySpeed_Button"
+FlySpeed_Button.Parent = Character_Section
+FlySpeed_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+FlySpeed_Button.BackgroundTransparency = 0.500
+FlySpeed_Button.BorderSizePixel = 0
+FlySpeed_Button.Position = UDim2.new(0, 25, 0, 125)
+FlySpeed_Button.Size = UDim2.new(0, 150, 0, 30)
+FlySpeed_Button.Font = Enum.Font.Oswald
+FlySpeed_Button.Text = "Fly speed"
+FlySpeed_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+FlySpeed_Button.TextScaled = true
+
+local FlySpeed_Input = Instance.new("TextBox")
+FlySpeed_Input.Name = "FlySpeed_Input"
+FlySpeed_Input.Parent = Character_Section
+FlySpeed_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+FlySpeed_Input.BackgroundTransparency = 0.300
+FlySpeed_Input.BorderSizePixel = 0
+FlySpeed_Input.Position = UDim2.new(0, 210, 0, 125)
+FlySpeed_Input.Size = UDim2.new(0, 175, 0, 30)
+FlySpeed_Input.Font = Enum.Font.Gotham
+FlySpeed_Input.PlaceholderText = "Number"
+FlySpeed_Input.Text = ""
+FlySpeed_Input.TextColor3 = Color3.fromRGB(20, 20, 20)
+FlySpeed_Input.TextSize = 14
+
+local Fly_Button = Instance.new("TextButton")
+Fly_Button.Name = "Fly_Button"
+Fly_Button.Parent = Character_Section
+Fly_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+Fly_Button.BackgroundTransparency = 0.500
+Fly_Button.BorderSizePixel = 0
+Fly_Button.Position = UDim2.new(0, 25, 0, 175)
+Fly_Button.Size = UDim2.new(0, 150, 0, 30)
+Fly_Button.Font = Enum.Font.Oswald
+Fly_Button.Text = "Fly"
+Fly_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+Fly_Button.TextScaled = true
+
+local Respawn_Button = Instance.new("TextButton")
+Respawn_Button.Name = "Respawn_Button"
+Respawn_Button.Parent = Character_Section
+Respawn_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+Respawn_Button.BackgroundTransparency = 0.500
+Respawn_Button.BorderSizePixel = 0
+Respawn_Button.Position = UDim2.new(0, 210, 0, 175)
+Respawn_Button.Size = UDim2.new(0, 150, 0, 30)
+Respawn_Button.Font = Enum.Font.Oswald
+Respawn_Button.Text = "Respawn"
+Respawn_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+Respawn_Button.TextScaled = true
+
+local SaveCheckpoint_Button = Instance.new("TextButton")
+SaveCheckpoint_Button.Name = "SaveCheckpoint_Button"
+SaveCheckpoint_Button.Parent = Character_Section
+SaveCheckpoint_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+SaveCheckpoint_Button.BackgroundTransparency = 0.500
+SaveCheckpoint_Button.BorderSizePixel = 0
+SaveCheckpoint_Button.Position = UDim2.new(0, 25, 0, 225)
+SaveCheckpoint_Button.Size = UDim2.new(0, 150, 0, 30)
+SaveCheckpoint_Button.Font = Enum.Font.Oswald
+SaveCheckpoint_Button.Text = "Save checkpoint"
+SaveCheckpoint_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+SaveCheckpoint_Button.TextScaled = true
+
+local ClearCheckpoint_Button = Instance.new("TextButton")
+ClearCheckpoint_Button.Name = "ClearCheckpoint_Button"
+ClearCheckpoint_Button.Parent = Character_Section
+ClearCheckpoint_Button.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+ClearCheckpoint_Button.BackgroundTransparency = 0.500
+ClearCheckpoint_Button.BorderSizePixel = 0
+ClearCheckpoint_Button.Position = UDim2.new(0, 210, 0, 225)
+ClearCheckpoint_Button.Size = UDim2.new(0, 150, 0, 30)
+ClearCheckpoint_Button.Font = Enum.Font.Oswald
+ClearCheckpoint_Button.Text = "Clear checkpoint"
+ClearCheckpoint_Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+ClearCheckpoint_Button.TextScaled = true
+
+-- ============ TARGET SECTION ============
+Target_Section.Name = "Target_Section"
+Target_Section.Parent = Background
+Target_Section.Active = true
+Target_Section.BackgroundTransparency = 1.000
+Target_Section.BorderSizePixel = 0
+Target_Section.Position = UDim2.new(0, 105, 0, 30)
+Target_Section.Size = UDim2.new(0, 395, 0, 320)
+Target_Section.Visible = false
+Target_Section.CanvasSize = UDim2.new(0, 0, 4.5, 0)
+Target_Section.ScrollBarThickness = 5
+
+local TargetName_Input = Instance.new("TextBox")
+TargetName_Input.Name = "TargetName_Input"
+TargetName_Input.Parent = Target_Section
+TargetName_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+TargetName_Input.BackgroundTransparency = 0.300
+TargetName_Input.BorderSizePixel = 0
+TargetName_Input.Position = UDim2.new(0, 25, 0, 10)
+TargetName_Input.Size = UDim2.new(0, 200, 0, 30)
+TargetName_Input.Font = Enum.Font.Gotham
+TargetName_Input.PlaceholderText = "Enter target name..."
+TargetName_Input.Text = ""
+TargetName_Input.TextColor3 = Color3.fromRGB(20, 20, 20)
+TargetName_Input.TextSize = 14
+
+local TargetStatus = Instance.new("TextLabel")
+TargetStatus.Name = "TargetStatus"
+TargetStatus.Parent = Target_Section
+TargetStatus.BackgroundTransparency = 1
+TargetStatus.Position = UDim2.new(0, 235, 0, 10)
+TargetStatus.Size = UDim2.new(0, 130, 0, 30)
+TargetStatus.Font = Enum.Font.Gotham
+TargetStatus.Text = "No target"
+TargetStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+TargetStatus.TextSize = 13
+TargetStatus.TextXAlignment = Enum.TextXAlignment.Left
+
+local function MakeLabel(text, yPos)
+    local lbl = Instance.new("TextLabel")
+    lbl.Parent = Target_Section
+    lbl.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    lbl.BorderSizePixel = 0
+    lbl.Position = UDim2.new(0, 25, 0, yPos)
+    lbl.Size = UDim2.new(0, 340, 0, 24)
+    lbl.Font = Enum.Font.Oswald
+    lbl.Text = "  "..text
+    lbl.TextColor3 = Color3.fromRGB(0, 220, 220)
+    lbl.TextSize = 14
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+end
+
+local function MakeBtn(text, xPos, yPos)
+    local btn = Instance.new("TextButton")
+    btn.Parent = Target_Section
+    btn.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+    btn.BackgroundTransparency = 0.5
+    btn.BorderSizePixel = 0
+    btn.Position = UDim2.new(0, xPos, 0, yPos)
+    btn.Size = UDim2.new(0, 105, 0, 30)
+    btn.Font = Enum.Font.Oswald
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    btn.TextScaled = true
+    return btn
+end
+
+-- ABUSIVE
+MakeLabel("ABUSIVE", 50)
+local FlingTarget_Button = MakeBtn("Fling", 25, 78)
+local Bring_Button = MakeBtn("Bring", 140, 78)
+local LoopFling_Button = MakeBtn("Loop Fling", 255, 78)
+local Weld_Button = MakeBtn("Weld", 25, 112)
+local ToolKill_Button = MakeBtn("Tool Kill", 140, 112)
+local LoopTKill_Button = MakeBtn("Loop T-Kill", 255, 112)
+
+-- OTHERS
+MakeLabel("OTHERS", 150)
+local Follow_Button = MakeBtn("Follow", 25, 178)
+local TeleportTo_Button = MakeBtn("Teleport To", 140, 178)
+local View_Button = MakeBtn("View", 255, 178)
+local Orbit_Button = MakeBtn("Orbit", 25, 212)
+local LookAt_Button = MakeBtn("Look At", 140, 212)
+local PathFollow_Button = MakeBtn("Path Follow", 255, 212)
+
+-- WELDING
+MakeLabel("WELDING", 250)
+local Elevator_Button = MakeBtn("Elevator", 25, 278)
+local NoJump_Button = MakeBtn("No Jump", 140, 278)
+local Annoy_Button = MakeBtn("Annoy", 255, 278)
+local InfJump_Button = MakeBtn("Inf Jump", 25, 312)
+local HeadStand_Button = MakeBtn("Head Stand", 140, 312)
+local Carpet_Button = MakeBtn("Carpet", 255, 312)
+local Weird_Button = MakeBtn("Weird", 25, 346)
+local Invert_Button = MakeBtn("Invert", 140, 346)
+local Platform_Button = MakeBtn("Platform", 255, 346)
+local Speed3_Button = MakeBtn("Speed 3", 25, 380)
+local Speed5_Button = MakeBtn("Speed 5", 140, 380)
+local Speed10_Button = MakeBtn("Speed 10", 255, 380)
+
+-- INSPECT
+MakeLabel("INSPECT / MISC", 418)
+local Inspect_Button = MakeBtn("Inspect", 25, 446)
+local Age_Button = MakeBtn("Age", 140, 446)
+local JoinDate_Button = MakeBtn("Join Date", 255, 446)
+local CopyTools_Button = MakeBtn("Copy Tools", 25, 480)
+local CopyAnims_Button = MakeBtn("Copy Anims", 140, 480)
+local CopyID_Button = MakeBtn("Copy ID", 255, 480)
+local Health_Button = MakeBtn("Health", 25, 514)
+local FullName_Button = MakeBtn("Full Name", 140, 514)
+local SimRadius_Button = MakeBtn("Sim Radius", 255, 514)
+local Friends_Button = MakeBtn("Friends", 25, 548)
+local Team_Button = MakeBtn("Team", 140, 548)
+local Membership_Button = MakeBtn("Membership", 255, 548)
+
+-- ASSETS
+Assets.Name = "Assets"
+Assets.Parent = SysBroker
+
+Ticket_Asset.Name = "Ticket_Asset"
+Ticket_Asset.Parent = Assets
+Ticket_Asset.AnchorPoint = Vector2.new(0, 0.5)
+Ticket_Asset.BackgroundTransparency = 1.000
+Ticket_Asset.BorderSizePixel = 0
+Ticket_Asset.Position = UDim2.new(1, -30, 0.5, 0)
+Ticket_Asset.Size = UDim2.new(0, 25, 0, 25)
+Ticket_Asset.ZIndex = 2
+Ticket_Asset.Image = "rbxassetid://3926305904"
+Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
+Ticket_Asset.ImageRectOffset = Vector2.new(424, 4)
+Ticket_Asset.ImageRectSize = Vector2.new(36, 36)
+
+Click_Asset.Name = "Click_Asset"
+Click_Asset.Parent = Assets
+Click_Asset.AnchorPoint = Vector2.new(0, 0.5)
+Click_Asset.BackgroundTransparency = 1.000
+Click_Asset.BorderSizePixel = 0
+Click_Asset.Position = UDim2.new(1, -30, 0.5, 0)
+Click_Asset.Size = UDim2.new(0, 25, 0, 25)
+Click_Asset.ZIndex = 2
+Click_Asset.Image = "rbxassetid://3926305904"
+Click_Asset.ImageColor3 = Color3.fromRGB(100, 100, 100)
+Click_Asset.ImageRectOffset = Vector2.new(204, 964)
+Click_Asset.ImageRectSize = Vector2.new(36, 36)
+
+-- TOGGLES
+CreateToggle(Fly_Button)
+CreateToggle(FlingTarget_Button)
+CreateToggle(LoopFling_Button)
+CreateToggle(Follow_Button)
+CreateToggle(View_Button)
+CreateToggle(Orbit_Button)
+CreateToggle(LookAt_Button)
+CreateToggle(PathFollow_Button)
+CreateToggle(Elevator_Button)
+CreateToggle(NoJump_Button)
+CreateToggle(Annoy_Button)
+CreateToggle(InfJump_Button)
+CreateToggle(HeadStand_Button)
+CreateToggle(Carpet_Button)
+CreateToggle(Weird_Button)
+CreateToggle(Invert_Button)
+CreateToggle(Platform_Button)
+CreateToggle(Speed3_Button)
+CreateToggle(Speed5_Button)
+CreateToggle(Speed10_Button)
+CreateToggle(LoopTKill_Button)
+
+-- CLICKERS
+CreateClicker(WalkSpeed_Button)
+CreateClicker(JumpPower_Button)
+CreateClicker(FlySpeed_Button)
+CreateClicker(Respawn_Button)
+CreateClicker(SaveCheckpoint_Button)
+CreateClicker(ClearCheckpoint_Button)
+CreateClicker(Bring_Button)
+CreateClicker(Weld_Button)
+CreateClicker(ToolKill_Button)
+CreateClicker(TeleportTo_Button)
+CreateClicker(Inspect_Button)
+CreateClicker(Age_Button)
+CreateClicker(JoinDate_Button)
+CreateClicker(CopyTools_Button)
+CreateClicker(CopyAnims_Button)
+CreateClicker(CopyID_Button)
+CreateClicker(Health_Button)
+CreateClicker(FullName_Button)
+CreateClicker(SimRadius_Button)
+CreateClicker(Friends_Button)
+CreateClicker(Team_Button)
+CreateClicker(Membership_Button)
+
+-- OPEN/CLOSE
+OpenClose.Name = "OpenClose"
+OpenClose.Parent = SysBroker
+OpenClose.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+OpenClose.BorderSizePixel = 0
+OpenClose.Position = UDim2.new(0, 0, 0.5, 0)
+OpenClose.Size = UDim2.new(0, 30, 0, 30)
+OpenClose.Image = "rbxassetid://120164866361360"
+OpenClose.Draggable = true
+OpenClose.ImageColor3 = Color3.fromRGB(0, 255, 255)
+
+UICornerOC.CornerRadius = UDim.new(1, 0)
+UICornerOC.Parent = OpenClose
+
+-- CHANGE SECTION
+local function ChangeSection(SectionClicked)
+    local SectionClickedName = string.split(SectionClicked.Name,"_")[1]
+    for i,v in pairs(SectionList:GetChildren()) do
+        if v:IsA("TextButton") then
+            v.BackgroundTransparency = (v.Name == SectionClicked.Name) and 0 or 0.5
+        end
+    end
+    for i,v in pairs(Background:GetChildren()) do
+        if v:IsA("ScrollingFrame") then
+            local SectionForName = string.split(v.Name,"_")[1]
+            v.Visible = (SectionForName == SectionClickedName)
+        end
+    end
+end
+
+Character_Section_Button.MouseButton1Click:Connect(function()
+    ChangeSection(Character_Section_Button)
+end)
+
+Target_Section_Button.MouseButton1Click:Connect(function()
+    ChangeSection(Target_Section_Button)
+end)
+
+-- UPDATE TARGET
+local function UpdateTarget(player)
+    if player ~= nil then
+        TargetedPlayer = player.Name
+        TargetName_Input.Text = player.Name
+        TargetStatus.Text = "OK: "..player.Name
+        TargetStatus.TextColor3 = Color3.fromRGB(100, 255, 100)
+    else
+        TargetName_Input.Text = ""
+        TargetStatus.Text = "Not found"
+        TargetStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+        TargetedPlayer = nil
+    end
+end
+
+TargetName_Input.FocusLost:Connect(function()
+    local p = GetPlayer(TargetName_Input.Text)
+    if p then UpdateTarget(p) else UpdateTarget(nil) end
+end)
+
+-- CHARACTER FUNCTIONS
+WalkSpeed_Button.MouseButton1Click:Connect(function()
+    pcall(function()
+        local Speed = WalkSpeed_Input.Text:gsub("%D", "")
+        if Speed == "" then Speed = 16 end
+        plr.Character.Humanoid.WalkSpeed = tonumber(Speed)
+        SendNotify("Ali Hub","Walk speed updated.",4)
+    end)
+end)
+
+JumpPower_Button.MouseButton1Click:Connect(function()
+    pcall(function()
+        local Power = JumpPower_Input.Text:gsub("%D", "")
+        if Power == "" then Power = 50 end
+        plr.Character.Humanoid.JumpPower = tonumber(Power)
+        SendNotify("Ali Hub","Jump power updated.",4)
+    end)
+end)
+
+FlySpeed_Button.MouseButton1Click:Connect(function()
+    pcall(function()
+        local Speed = FlySpeed_Input.Text:gsub("%D", "")
+        if Speed == "" then Speed = 50 end
+        FlySpeed = tonumber(Speed)
+        SendNotify("Ali Hub","Fly speed updated.",4)
+    end)
+end)
+
+Respawn_Button.MouseButton1Click:Connect(function()
+    local RsP = GetRoot(plr).Position
+    plr.Character.Humanoid.Health = 0
+    plr.CharacterAdded:wait(); task.wait(GetPing()+0.1)
+    TeleportTO(RsP.X,RsP.Y,RsP.Z,"pos","safe")
+end)
+
+SaveCheckpoint_Button.MouseButton1Click:Connect(function()
+    SavedCheckpoint = GetRoot(plr).Position
+    SendNotify("Ali Hub","Checkpoint saved.",4)
+end)
+
+ClearCheckpoint_Button.MouseButton1Click:Connect(function()
+    SavedCheckpoint = nil
+    SendNotify("Ali Hub","Checkpoint cleared.",4)
+end)
+
+-- FLY SYSTEM
+local flying = false
+local flyConn, flyBV, flyBG
+local flyVel = Vector3.new()
+local flyUp, flyDown = false, false
+
+local function StopFly()
+    flying = false
+    if flyConn then flyConn:Disconnect() flyConn = nil end
+    if flyBV then flyBV:Destroy() flyBV = nil end
+    if flyBG then flyBG:Destroy() flyBG = nil end
+    flyVel = Vector3.new()
+    pcall(function() plr.Character.Humanoid.PlatformStand = false end)
+end
+
+local function StartFly()
+    local char = plr.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not (hum and root) then return end
+    StopFly()
+    flying = true
+    hum.PlatformStand = true
+    flyBV = Instance.new("BodyVelocity")
+    flyBV.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+    flyBV.Velocity = Vector3.new()
+    flyBV.Parent = root
+    flyBG = Instance.new("BodyGyro")
+    flyBG.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+    flyBG.P = 9e4
+    flyBG.CFrame = root.CFrame
+    flyBG.Parent = root
+    flyConn = RunService.Heartbeat:Connect(function(dt)
+        if not flying or not root.Parent or not hum.Parent then
+            StopFly() return
+        end
+        local cam = workspace.CurrentCamera
+        local look = cam.CFrame.LookVector
+        local right = cam.CFrame.RightVector
+        local flatLook = Vector3.new(look.X, 0, look.Z)
+        local flatRight = Vector3.new(right.X, 0, right.Z)
+        if flatLook.Magnitude > 0 then flatLook = flatLook.Unit end
+        if flatRight.Magnitude > 0 then flatRight = flatRight.Unit end
+        local md = hum.MoveDirection
+        local fwd = md:Dot(flatLook)
+        local side = md:Dot(flatRight)
+        local dir = flatLook * fwd + flatRight * side + Vector3.new(0, look.Y * fwd, 0)
+        if hum.Jump or flyUp then dir = dir + Vector3.new(0, 1, 0) end
+        if flyDown then dir = dir - Vector3.new(0, 1, 0) end
+        local target = Vector3.new()
+        if dir.Magnitude > 0.05 then target = dir.Unit * FlySpeed end
+        flyVel = flyVel:Lerp(target, math.clamp(dt * 8, 0, 1))
+        flyBV.Velocity = flyVel
+        if flatLook.Magnitude > 0 then
+            flyBG.CFrame = CFrame.lookAt(root.Position, root.Position + flatLook)
+        end
+    end)
+end
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.Space then flyUp = true end
+    if input.KeyCode == Enum.KeyCode.Q or input.KeyCode == Enum.KeyCode.LeftControl then flyDown = true end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Space then flyUp = false end
+    if input.KeyCode == Enum.KeyCode.Q or input.KeyCode == Enum.KeyCode.LeftControl then flyDown = false end
+end)
+
+Fly_Button.MouseButton1Click:Connect(function()
+    ChangeToggleColor(Fly_Button)
+    if Fly_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+        StartFly()
+    else
+        StopFly()
+    end
+end)
+
+-- TARGET FUNCTIONS
+local function GetTarget()
+    if TargetedPlayer and Players[TargetedPlayer] then
+        return Players[TargetedPlayer]
+    end
+    return nil
+end
+
+local function ToggleFling(bool)
+    task.spawn(function()
+        if bool then
+            repeat
+                pcall(function()
+                    local RVelocity = GetRoot(plr).Velocity 
+                    GetRoot(plr).Velocity = Vector3.new(math.random(-150,150),-25000,math.random(-150,150))
+                    RunService.RenderStepped:wait()
+                    GetRoot(plr).Velocity = RVelocity
+                end)
+                RunService.Heartbeat:wait()
+            until FlingTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(255,0,0)
+        end
+    end)
+end
+
+FlingTarget_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    ChangeToggleColor(FlingTarget_Button)
+    if FlingTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+        local OldPos = GetRoot(plr).Position
+        ToggleFling(true)
+        repeat task.wait()
+            pcall(function()
+                PredictionTP(t,"safe")
+            end)
+        until FlingTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(255,0,0)
+        TeleportTO(OldPos.X,OldPos.Y,OldPos.Z,"pos","safe")
+    else
+        ToggleFling(false)
+    end
+end)
+
+Bring_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t or not t.Character then SendNotify("Ali Hub","No target!",4) return end
+    local tRoot = t.Character:FindFirstChild("HumanoidRootPart")
+    local myRoot = GetRoot(plr)
+    if not (tRoot and myRoot) then return end
+    local startPos = tRoot.Position
+    local goalPos = myRoot.Position
+    local dir = goalPos - startPos
+    local dist = dir.Magnitude
+    if dist < 1 then return end
+    dir = dir.Unit
+    for i = 1, 30 do
+        if not tRoot.Parent then break end
+        tRoot.CFrame = CFrame.new(startPos + dir * (dist * i / 30) + Vector3.new(0, 2, 0))
+        RunService.Heartbeat:Wait()
+    end
+    SendNotify("Ali Hub","Brought "..t.Name,4)
+end)
+
+LoopFling_Button.MouseButton1Click:Connect(function()
+    ChangeToggleColor(LoopFling_Button)
+    if LoopFling_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+        task.spawn(function()
+            while LoopFling_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) do
+                local t = GetTarget()
+                if t and t.Character then
+                    pcall(function()
+                        local myRoot = GetRoot(plr)
+                        local tRoot = t.Character:FindFirstChild("HumanoidRootPart")
+                        if myRoot and tRoot then
+                            myRoot.Velocity = Vector3.new(0, 90000, 0)
+                            myRoot.CFrame = tRoot.CFrame
+                        end
+                    end)
+                end
+                task.wait(0.2)
+            end
+        end)
+    end
+end)
+
+-- WELD SYSTEM
+local weldActive = false
+local weldConn = nil
+local currentWeldBtn = nil
+
+local function StopWeld()
+    weldActive = false
+    if weldConn then weldConn:Disconnect() weldConn = nil end
+    pcall(function()
+        local root = GetRoot(plr)
+        if root then sethiddenproperty(root, "PhysicsRepRootRef", nil) end
+    end)
+    local hum = plr.Character and plr.Character:FindFirstChild("Humanoid")
+    if hum then hum.PlatformStand = false end
+    if currentWeldBtn then
+        currentWeldBtn.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
+        currentWeldBtn = nil
+    end
+end
+
+local function StartWeld(btn, offset, rot)
+    if weldActive and currentWeldBtn == btn then
+        StopWeld()
+        return
+    end
+    StopWeld()
+    local t = GetTarget()
+    if not t or not t.Character then SendNotify("Ali Hub","No target!",4) return end
+    weldActive = true
+    currentWeldBtn = btn
+    btn.Ticket_Asset.ImageColor3 = Color3.fromRGB(0, 255, 0)
+    local hum = plr.Character and plr.Character:FindFirstChild("Humanoid")
+    if hum then hum.PlatformStand = true end
+    weldConn = RunService.Heartbeat:Connect(function()
+        local target = GetTarget()
+        local tRoot = target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+        local myRoot = GetRoot(plr)
+        if tRoot and myRoot then
+            myRoot.CFrame = tRoot.CFrame * CFrame.new(offset) * (rot or CFrame.new())
+            myRoot.Velocity = Vector3.zero
+            pcall(function()
+                sethiddenproperty(myRoot, "PhysicsRepRootRef", InstanceHandle.new(tRoot))
+            end)
+        end
+    end)
+end
+
+Weld_Button.MouseButton1Click:Connect(function()
+    StartWeld(Weld_Button, Vector3.new(0, 1, 0), CFrame.new())
+end)
+
+local function ToolKill(target)
+    local tool = plr.Character and plr.Character:FindFirstChildOfClass("Tool")
+    if not tool then SendNotify("Ali Hub","Equip a tool first!",4) return end
+    local handle = tool:FindFirstChild("Handle")
+    local tRoot = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+    if not (handle and tRoot) then return end
+    for _ = 1, 15 do
+        firetouchinterest(handle, tRoot, 0)
+        firetouchinterest(handle, tRoot, 1)
+        firetouchinterest(handle, tRoot, 0)
+    end
+end
+
+ToolKill_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    ToolKill(t)
+end)
+
+LoopTKill_Button.MouseButton1Click:Connect(function()
+    ChangeToggleColor(LoopTKill_Button)
+    if LoopTKill_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+        task.spawn(function()
+            while LoopTKill_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) do
+                local t = GetTarget()
+                if t then pcall(ToolKill, t) end
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
+Follow_Button.MouseButton1Click:Connect(function()
+    ChangeToggleColor(Follow_Button)
+    if Follow_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+        task.spawn(function()
+            while Follow_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) do
+                local t = GetTarget()
+                local tRoot = t and t.Character and t.Character:FindFirstChild("HumanoidRootPart")
+                local hum = plr.Character and plr.Character:FindFirstChild("Humanoid")
+                if tRoot and hum then hum:MoveTo(tRoot.Position) end
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
+TeleportTo_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    local tRoot = t.Character and t.Character:FindFirstChild("HumanoidRootPart")
+    local myRoot = GetRoot(plr)
+    if tRoot and myRoot then
+        myRoot.CFrame = tRoot.CFrame * CFrame.new(2, 0, 0)
+        SendNotify("Ali Hub","Teleported to "..t.Name,4)
+    end
+end)
+
+View_Button.MouseButton1Click:Connect(function()
+    ChangeToggleColor(View_Button)
+    if View_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+        task.spawn(function()
+            while View_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) do
+                local t = GetTarget()
+                local head = t and t.Character and (t.Character:FindFirstChild("Head") or t.Character:FindFirstChild("HumanoidRootPart"))
+                if head then workspace.CurrentCamera.CameraSubject = head end
+                task.wait(0.2)
+            end
+            if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+                workspace.CurrentCamera.CameraSubject = plr.Character.Humanoid
+            end
+        end)
+    end
+end)
+
+Orbit_Button.MouseButton1Click:Connect(function()
+    ChangeToggleColor(Orbit_Button)
+    if Orbit_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+        task.spawn(function()
+            local angle = 0
+            while Orbit_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) do
+                local t = GetTarget()
+                local tRoot = t and t.Character and t.Character:FindFirstChild("HumanoidRootPart")
+                local myRoot = GetRoot(plr)
+                if tRoot and myRoot then
+                    angle = angle + 0.05
+                    local offset = Vector3.new(math.cos(angle) * 8, 2, math.sin(angle) * 8)
+                    myRoot.CFrame = CFrame.new(tRoot.Position + offset, tRoot.Position)
+                end
+                task.wait(0.03)
+            end
+        end)
+    end
+end)
+
+LookAt_Button.MouseButton1Click:Connect(function()
+    ChangeToggleColor(LookAt_Button)
+    if LookAt_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+        task.spawn(function()
+            while LookAt_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) do
+                local t = GetTarget()
+                local tRoot = t and t.Character and t.Character:FindFirstChild("HumanoidRootPart")
+                if tRoot then
+                    local cam = workspace.CurrentCamera
+                    cam.CFrame = CFrame.new(cam.CFrame.Position, tRoot.Position)
+                end
+                task.wait(0.03)
+            end
+        end)
+    end
+end)
+
+PathFollow_Button.MouseButton1Click:Connect(function()
+    ChangeToggleColor(PathFollow_Button)
+    if PathFollow_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+        task.spawn(function()
+            local PathfindingService = game:GetService("PathfindingService")
+            while PathFollow_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) do
+                local t = GetTarget()
+                local tRoot = t and t.Character and t.Character:FindFirstChild("HumanoidRootPart")
+                local hum = plr.Character and plr.Character:FindFirstChild("Humanoid")
+                local myRoot = GetRoot(plr)
+                if tRoot and hum and myRoot then
+                    local path = PathfindingService:CreatePath({
+                        AgentRadius = 2, AgentHeight = 5, AgentCanJump = true
+                    })
+                    pcall(function() path:ComputeAsync(myRoot.Position, tRoot.Position) end)
+                    if path.Status == Enum.PathStatus.Success then
+                        for _, wp in ipairs(path:GetWaypoints()) do
+                            if PathFollow_Button.Ticket_Asset.ImageColor3 ~= Color3.fromRGB(0,255,0) then break end
+                            if wp.Action == Enum.PathWaypointAction.Jump then hum.Jump = true end
+                            hum:MoveTo(wp.Position)
+                            hum.MoveToFinished:Wait()
+                        end
+                    else
+                        hum:MoveTo(tRoot.Position)
+                    end
+                end
+                task.wait(0.2)
+            end
+        end)
+    end
+end)
+
+-- WELDING MODES SETUP
+local function SetupWeld(btn, offset, rot)
+    btn.MouseButton1Click:Connect(function()
+        StartWeld(btn, offset, rot)
+    end)
+end
+
+SetupWeld(Elevator_Button, Vector3.new(0, -3, 0), CFrame.Angles(math.rad(-90), 0, math.rad(3.34)))
+SetupWeld(NoJump_Button, Vector3.new(0, 3.5, 0), CFrame.Angles(math.rad(-90), 0, 0))
+SetupWeld(Annoy_Button, Vector3.new(0, 1, 0), CFrame.new())
+SetupWeld(InfJump_Button, Vector3.new(0, -5.75, 0), CFrame.new())
+SetupWeld(HeadStand_Button, Vector3.new(0, 4.25, 0), CFrame.new())
+SetupWeld(Carpet_Button, Vector3.new(0, -3.6, 0), CFrame.Angles(math.rad(-90), 0, 0))
+SetupWeld(Weird_Button, Vector3.new(0, 2, 0), CFrame.Angles(math.rad(-90), 0, 0))
+SetupWeld(Invert_Button, Vector3.new(0, 0.7, -0.8), CFrame.new())
+SetupWeld(Platform_Button, Vector3.new(0, -4, 0), CFrame.Angles(math.rad(-90), 0, 0))
+SetupWeld(Speed3_Button, Vector3.new(0, 0.7, 1), CFrame.new())
+SetupWeld(Speed5_Button, Vector3.new(0, 0.7, 0.5), CFrame.new())
+SetupWeld(Speed10_Button, Vector3.new(0, 0.7, 0.1), CFrame.new())
+
+-- INSPECT FUNCTIONS
+Inspect_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    pcall(function() game:GetService("GuiService"):InspectPlayerFromUserId(t.UserId) end)
+end)
+
+Age_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    SendNotify(t.Name.."'s Age", t.AccountAge.." days old", 6)
+end)
+
+JoinDate_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    local jd = os.date("%B %d, %Y", os.time() - (t.AccountAge * 86400))
+    SendNotify(t.Name.."'s Join Date", jd, 6)
+end)
+
+CopyTools_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    local count = 0
+    for _, tool in ipairs(t.Backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            pcall(function()
+                local clone = tool:Clone()
+                clone.Parent = plr.Backpack
+                count = count + 1
+            end)
+        end
+    end
+    SendNotify("Ali Hub", "Copied "..count.." tools", 4)
+end)
+
+CopyAnims_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    local tHum = t.Character and t.Character:FindFirstChild("Humanoid")
+    local tAnim = tHum and tHum:FindFirstChild("Animator")
+    if not tAnim then SendNotify("Ali Hub","No animator",4) return end
+    local playing = tAnim:GetPlayingAnimationTracks()
+    if #playing > 0 then
+        local top = playing[1]
+        for _, tr in ipairs(playing) do
+            if tr.Priority.Value > top.Priority.Value then top = tr end
+        end
+        local myHum = plr.Character and plr.Character:FindFirstChild("Humanoid")
+        if myHum then
+            local anim = Instance.new("Animation")
+            anim.AnimationId = top.Animation.AnimationId
+          local myHum = plr.Character and plr.Character:FindFirstChild("Humanoid")
+        if myHum then
+            local anim = Instance.new("Animation")
+            anim.AnimationId = top.Animation.AnimationId
+            local track = myHum:LoadAnimation(anim)
+            track.Priority = Enum.AnimationPriority.Action4
+            track:Play(0)
+            track.TimePosition = top.TimePosition
+            SendNotify("Ali Hub", "Copied animation", 4)
+        end
+    else
+        SendNotify("Ali Hub", "Target is not playing any animation", 4)
+    end
+end)
+
+CopyID_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    pcall(function()
+        setclipboard(tostring(t.UserId))
+        SendNotify("Ali Hub", "UserID copied: "..t.UserId, 4)
+    end)
+end)
+
+Health_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    local hum = t.Character and t.Character:FindFirstChild("Humanoid")
+    if hum then
+        SendNotify(t.Name.."'s Health", math.round(hum.Health).." / "..math.round(hum.MaxHealth), 6)
+    else
+        SendNotify("Ali Hub", "Target has no Humanoid", 4)
+    end
+end)
+
+FullName_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    SendNotify("Name Info", "Username: "..t.Name.."\nDisplay: "..t.DisplayName, 6)
+end)
+
+SimRadius_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    pcall(function()
+        local r = gethiddenproperty(t, "SimulationRadius")
+        SendNotify(t.Name.."'s SimRadius", "Radius: "..tostring(math.round(r or 0)), 6)
+    end)
+end)
+
+Friends_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    local isFriend = plr:IsFriendsWith(t.UserId)
+    SendNotify("Friends Check", t.Name..(isFriend and " is your friend" or " is NOT your friend"), 6)
+end)
+
+Team_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    SendNotify(t.Name.."'s Team", t.Team and t.Team.Name or "No Team", 6)
+end)
+
+Membership_Button.MouseButton1Click:Connect(function()
+    local t = GetTarget()
+    if not t then SendNotify("Ali Hub","No target!",4) return end
+    SendNotify(t.Name.."'s Membership", tostring(t.MembershipType), 6)
+end)
+
+-- TARGET SELECT BY CLICK (Hold E)
+local EHeld = false
+UserInputService.InputBegan:Connect(function(input, gp)
+    if not gp and input.KeyCode == Enum.KeyCode.E then EHeld = true end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.E then EHeld = false end
+end)
+
+mouse.Button1Down:Connect(function()
+    if EHeld and mouse.Target then
+        local model = mouse.Target:FindFirstAncestorOfClass("Model")
+        local clickedPlayer = model and Players:GetPlayerFromCharacter(model)
+        if clickedPlayer and clickedPlayer ~= plr then
+            UpdateTarget(clickedPlayer)
+        end
+    end
+end)
+
+-- GUI OPEN/CLOSE
+OpenClose.MouseButton1Click:Connect(function()
+    Background.Visible = not Background.Visible
+end)
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.B then
+        Background.Visible = not Background.Visible
+    end
+end)
+
+-- HANDLE RESPAWN
+plr.CharacterAdded:Connect(function()
+    task.wait(1)
+    if weldActive then StopWeld() end
+    if flying then
+        StopFly()
+        if Fly_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+            ChangeToggleColor(Fly_Button)
+        end
+    end
+    if SavedCheckpoint then
+        task.wait(0.5)
+        TeleportTO(SavedCheckpoint.X, SavedCheckpoint.Y, SavedCheckpoint.Z, "pos", "safe")
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(p)
+    if TargetedPlayer == p.Name then
+        UpdateTarget(nil)
+        SendNotify("Ali Hub", "Target left the game", 4)
+    end
+end)
+
+SendNotify("Ali Hub", "Loaded! Press [B] to toggle, [E]+Click to target", 8)
+print("Ali Hub Modified loaded successfully!")
