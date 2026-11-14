@@ -1,0 +1,951 @@
+--[[
+	Ali Hub - Target & Welding Edition (Only Target Section)
+]]
+
+--RELOAD GUI
+if game.CoreGui:FindFirstChild("SysBroker") then
+	game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Ali hub",Text = "الواجهة مفتوحة بالفعل، ادخل من جديد لإعادة التشغيل",Duration = 5;})
+	return
+end
+
+--SERVICES & VARIABLES
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local mouse = plr:GetMouse()
+
+local ForceWhitelist = {}
+local TargetedPlayer = nil
+
+--FUNCTIONS
+_G.shield = function(id)
+	if not table.find(ForceWhitelist,id) then
+		table.insert(ForceWhitelist, id)
+	end
+end
+
+local function SendNotify(title, message, duration)
+	game:GetService("StarterGui"):SetCore("SendNotification", {Title = title, Text = message, Duration = duration or 5})
+end
+
+local function ChangeToggleColor(Button)
+	local led = Button:FindFirstChild("Ticket_Asset")
+	if led then
+		if led.ImageColor3 == Color3.fromRGB(255, 0, 0) then
+			led.ImageColor3 = Color3.fromRGB(0, 255, 0)
+		else
+			led.ImageColor3 = Color3.fromRGB(255, 0, 0)
+		end
+	end
+end
+
+local function GetPing()
+	return (game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())/1000
+end
+
+local function GetPlayer(UserDisplay)
+	if UserDisplay ~= "" then
+		for i,v in pairs(Players:GetPlayers()) do
+			if v.Name:lower():match(UserDisplay:lower()) or v.DisplayName:lower():match(UserDisplay:lower()) then
+				return v
+			end
+		end
+		return nil
+	else
+		return nil
+	end
+end
+
+local function GetCharacter(Player)
+	if Player and Player.Character then
+		return Player.Character
+	end
+end
+
+local function GetRoot(Player)
+	local char = GetCharacter(Player)
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		return char.HumanoidRootPart
+	end
+end
+
+-- WELDING / ATTACHMENT FUNCTION
+local function attach(Part, TargetPart)
+	pcall(sethiddenproperty, Part, 'PhysicsRepRootRef', InstanceHandle.new(TargetPart or Part))
+end
+
+local function TeleportTO(posX,posY,posZ,player,method)
+	pcall(function()
+		if method == "safe" then
+			task.spawn(function()
+				for i = 1,30 do
+					task.wait()
+					if GetRoot(plr) then
+						GetRoot(plr).Velocity = Vector3.new(0,0,0)
+						if player == "pos" then
+							GetRoot(plr).CFrame = CFrame.new(posX,posY,posZ)
+						else
+							local targetRoot = GetRoot(player)
+							if targetRoot then
+								GetRoot(plr).CFrame = CFrame.new(targetRoot.Position)+Vector3.new(0,2,0)
+							end
+						end
+					end
+				end
+			end)
+		else
+			if GetRoot(plr) then
+				GetRoot(plr).Velocity = Vector3.new(0,0,0)
+				if player == "pos" then
+					GetRoot(plr).CFrame = CFrame.new(posX,posY,posZ)
+				else
+					local targetRoot = GetRoot(player)
+					if targetRoot then
+						GetRoot(plr).CFrame = CFrame.new(targetRoot.Position)+Vector3.new(0,2,0)
+					end
+				end
+			end
+		end
+	end)
+end
+
+local function PredictionTP(player,method)
+	local root = GetRoot(player)
+	if not root then return end
+	local pos = root.Position
+	local vel = root.Velocity
+	if GetRoot(plr) then
+		GetRoot(plr).CFrame = CFrame.new((pos.X)+(vel.X)*(GetPing()*3.5),(pos.Y)+(vel.Y)*(GetPing()*2),(pos.Z)+(vel.Z)*(GetPing()*3.5))
+		if method == "safe" then
+			task.wait()
+			GetRoot(plr).CFrame = CFrame.new(pos)
+			task.wait()
+			GetRoot(plr).CFrame = CFrame.new((pos.X)+(vel.X)*(GetPing()*3.5),(pos.Y)+(vel.Y)*(GetPing()*2),(pos.Z)+(vel.Z)*(GetPing()*3.5))
+		end
+	end
+end
+
+local function GetPush()
+	local TempPush = nil
+	pcall(function()
+		if plr.Backpack:FindFirstChild("Push") then
+			local PushTool = plr.Backpack.Push
+			PushTool.Parent = plr.Character
+			TempPush = PushTool
+		end
+		for i,v in pairs(Players:GetPlayers()) do
+			if v.Character and v.Character:FindFirstChild("Push") then
+				TempPush = v.Character.Push
+			end
+		end
+	end)
+	return TempPush
+end
+
+local function Push(Target)
+	local PushTool = GetPush()
+	if PushTool ~= nil then
+		local args = {[1] = Target.Character}
+		PushTool.PushTool:FireServer(unpack(args))
+	end
+	if plr.Character and plr.Character:FindFirstChild("Push") then
+		plr.Character.Push.Parent = plr.Backpack
+	end
+end
+
+local function PlayAnim(id,time,speed)
+	pcall(function()
+		plr.Character.Animate.Disabled = false
+		local hum = plr.Character.Humanoid
+		local animtrack = hum:GetPlayingAnimationTracks()
+		for i,track in pairs(animtrack) do
+			track:Stop()
+		end
+		plr.Character.Animate.Disabled = true
+		local Anim = Instance.new("Animation")
+		Anim.AnimationId = "rbxassetid://"..id
+		local loadanim = hum:LoadAnimation(Anim)
+		loadanim:Play()
+		loadanim.TimePosition = time
+		loadanim:AdjustSpeed(speed)
+		loadanim.Stopped:Connect(function()
+			plr.Character.Animate.Disabled = false
+			for i, track in pairs (animtrack) do
+				track:Stop()
+			end
+		end)
+	end)
+end
+
+local function StopAnim()
+	pcall(function()
+		plr.Character.Animate.Disabled = false
+		local animtrack = plr.Character.Humanoid:GetPlayingAnimationTracks()
+		for i, track in pairs (animtrack) do
+			track:Stop()
+		end
+	end)
+end
+
+--LOAD GUI (ALI HUB - TARGET ONLY)
+task.wait(0.1)
+local SysBroker = Instance.new("ScreenGui")
+local Background = Instance.new("ImageLabel")
+local TitleBarLabel = Instance.new("TextLabel")
+local Target_Section = Instance.new("ScrollingFrame")
+
+-- Target Info & Selector
+local TargetImage = Instance.new("ImageLabel")
+local TargetName_Input = Instance.new("TextBox")
+local ClickTargetTool_Button = Instance.new("ImageButton")
+local UserIDTargetLabel = Instance.new("TextLabel")
+
+-- Original Target Buttons
+local FlingTarget_Button = Instance.new("TextButton")
+local ViewTarget_Button = Instance.new("TextButton")
+local FocusTarget_Button = Instance.new("TextButton")
+local BenxTarget_Button = Instance.new("TextButton")
+local StandTarget_Button = Instance.new("TextButton")
+local HeadsitTarget_Button = Instance.new("TextButton")
+local DoggyTarget_Button = Instance.new("TextButton")
+local BackpackTarget_Button = Instance.new("TextButton")
+local DragTarget_Button = Instance.new("TextButton")
+local TeleportTarget_Button = Instance.new("TextButton")
+
+-- Welding & Extra Target Buttons
+local WeldFling_Button = Instance.new("TextButton")
+local WeldFling2_Button = Instance.new("TextButton")
+local WeldPlatform_Button = Instance.new("TextButton")
+local WeldCarpet_Button = Instance.new("TextButton")
+local WeldElevator_Button = Instance.new("TextButton")
+local WeldAntiJump_Button = Instance.new("TextButton")
+local WeldInfJump_Button = Instance.new("TextButton")
+local WeldSpeedSlow_Button = Instance.new("TextButton")
+local WeldSpeedMed_Button = Instance.new("TextButton")
+local WeldSpeedFast_Button = Instance.new("TextButton")
+local WeldMoveBreak_Button = Instance.new("TextButton")
+local WeldRocket_Button = Instance.new("TextButton")
+local WeldGodspeed_Button = Instance.new("TextButton")
+local WeldNaNFling_Button = Instance.new("TextButton")
+
+-- Assets & Open/Close
+local Assets = Instance.new("Folder")
+local Ticket_Asset = Instance.new("ImageButton")
+local Click_Asset = Instance.new("ImageButton")
+local Velocity_Asset = Instance.new("BodyAngularVelocity")
+local OpenClose = Instance.new("ImageButton")
+local UICornerOC = Instance.new("UICorner")
+
+local function CreateToggle(Button)
+	local NewToggle = Ticket_Asset:Clone()
+	NewToggle.Parent = Button
+end
+
+local function CreateClicker(Button)
+	local NewClicker = Click_Asset:Clone()
+	NewClicker.Parent = Button
+end
+
+SysBroker.Name = "SysBroker"
+SysBroker.Parent = game.CoreGui
+SysBroker.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+Background.Name = "Background"
+Background.Parent = SysBroker
+Background.AnchorPoint = Vector2.new(0.5, 0.5)
+Background.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Background.BorderSizePixel = 0
+Background.Position = UDim2.new(0.5, 0, 0.5, 0)
+Background.Size = UDim2.new(0, 410, 0, 360)
+Background.ZIndex = 9
+Background.Image = "rbxassetid://115978964346924"
+Background.ImageColor3 = Color3.fromRGB(0, 255, 255)
+Background.ImageTransparency = 0.600
+Background.Active = true
+Background.Draggable = true
+
+TitleBarLabel.Name = "TitleBarLabel"
+TitleBarLabel.Parent = Background
+TitleBarLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+TitleBarLabel.BackgroundTransparency = 0.250
+TitleBarLabel.BorderSizePixel = 0
+TitleBarLabel.Size = UDim2.new(1, 0, 0, 30)
+TitleBarLabel.Font = Enum.Font.Unknown
+TitleBarLabel.Text = " Ali hub - قائمة الهدف"
+TitleBarLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+TitleBarLabel.TextScaled = true
+TitleBarLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+Target_Section.Name = "Target_Section"
+Target_Section.Parent = Background
+Target_Section.Active = true
+Target_Section.BackgroundTransparency = 1.000
+Target_Section.BorderSizePixel = 0
+Target_Section.Position = UDim2.new(0, 5, 0, 30)
+Target_Section.Size = UDim2.new(1, -10, 1, -35)
+Target_Section.CanvasSize = UDim2.new(0, 0, 0, 770)
+Target_Section.ScrollBarThickness = 5
+
+TargetImage.Name = "TargetImage"
+TargetImage.Parent = Target_Section
+TargetImage.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TargetImage.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TargetImage.Position = UDim2.new(0, 20, 0, 15)
+TargetImage.Size = UDim2.new(0, 100, 0, 100)
+TargetImage.Image = "rbxassetid://10818605405"
+
+TargetName_Input.Name = "TargetName_Input"
+TargetName_Input.Parent = Target_Section
+TargetName_Input.BackgroundColor3 = Color3.fromRGB(0, 140, 140)
+TargetName_Input.BackgroundTransparency = 0.300
+TargetName_Input.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TargetName_Input.Position = UDim2.new(0, 140, 0, 20)
+TargetName_Input.Size = UDim2.new(0, 195, 0, 30)
+TargetName_Input.Font = Enum.Font.Gotham
+TargetName_Input.PlaceholderColor3 = Color3.fromRGB(0, 0, 0)
+TargetName_Input.PlaceholderText = "@الهدف..."
+TargetName_Input.Text = ""
+TargetName_Input.TextColor3 = Color3.fromRGB(20, 20, 20)
+TargetName_Input.TextSize = 14.000
+
+ClickTargetTool_Button.Name = "ClickTargetTool_Button"
+ClickTargetTool_Button.Parent = TargetName_Input
+ClickTargetTool_Button.BackgroundTransparency = 1.000
+ClickTargetTool_Button.Position = UDim2.new(1, 5, 0, 0)
+ClickTargetTool_Button.Size = UDim2.new(0, 30, 0, 30)
+ClickTargetTool_Button.Image = "rbxassetid://2716591855"
+
+UserIDTargetLabel.Name = "UserIDTargetLabel"
+UserIDTargetLabel.Parent = Target_Section
+UserIDTargetLabel.BackgroundTransparency = 1.000
+UserIDTargetLabel.Position = UDim2.new(0, 140, 0, 58)
+UserIDTargetLabel.Size = UDim2.new(0, 235, 0, 65)
+UserIDTargetLabel.Font = Enum.Font.Oswald
+UserIDTargetLabel.Text = "المعرف: \nالاسم: \nانضم: "
+UserIDTargetLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+UserIDTargetLabel.TextSize = 16.000
+UserIDTargetLabel.TextWrapped = true
+UserIDTargetLabel.TextXAlignment = Enum.TextXAlignment.Left
+UserIDTargetLabel.TextYAlignment = Enum.TextYAlignment.Top
+
+-- Helper to create styled Ali Hub buttons quickly
+local function StyleBtn(btn, name, text, x, y)
+	btn.Name = name
+	btn.Parent = Target_Section
+	btn.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+	btn.BackgroundTransparency = 0.500
+	btn.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	btn.BorderSizePixel = 0
+	btn.Position = UDim2.new(0, x, 0, y)
+	btn.Size = UDim2.new(0, 150, 0, 30)
+	btn.Font = Enum.Font.Oswald
+	btn.Text = text
+	btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+	btn.TextScaled = true
+	btn.TextWrapped = true
+end
+
+-- Positioning All Target Buttons (Original + Welding)
+StyleBtn(FlingTarget_Button, "FlingTarget_Button", "رمي", 20, 135)
+StyleBtn(ViewTarget_Button, "ViewTarget_Button", "مشاهدة", 205, 135)
+
+StyleBtn(FocusTarget_Button, "FocusTarget_Button", "تركيز", 20, 180)
+StyleBtn(BenxTarget_Button, "BenxTarget_Button", "اصطدام", 205, 180)
+
+StyleBtn(StandTarget_Button, "StandTarget_Button", "وقوف", 20, 225)
+StyleBtn(HeadsitTarget_Button, "HeadsitTarget_Button", "الجلوس على الرأس", 205, 225)
+
+StyleBtn(DoggyTarget_Button, "DoggyTarget_Button", "Doggy", 20, 270)
+StyleBtn(BackpackTarget_Button, "BackpackTarget_Button", "الحقيبة", 205, 270)
+
+StyleBtn(DragTarget_Button, "DragTarget_Button", "سحب", 20, 315)
+StyleBtn(TeleportTarget_Button, "TeleportTarget_Button", "انتقال", 205, 315)
+
+-- Welding Abilities
+StyleBtn(WeldFling_Button, "WeldFling_Button", "لحام طرد (Fling)", 20, 360)
+StyleBtn(WeldFling2_Button, "WeldFling2_Button", "لحام طرد 2.0", 205, 360)
+
+StyleBtn(WeldPlatform_Button, "WeldPlatform_Button", "طيران منصة (Platform)", 20, 405)
+StyleBtn(WeldCarpet_Button, "WeldCarpet_Button", "بساط سحري (Carpet)", 205, 405)
+
+StyleBtn(WeldElevator_Button, "WeldElevator_Button", "مصعد (Elevator)", 20, 450)
+StyleBtn(WeldAntiJump_Button, "WeldAntiJump_Button", "منع القفز (Anti Jump)", 205, 450)
+
+StyleBtn(WeldInfJump_Button, "WeldInfJump_Button", "قفز لا نهائي (Inf Jump)", 20, 495)
+StyleBtn(WeldMoveBreak_Button, "WeldMoveBreak_Button", "تجميد حركة (Breaker)", 205, 495)
+
+StyleBtn(WeldSpeedSlow_Button, "WeldSpeedSlow_Button", "دفعة سرعة (بطيء)", 20, 540)
+StyleBtn(WeldSpeedMed_Button, "WeldSpeedMed_Button", "دفعة سرعة (متوسط)", 205, 540)
+
+StyleBtn(WeldSpeedFast_Button, "WeldSpeedFast_Button", "دفعة سرعة (سريع)", 20, 585)
+StyleBtn(WeldRocket_Button, "WeldRocket_Button", "صاروخ (Rocket)", 205, 585)
+
+StyleBtn(WeldGodspeed_Button, "WeldGodspeed_Button", "سرعة البرق (GODSPEED)", 20, 630)
+StyleBtn(WeldNaNFling_Button, "WeldNaNFling_Button", "طرد NaN (NaN Fling)", 205, 630)
+
+-- Assets Setup
+Assets.Name = "Assets"
+Assets.Parent = SysBroker
+
+Ticket_Asset.Name = "Ticket_Asset"
+Ticket_Asset.Parent = Assets
+Ticket_Asset.AnchorPoint = Vector2.new(0, 0.5)
+Ticket_Asset.BackgroundTransparency = 1.000
+Ticket_Asset.Position = UDim2.new(1, 5, 0.5, 0)
+Ticket_Asset.Size = UDim2.new(0, 25, 0, 25)
+Ticket_Asset.Image = "rbxassetid://3926305904"
+Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
+Ticket_Asset.ImageRectOffset = Vector2.new(424, 4)
+Ticket_Asset.ImageRectSize = Vector2.new(36, 36)
+
+Click_Asset.Name = "Click_Asset"
+Click_Asset.Parent = Assets
+Click_Asset.AnchorPoint = Vector2.new(0, 0.5)
+Click_Asset.BackgroundTransparency = 1.000
+Click_Asset.Position = UDim2.new(1, 5, 0.5, 0)
+Click_Asset.Size = UDim2.new(0, 25, 0, 25)
+Click_Asset.Image = "rbxassetid://3926305904"
+Click_Asset.ImageColor3 = Color3.fromRGB(100, 100, 100)
+Click_Asset.ImageRectOffset = Vector2.new(204, 964)
+Click_Asset.ImageRectSize = Vector2.new(36, 36)
+
+Velocity_Asset.AngularVelocity = Vector3.new(0,0,0)
+Velocity_Asset.MaxTorque = Vector3.new(50000,50000,50000)
+Velocity_Asset.P = 1250
+Velocity_Asset.Name = "BreakVelocity"
+Velocity_Asset.Parent = Assets
+
+OpenClose.Name = "OpenClose"
+OpenClose.Parent = SysBroker
+OpenClose.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+OpenClose.Position = UDim2.new(0, 0, 0.5, 0)
+OpenClose.Size = UDim2.new(0, 30, 0, 30)
+OpenClose.Image = "rbxassetid://120164866361360"
+OpenClose.Draggable = true
+OpenClose.ImageColor3 = Color3.fromRGB(0, 255, 255)
+
+UICornerOC.CornerRadius = UDim.new(1, 0)
+UICornerOC.Parent = OpenClose
+
+-- Attach Toggles & Clickers
+local ToggleButtons = {
+	ViewTarget_Button, FlingTarget_Button, FocusTarget_Button, BenxTarget_Button,
+	HeadsitTarget_Button, StandTarget_Button, BackpackTarget_Button, DoggyTarget_Button,
+	DragTarget_Button, WeldFling_Button, WeldFling2_Button, WeldPlatform_Button,
+	WeldCarpet_Button, WeldElevator_Button, WeldAntiJump_Button, WeldInfJump_Button,
+	WeldMoveBreak_Button, WeldSpeedSlow_Button, WeldSpeedMed_Button, WeldSpeedFast_Button,
+	WeldRocket_Button, WeldGodspeed_Button
+}
+
+for _, btn in ipairs(ToggleButtons) do
+	CreateToggle(btn)
+end
+
+CreateClicker(TeleportTarget_Button)
+CreateClicker(WeldNaNFling_Button)
+
+-- Update Target Function
+local function UpdateTarget(player)
+	pcall(function()
+		if player and table.find(ForceWhitelist,player.UserId) then
+			SendNotify("Ali hub","لا يمكنك استهداف هذا اللاعب: @"..player.Name.." / "..player.DisplayName,5)
+			player = nil
+		end
+	end)
+	if (player ~= nil) then
+		TargetedPlayer = player.Name
+		TargetName_Input.Text = player.Name
+		UserIDTargetLabel.Text = ("المعرف: "..player.UserId.."\nالاسم: "..player.DisplayName.."\nانضم: "..os.date("%d-%m-%Y", os.time()-player.AccountAge * 24 * 3600).." [يوم/شهر/سنة]")
+		TargetImage.Image = Players:GetUserThumbnailAsync(player.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size420x420)
+	else
+		TargetName_Input.Text = ""
+		UserIDTargetLabel.Text = "المعرف: \nالاسم: \nانضم: "
+		TargetImage.Image = "rbxassetid://10818605405"
+		TargetedPlayer = nil
+		for _, btn in ipairs(ToggleButtons) do
+			local tAsset = btn:FindFirstChild("Ticket_Asset")
+			if tAsset then
+				tAsset.ImageColor3 = Color3.fromRGB(255,0,0)
+			end
+		end
+	end
+end
+
+-- Click Target Tool
+ClickTargetTool_Button.MouseButton1Click:Connect(function()
+	local GetTargetTool = Instance.new("Tool")
+	GetTargetTool.Name = "ClickTarget"
+	GetTargetTool.RequiresHandle = false
+	GetTargetTool.TextureId = "rbxassetid://2716591855"
+	GetTargetTool.ToolTip = "Select Target"
+
+	GetTargetTool.Activated:Connect(function()
+		local hit = mouse.Target
+		local person = nil
+		if hit and hit.Parent then
+			if hit.Parent:IsA("Model") then
+				person = Players:GetPlayerFromCharacter(hit.Parent)
+			elseif hit.Parent:IsA("Accessory") then
+				person = Players:GetPlayerFromCharacter(hit.Parent.Parent)
+			end
+			if person then
+				UpdateTarget(person)
+			end
+		end
+	end)
+	GetTargetTool.Parent = plr.Backpack
+	SendNotify("Ali hub", "تم إعطاء أداة تحديد الهدف في الحقيبة.", 3)
+end)
+
+TargetName_Input.FocusLost:Connect(function()
+	local LabelTarget = GetPlayer(TargetName_Input.Text)
+	UpdateTarget(LabelTarget)
+end)
+
+-- ==========================================
+-- ORIGINAL TARGET ABILITIES
+-- ==========================================
+local FlingActive = false
+local function ToggleFling(bool)
+	FlingActive = bool
+	if bool then
+		task.spawn(function()
+			local RVelocity = nil
+			repeat
+				pcall(function()
+					RVelocity = GetRoot(plr).Velocity 
+					GetRoot(plr).Velocity = Vector3.new(math.random(-150,150),-25000,math.random(-150,150))
+					RunService.RenderStepped:wait()
+					GetRoot(plr).Velocity = RVelocity
+				end)
+				RunService.Heartbeat:wait()
+			until not FlingActive
+		end)
+	end
+end
+
+FlingTarget_Button.MouseButton1Click:Connect(function()
+	if TargetedPlayer ~= nil then
+		ChangeToggleColor(FlingTarget_Button)
+		if FlingTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+			local OldPos = GetRoot(plr).Position
+			ToggleFling(true)
+			repeat task.wait()
+				pcall(function()
+					PredictionTP(Players[TargetedPlayer],"safe")
+				end)
+				task.wait()
+			until FlingTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(255,0,0)
+			ToggleFling(false)
+			TeleportTO(OldPos.X,OldPos.Y,OldPos.Z,"pos","safe")
+		else
+			ToggleFling(false)
+		end
+	else
+		SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+	end
+end)
+
+ViewTarget_Button.MouseButton1Click:Connect(function()
+	if TargetedPlayer ~= nil then
+		ChangeToggleColor(ViewTarget_Button)
+		if ViewTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+			repeat
+				pcall(function()
+					game.Workspace.CurrentCamera.CameraSubject = Players[TargetedPlayer].Character.Humanoid
+				end)
+				task.wait(0.5)
+			until ViewTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(255,0,0)
+			game.Workspace.CurrentCamera.CameraSubject = plr.Character.Humanoid
+		end
+	else
+		SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+	end
+end)
+
+FocusTarget_Button.MouseButton1Click:Connect(function()
+	if TargetedPlayer ~= nil then
+		ChangeToggleColor(FocusTarget_Button)
+		if FocusTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+			repeat
+				pcall(function()
+					local target = Players[TargetedPlayer]
+					TeleportTO(0,0,0,target)
+					Push(target)
+				end)
+				task.wait(0.2)
+			until FocusTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(255,0,0)
+		end
+	else
+		SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+	end
+end)
+
+BenxTarget_Button.MouseButton1Click:Connect(function()
+	if TargetedPlayer ~= nil then
+		ChangeToggleColor(BenxTarget_Button)
+		if BenxTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+			PlayAnim(5918726674,0,1)
+			repeat
+				pcall(function()
+					if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+						local TempV = Velocity_Asset:Clone()
+						TempV.Parent = GetRoot(plr)
+					end
+					local otherRoot = GetRoot(Players[TargetedPlayer])
+					GetRoot(plr).CFrame = otherRoot.CFrame * CFrame.new(0,0,1.1)
+					GetRoot(plr).Velocity = Vector3.new(0,0,0)
+				end)
+				task.wait()
+			until BenxTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(255,0,0)
+			StopAnim()
+			if GetRoot(plr):FindFirstChild("BreakVelocity") then GetRoot(plr).BreakVelocity:Destroy() end
+		end
+	else
+		SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+	end
+end)
+
+HeadsitTarget_Button.MouseButton1Click:Connect(function()
+	if TargetedPlayer ~= nil then
+		ChangeToggleColor(HeadsitTarget_Button)
+		if HeadsitTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+			repeat
+				pcall(function()
+					if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+						local TempV = Velocity_Asset:Clone()
+						TempV.Parent = GetRoot(plr)
+					end
+					local targethead = Players[TargetedPlayer].Character.Head
+					plr.Character.Humanoid.Sit = true
+					GetRoot(plr).CFrame = targethead.CFrame * CFrame.new(0,2,0)
+					GetRoot(plr).Velocity = Vector3.new(0,0,0)
+				end)
+				task.wait()
+			until HeadsitTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(255,0,0)
+			if GetRoot(plr):FindFirstChild("BreakVelocity") then GetRoot(plr).BreakVelocity:Destroy() end
+		end
+	else
+		SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+	end
+end)
+
+StandTarget_Button.MouseButton1Click:Connect(function()
+	if TargetedPlayer ~= nil then
+		ChangeToggleColor(StandTarget_Button)
+		if StandTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+			PlayAnim(13823324057,4,0)
+			repeat
+				pcall(function()
+					if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+						local TempV = Velocity_Asset:Clone()
+						TempV.Parent = GetRoot(plr)
+					end
+					local root = GetRoot(Players[TargetedPlayer])
+					GetRoot(plr).CFrame = root.CFrame * CFrame.new(-3,1,0)
+					GetRoot(plr).Velocity = Vector3.new(0,0,0)
+				end)
+				task.wait()
+			until StandTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(255,0,0)
+			StopAnim()
+			if GetRoot(plr):FindFirstChild("BreakVelocity") then GetRoot(plr).BreakVelocity:Destroy() end
+		end
+	else
+		SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+	end
+end)
+
+BackpackTarget_Button.MouseButton1Click:Connect(function()
+	if TargetedPlayer ~= nil then
+		ChangeToggleColor(BackpackTarget_Button)
+		if BackpackTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+			repeat
+				pcall(function()
+					if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+						local TempV = Velocity_Asset:Clone()
+						TempV.Parent = GetRoot(plr)
+					end
+					local root = GetRoot(Players[TargetedPlayer])
+					plr.Character.Humanoid.Sit = true
+					GetRoot(plr).CFrame = root.CFrame * CFrame.new(0,0,1.2) * CFrame.Angles(0, -3, 0)
+					GetRoot(plr).Velocity = Vector3.new(0,0,0)
+				end)
+				task.wait()
+			until BackpackTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(255,0,0)
+			if GetRoot(plr):FindFirstChild("BreakVelocity") then GetRoot(plr).BreakVelocity:Destroy() end
+		end
+	else
+		SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+	end
+end)
+
+DoggyTarget_Button.MouseButton1Click:Connect(function()
+	if TargetedPlayer ~= nil then
+		ChangeToggleColor(DoggyTarget_Button)
+		if DoggyTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+			PlayAnim(13694096724,3.4,0)
+			repeat
+				pcall(function()
+					if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+						local TempV = Velocity_Asset:Clone()
+						TempV.Parent = GetRoot(plr)
+					end
+					local root = Players[TargetedPlayer].Character.LowerTorso
+					GetRoot(plr).CFrame = root.CFrame * CFrame.new(0,0.23,0)
+					GetRoot(plr).Velocity = Vector3.new(0,0,0)
+				end)
+				task.wait()
+			until DoggyTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(255,0,0)
+			StopAnim()
+			if GetRoot(plr):FindFirstChild("BreakVelocity") then GetRoot(plr).BreakVelocity:Destroy() end
+		end
+	else
+		SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+	end
+end)
+
+DragTarget_Button.MouseButton1Click:Connect(function()
+	if TargetedPlayer ~= nil then
+		ChangeToggleColor(DragTarget_Button)
+		if DragTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0) then
+			PlayAnim(10714360343,0.5,0)
+			repeat
+				pcall(function()
+					if not GetRoot(plr):FindFirstChild("BreakVelocity") then
+						local TempV = Velocity_Asset:Clone()
+						TempV.Parent = GetRoot(plr)
+					end
+					local root = Players[TargetedPlayer].Character.RightHand
+					GetRoot(plr).CFrame = root.CFrame * CFrame.new(0,-2.5,1) * CFrame.Angles(-2, -3, 0)
+					GetRoot(plr).Velocity = Vector3.new(0,0,0)
+				end)
+				task.wait()
+			until DragTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(255,0,0)
+			StopAnim()
+			if GetRoot(plr):FindFirstChild("BreakVelocity") then GetRoot(plr).BreakVelocity:Destroy() end
+		end
+	else
+		SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+	end
+end)
+
+TeleportTarget_Button.MouseButton1Click:Connect(function()
+	if TargetedPlayer ~= nil then
+		TeleportTO(0,0,0,Players[TargetedPlayer],"safe")
+	else
+		SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+	end
+end)
+
+-- ==========================================
+-- WELDING ABILITIES LINKED TO TARGET SYSTEM
+-- ==========================================
+local function SetupWeldMovement(Btn, Offset, IsFling)
+	local Conn = nil
+	local SavedCF = nil
+	
+	Btn.MouseButton1Click:Connect(function()
+		if TargetedPlayer == nil then
+			SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+			return
+		end
+		
+		ChangeToggleColor(Btn)
+		local State = (Btn.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0))
+		
+		if Conn then Conn:Disconnect(); Conn = nil end
+		local LRoot = GetRoot(plr)
+		
+		if not State then
+			if LRoot and SavedCF then
+				LRoot.CFrame = SavedCF
+				LRoot.Velocity = Vector3.zero
+				LRoot.RotVelocity = Vector3.zero
+				SavedCF = nil
+			end
+			if LRoot then attach(LRoot, LRoot) end
+			return
+		end
+		
+		if LRoot then SavedCF = LRoot.CFrame end
+		
+		Conn = RunService.Heartbeat:Connect(function()
+			local CurrentLRoot = GetRoot(plr)
+			local TargetPlr = Players:FindFirstChild(TargetedPlayer)
+			local TRoot = GetRoot(TargetPlr)
+			if not (CurrentLRoot and TRoot) then return end
+			
+			CurrentLRoot.CFrame = CFrame.new(TRoot.Position + Offset) * CFrame.Angles(-math.pi/2, 0, 0)
+			local Vel = IsFling and Vector3.new(500, 500, 500) or Vector3.zero
+			CurrentLRoot.Velocity = Vel
+			CurrentLRoot.RotVelocity = Vel
+			attach(CurrentLRoot, TRoot)
+		end)
+	end)
+end
+
+local function SetupWeldBind(Btn, Offset)
+	local Conn = nil
+	
+	Btn.MouseButton1Click:Connect(function()
+		if TargetedPlayer == nil then
+			SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+			return
+		end
+		
+		ChangeToggleColor(Btn)
+		local State = (Btn.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0))
+		
+		if Conn then Conn:Disconnect(); Conn = nil end
+		local LRoot = GetRoot(plr)
+		
+		if not State then
+			if LRoot then
+				LRoot.Velocity = Vector3.zero
+				attach(LRoot, LRoot)
+			end
+			return
+		end
+		
+		Conn = RunService.Heartbeat:Connect(function()
+			local CurrentLRoot = GetRoot(plr)
+			local TargetPlr = Players:FindFirstChild(TargetedPlayer)
+			local TRoot = GetRoot(TargetPlr)
+			if CurrentLRoot and TRoot then
+				CurrentLRoot.CFrame = TRoot.CFrame * CFrame.new(Offset)
+				CurrentLRoot.Velocity = Vector3.zero
+				attach(CurrentLRoot, TRoot)
+			end
+		end)
+	end)
+end
+
+local function SetupWeldRocket(Btn, Speed)
+	local Conn = nil
+	
+	Btn.MouseButton1Click:Connect(function()
+		if TargetedPlayer == nil then
+			SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+			return
+		end
+		
+		ChangeToggleColor(Btn)
+		local State = (Btn.Ticket_Asset.ImageColor3 == Color3.fromRGB(0,255,0))
+		
+		if Conn then Conn:Disconnect(); Conn = nil end
+		if not State then return end
+		
+		local LRoot = GetRoot(plr)
+		local TargetPlr = Players:FindFirstChild(TargetedPlayer)
+		local TRoot = GetRoot(TargetPlr)
+		if not (LRoot and TRoot) then
+			Btn.Ticket_Asset.ImageColor3 = Color3.fromRGB(255,0,0)
+			return
+		end
+		
+		local SavedCF = LRoot.CFrame
+		Conn = RunService.Heartbeat:Connect(function()
+			if not TRoot.Parent then return end
+			local Pos = TRoot.Position + Vector3.new(0, -3, 0)
+			LRoot.CFrame = CFrame.new(Pos, Pos + Vector3.new(0, 1, 0))
+			LRoot.Velocity = Vector3.new(0, Speed, 0)
+			LRoot.RotVelocity = Vector3.zero
+			attach(LRoot, TRoot)
+		end)
+		
+		task.delay(0.2, function()
+			if Conn then Conn:Disconnect(); Conn = nil end
+			if LRoot then
+				LRoot.CFrame = SavedCF
+				LRoot.Velocity = Vector3.zero
+				LRoot.RotVelocity = Vector3.zero
+				attach(LRoot, LRoot)
+			end
+			Btn.Ticket_Asset.ImageColor3 = Color3.fromRGB(255,0,0)
+		end)
+	end)
+end
+
+-- Registering Welding Buttons
+SetupWeldMovement(WeldFling_Button, Vector3.new(0, 0, 0), true)
+SetupWeldMovement(WeldFling2_Button, Vector3.new(0, -2.5, 0), true)
+SetupWeldMovement(WeldPlatform_Button, Vector3.new(0, -2.8, 0), false)
+SetupWeldMovement(WeldCarpet_Button, Vector3.new(0, -3.1, 0), false)
+SetupWeldMovement(WeldElevator_Button, Vector3.new(0, -2.6, 0), false)
+SetupWeldMovement(WeldAntiJump_Button, Vector3.new(0, 3.5, 0), false)
+
+SetupWeldBind(WeldInfJump_Button, Vector3.new(0, -5.75, 0))
+SetupWeldBind(WeldSpeedSlow_Button, Vector3.new(0, 0.7, 1))
+SetupWeldBind(WeldSpeedMed_Button, Vector3.new(0, 0.7, 0.5))
+SetupWeldBind(WeldSpeedFast_Button, Vector3.new(0, 0.7, 0.35))
+SetupWeldBind(WeldMoveBreak_Button, Vector3.new(0, 0.7, -0.8))
+
+SetupWeldRocket(WeldRocket_Button, 50)
+SetupWeldRocket(WeldGodspeed_Button, 5000)
+
+local NaNFlingin = false
+WeldNaNFling_Button.MouseButton1Click:Connect(function()
+	if TargetedPlayer == nil then
+		SendNotify("Ali hub", "الرجاء اختيار هدف أولاً!", 3)
+		return
+	end
+	if NaNFlingin then return end
+	
+	local Char = plr.Character
+	local LRoot = GetRoot(plr)
+	local LHum = Char and Char:FindFirstChildOfClass("Humanoid")
+	local TargetPlr = Players:FindFirstChild(TargetedPlayer)
+	local TRoot = GetRoot(TargetPlr)
+	if not (LRoot and LHum and TRoot) then return end
+	
+	NaNFlingin = true
+	local SavedCF = LRoot.CFrame
+	local SavedVel = LRoot.Velocity
+	local SavedPlatform = LHum.PlatformStand
+	local Vec = Vector3.new(0/0, 0/0, 0/0)
+	
+	LHum.PlatformStand = true
+	local Conn = RunService.Heartbeat:Connect(function()
+		LRoot.CFrame = TRoot.CFrame
+		LRoot.AssemblyLinearVelocity = Vec
+		LRoot.AssemblyAngularVelocity = Vec
+		pcall(function() LHum:Move(Vec) end)
+		attach(LRoot, TRoot)
+	end)
+
+	task.delay(1.5, function()
+		if Conn then Conn:Disconnect() end
+		LHum.PlatformStand = SavedPlatform
+		LRoot.AssemblyLinearVelocity = Vector3.zero
+		LRoot.AssemblyAngularVelocity = Vector3.zero
+		LRoot.CFrame = SavedCF
+		LRoot.Velocity = SavedVel
+		LRoot.RotVelocity = Vector3.zero
+		attach(LRoot, LRoot)
+		NaNFlingin = false
+	end)
+end)
+
+-- Player Removing & GUI Toggle Events
+Players.PlayerRemoving:Connect(function(player)
+	pcall(function()
+		if player.Name == TargetedPlayer then
+			UpdateTarget(nil)
+			SendNotify("Ali hub","اللاعب المستهدف خرج من السيرفر.",5)
+		end
+	end)
+end)
+
+OpenClose.MouseButton1Click:Connect(function()
+	Background.Visible = not Background.Visible
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+	if gameProcessedEvent then return end
+	if input.KeyCode == Enum.KeyCode.B then
+		Background.Visible = not Background.Visible
+	end
+end)
+
+SendNotify("Ali hub","تم تحميل قائمة الهدف مع قدرات اللحام بنجاح!", 5)
