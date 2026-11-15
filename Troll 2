@@ -772,6 +772,18 @@ local function playerFromPart(part)
 	return p and Players:GetPlayerFromCharacter(p)
 end
 
+local function targetNotify(p)
+	targetName = p.Name
+	pcall(function()
+		StarterGui:SetCore("SendNotification", {
+			Title = "Target : " .. p.DisplayName,
+			Text = "",
+			Icon = "rbxthumb://type=AvatarHeadShot&id=" .. p.UserId .. "&w=420&h=420",
+			Duration = 5,
+		})
+	end)
+end
+
 -- ============ الصفحات ============
 local homePage = makeSection("الرئيسية")
 local targetPage = makeSection("الهدف")
@@ -790,24 +802,18 @@ addLabel(homePage, "Ali hub", 28)
 addInput(targetPage, "اكتب اسم اللاعب", function(text)
 	targetName = text
 	local p = findPlayer(text, true)
-	if p then notify("الهدف: " .. p.DisplayName, 4) end
+	if p then targetNotify(p) end
 end)
 
 addButton(targetPage, "هدف عشوائي", function()
 	local p = findPlayer("random")
-	if p then
-		targetName = p.Name
-		notify("الهدف: " .. p.DisplayName, 4)
-	end
+	if p then targetNotify(p) end
 end)
 
 addButton(targetPage, "اختيار الهدف بالنقر", function()
 	giveTool("ClickTarget", "rbxassetid://117609145053554", function()
 		local p = playerFromPart(mouse.Target)
-		if p then
-			targetName = p.Name
-			notify("الهدف: " .. p.DisplayName, 4)
-		end
+		if p then targetNotify(p) end
 	end)
 end)
 
@@ -873,7 +879,6 @@ addToggle(targetPage, "Facesit", function(v)
 		followStop("facesit")
 	end
 end)
-
 addToggle(targetPage, "Bang", function(v)
 	if v then bangStart() else stop("bang"); stopHumanoidFlags() end
 end)
@@ -1127,4 +1132,3 @@ plr.CharacterAdded:Connect(function()
 end)
 
 showPage(homePage)
-end
