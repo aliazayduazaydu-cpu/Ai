@@ -1,0 +1,606 @@
+
+--==================================================
+-- ALI HUB | NILHUB UI
+-- Developer: مطور علاوي
+-- Theme: Black & Gray
+--==================================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Player = Players.LocalPlayer
+
+--==================================================
+-- LOAD LIBRARY
+--==================================================
+
+local Library = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/12xQ/lmao/refs/heads/main/ui",
+    true
+))()
+
+
+local Window = Library:Load({
+    Name = "ALI HUB",
+    Theme = "Dark",
+    SizeX = 260,
+    SizeY = 300,
+
+    ColorOverrides = {
+        TextColor = Color3.fromRGB(245,245,245),
+        MainFrame = Color3.fromRGB(28,28,28),
+        TabBackground = Color3.fromRGB(18,18,18),
+        Tab = Color3.fromRGB(35,35,35),
+
+        EnabledText = Color3.fromRGB(255,255,255),
+        DisabledText = Color3.fromRGB(160,160,160),
+
+        Section = Color3.fromRGB(35,35,35),
+
+        Button = Color3.fromRGB(45,45,45),
+        ButtonMouseOver = Color3.fromRGB(75,75,75),
+
+        ToggleEnabled = Color3.fromRGB(125,125,125),
+        ToggleDisabled = Color3.fromRGB(40,40,40),
+
+        Box = Color3.fromRGB(35,35,35),
+        BoxFocused = Color3.fromRGB(65,65,65),
+
+        Slider = Color3.fromRGB(35,35,35),
+        SliderFill = Color3.fromRGB(145,145,145),
+
+        Dropdown = Color3.fromRGB(35,35,35),
+        DropdownContent = Color3.fromRGB(25,25,25)
+    }
+})
+
+--==================================================
+-- TABS
+--==================================================
+
+local MainTab = Window:Tab("الرئيسية")
+local ToolsTab = Window:Tab("الأدوات")
+local ESPTab = Window:Tab("ESP")
+local PlayerTab = Window:Tab("اللاعب")
+
+--==================================================
+-- MAIN
+--==================================================
+
+local Info = MainTab:Section({
+    Name = "معلومات السكربت",
+    column = 1
+})
+
+Info:Label("ALI HUB")
+Info:Label("Developer: مطور علاوي")
+Info:Label("Username: hdjjlawe")
+Info:Label("Map: Story 1")
+
+Info:Button({
+    Name = "حسابي في Roblox",
+    Callback = function()
+        print("hdjjlawe")
+    end
+})
+
+Info:Button({
+    Name = "حسابي في YouTube",
+    Callback = function()
+        print("مطور علاوي")
+    end
+})
+
+local About = MainTab:Section({
+    Name = "معلومات",
+    column = 2
+})
+
+About:Label("شكرا لاستعمال السكربت")
+About:Label("سكربت مخصص لماب Story 1")
+
+--==================================================
+-- TOOLS
+--==================================================
+
+local GiveTool = ReplicatedStorage
+    :WaitForChild("RemoteEvents")
+    :WaitForChild("GiveTool")
+
+local function GetTool(Name)
+    GiveTool:FireServer(Name)
+end
+
+local ToolSection = ToolsTab:Section({
+    Name = "أخذ الأدوات",
+    column = 1
+})
+
+ToolSection:Button({
+    Name = "أخذ تفاحة",
+    Callback = function()
+        GetTool("Apple")
+    end
+})
+
+ToolSection:Button({
+    Name = "أخذ بيتزا",
+    Callback = function()
+        GetTool("Pizza3")
+    end
+})
+
+ToolSection:Button({
+    Name = "أخذ ببسي",
+    Callback = function()
+        GetTool("BloxyCola")
+    end
+})
+
+ToolSection:Button({
+    Name = "أخذ كوكيز",
+    Callback = function()
+        GetTool("Cookie")
+    end
+})
+
+ToolSection:Button({
+    Name = "أخذ جبس",
+    Callback = function()
+        GetTool("Chips")
+    end
+})
+
+ToolSection:Button({
+    Name = "أخذ سلاح",
+    Callback = function()
+        GetTool("Bat")
+    end
+})
+
+--==================================================
+-- AUTO TOOLS
+--==================================================
+
+local AutoTools = {}
+
+local AutoSection = ToolsTab:Section({
+    Name = "الأخذ التلقائي",
+    column = 2
+})
+
+local function CreateAutoTool(Name, ToolName)
+    AutoTools[Name] = false
+
+    AutoSection:Toggle({
+        Name = Name,
+        Flag = "Auto_" .. Name,
+
+        Callback = function(Value)
+            AutoTools[Name] = Value
+
+            if Value then
+                task.spawn(function()
+                    while AutoTools[Name] do
+                        GetTool(ToolName)
+                        task.wait()
+                    end
+                end)
+            end
+        end
+    })
+end
+
+CreateAutoTool("أوتو تفاحه", "Apple")
+CreateAutoTool("أوتو ببسي", "BloxyCola")
+CreateAutoTool("أوتو كوكيز", "Cookie")
+
+--==================================================
+-- EXTRA
+--==================================================
+
+local Extra = ToolsTab:Section({
+    Name = "أدوات إضافية",
+    column = 1
+})
+
+Extra:Button({
+    Name = "جلب كود الخزنة",
+    Callback = function()
+
+        local Part = workspace:FindFirstChild("CodeNote")
+
+        local Character = Player.Character
+        local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+
+        if Part and Root and Part:IsA("BasePart") then
+            Part.CFrame = Root.CFrame * CFrame.new(0,0,-3)
+        end
+    end
+})
+
+--==================================================
+-- ESP SYSTEM
+--==================================================
+
+local ESPEnabled = false
+local SelectedESP = false
+local SelectedPlayer = nil
+local TargetName = ""
+
+local function FindPlayer(Name)
+    if not Name or Name == "" then
+        return nil
+    end
+
+    Name = Name:lower()
+
+    for _, Plr in ipairs(Players:GetPlayers()) do
+        if Plr ~= Player then
+
+            if Plr.Name:lower():sub(1,#Name) == Name
+            or Plr.DisplayName:lower():sub(1,#Name) == Name then
+
+                return Plr
+            end
+        end
+    end
+
+    return nil
+end
+
+local function CreateESP(Plr)
+    if Plr == Player then return end
+
+    local Character = Plr.Character
+    if not Character then return end
+
+    local Highlight = Character:FindFirstChild("PlayerESP")
+
+    if not Highlight then
+        Highlight = Instance.new("Highlight")
+        Highlight.Name = "PlayerESP"
+        Highlight.FillColor = Color3.fromRGB(255,0,0)
+        Highlight.OutlineColor = Color3.fromRGB(255,255,255)
+        Highlight.FillTransparency = 0.5
+        Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        Highlight.Parent = Character
+    end
+end
+
+local function RemoveESP(Plr)
+    local Character = Plr.Character
+    if not Character then return end
+
+    local Highlight = Character:FindFirstChild("PlayerESP")
+
+    if Highlight then
+        Highlight:Destroy()
+    end
+end
+
+local function UpdateESP(Plr)
+    if Plr == Player then return end
+
+    if ESPEnabled or (SelectedESP and SelectedPlayer == Plr) then
+        CreateESP(Plr)
+    else
+        RemoveESP(Plr)
+    end
+end
+
+local function UpdateAllESP()
+    for _, Plr in ipairs(Players:GetPlayers()) do
+        UpdateESP(Plr)
+    end
+end
+
+--==================================================
+-- ESP UI
+--==================================================
+
+local ESPSection = ESPTab:Section({
+    Name = "ESP اللاعبين",
+    column = 1
+})
+
+ESPSection:Toggle({
+    Name = "ESP جميع اللاعبين",
+    Flag = "AllESP",
+
+    Callback = function(Value)
+        ESPEnabled = Value
+        UpdateAllESP()
+    end
+})
+
+local TargetSection = ESPTab:Section({
+    Name = "اختيار لاعب",
+    column = 2
+})
+
+TargetSection:Box({
+    Name = "اسم اللاعب",
+    Flag = "ESPPlayer",
+
+    Callback = function(Value)
+        TargetName = Value
+        SelectedPlayer = FindPlayer(Value)
+
+        UpdateAllESP()
+    end
+})
+
+TargetSection:Toggle({
+    Name = "ESP اللاعب المحدد",
+    Flag = "SelectedESP",
+
+    Callback = function(Value)
+        SelectedESP = Value
+
+        SelectedPlayer = FindPlayer(TargetName)
+
+        UpdateAllESP()
+    end
+})
+
+TargetSection:Button({
+    Name = "تحديث اللاعب المحدد",
+    Callback = function()
+        SelectedPlayer = FindPlayer(TargetName)
+        UpdateAllESP()
+    end
+})
+
+--==================================================
+-- ESP RESPAWN
+--==================================================
+
+local function SetupPlayer(Plr)
+    Plr.CharacterAdded:Connect(function()
+        task.wait(1)
+        UpdateESP(Plr)
+    end)
+end
+
+for _, Plr in ipairs(Players:GetPlayers()) do
+    SetupPlayer(Plr)
+end
+
+Players.PlayerAdded:Connect(function(Plr)
+    SetupPlayer(Plr)
+end)
+
+Players.PlayerRemoving:Connect(function(Plr)
+    if SelectedPlayer == Plr then
+        SelectedPlayer = nil
+    end
+end)
+
+--==================================================
+-- PLAYER SYSTEM
+--==================================================
+
+local SpeedEnabled = false
+local JumpEnabled = false
+local NoclipEnabled = false
+local InfiniteJumpEnabled = false
+
+local SpeedValue = 50
+local JumpValue = 100
+
+local NoclipConnection
+local OriginalCollision = {}
+
+--==================================================
+-- HUMANOID
+--==================================================
+
+local function GetHumanoid()
+    local Character = Player.Character
+
+    return Character and Character:FindFirstChildOfClass("Humanoid")
+end
+
+--==================================================
+-- SPEED
+--==================================================
+
+local SpeedSection = PlayerTab:Section({
+    Name = "السرعة",
+    column = 1
+})
+
+SpeedSection:Box({
+    Name = "قيمة السرعة",
+
+    Callback = function(Value)
+        local Number = tonumber(Value)
+
+        if Number and Number >= 0 and Number <= 250 then
+            SpeedValue = Number
+
+            local Humanoid = GetHumanoid()
+
+            if SpeedEnabled and Humanoid then
+                Humanoid.WalkSpeed = SpeedValue
+            end
+        end
+    end
+})
+
+SpeedSection:Toggle({
+    Name = "تشغيل السرعة",
+    Flag = "Speed",
+
+    Callback = function(Value)
+        SpeedEnabled = Value
+
+        local Humanoid = GetHumanoid()
+
+        if Humanoid then
+            Humanoid.WalkSpeed = Value and SpeedValue or 16
+        end
+    end
+})
+
+--==================================================
+-- JUMP
+--==================================================
+
+local JumpSection = PlayerTab:Section({
+    Name = "القفز",
+    column = 2
+})
+
+JumpSection:Box({
+    Name = "قوة القفز",
+
+    Callback = function(Value)
+        local Number = tonumber(Value)
+
+        if Number and Number >= 0 and Number <= 300 then
+            JumpValue = Number
+
+            local Humanoid = GetHumanoid()
+
+            if JumpEnabled and Humanoid then
+                Humanoid.UseJumpPower = true
+                Humanoid.JumpPower = JumpValue
+            end
+        end
+    end
+})
+
+JumpSection:Toggle({
+    Name = "تشغيل قوة القفز",
+    Flag = "Jump",
+
+    Callback = function(Value)
+        JumpEnabled = Value
+
+        local Humanoid = GetHumanoid()
+
+        if Humanoid then
+            Humanoid.UseJumpPower = true
+            Humanoid.JumpPower = Value and JumpValue or 50
+        end
+    end
+})
+
+--==================================================
+-- NOCLIP
+--==================================================
+
+local MovementSection = PlayerTab:Section({
+    Name = "الحركة",
+    column = 1
+})
+
+local function RestoreCollision()
+    for Part, OriginalValue in pairs(OriginalCollision) do
+        if Part and Part.Parent then
+            Part.CanCollide = OriginalValue
+        end
+    end
+
+    table.clear(OriginalCollision)
+end
+
+MovementSection:Toggle({
+    Name = "اختراق الجدران",
+    Flag = "Noclip",
+
+    Callback = function(Value)
+        NoclipEnabled = Value
+
+        if NoclipConnection then
+            NoclipConnection:Disconnect()
+            NoclipConnection = nil
+        end
+
+        if Value then
+            NoclipConnection = RunService.Stepped:Connect(function()
+
+                local Character = Player.Character
+
+                if Character then
+                    for _, Part in ipairs(Character:GetDescendants()) do
+                        if Part:IsA("BasePart") then
+
+                            if OriginalCollision[Part] == nil then
+                                OriginalCollision[Part] = Part.CanCollide
+                            end
+
+                            Part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        else
+            RestoreCollision()
+        end
+    end
+})
+
+--==================================================
+-- INFINITE JUMP
+--==================================================
+
+MovementSection:Toggle({
+    Name = "قفز لا نهائي",
+    Flag = "InfiniteJump",
+
+    Callback = function(Value)
+        InfiniteJumpEnabled = Value
+    end
+})
+
+UserInputService.JumpRequest:Connect(function()
+
+    if InfiniteJumpEnabled then
+
+        local Humanoid = GetHumanoid()
+
+        if Humanoid then
+            Humanoid:ChangeState(
+                Enum.HumanoidStateType.Jumping
+            )
+        end
+    end
+end)
+
+--==================================================
+-- CHARACTER RESPAWN
+--==================================================
+
+Player.CharacterAdded:Connect(function(Character)
+
+    local Humanoid = Character:WaitForChild("Humanoid")
+
+    task.wait(0.5)
+
+    if SpeedEnabled then
+        Humanoid.WalkSpeed = SpeedValue
+    end
+
+    if JumpEnabled then
+        Humanoid.UseJumpPower = true
+        Humanoid.JumpPower = JumpValue
+    end
+
+    if NoclipEnabled then
+        task.wait(0.5)
+
+        for _, Part in ipairs(Character:GetDescendants()) do
+            if Part:IsA("BasePart") then
+                OriginalCollision[Part] = Part.CanCollide
+                Part.CanCollide = false
+            end
+        end
+    end
+end)
+
+print("ALI HUB | NILHUB UI LOADED")
