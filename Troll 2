@@ -1,0 +1,1130 @@
+-- Ali hub (منقول بالكامل من NilHub بنفس شكل Ali hub)
+-- B: فتح/إغلاق القائمة | X: طيران
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local VirtualUser = game:GetService("VirtualUser")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+local Workspace = game:GetService("Workspace")
+
+local plr = Players.LocalPlayer
+local cam = Workspace.CurrentCamera
+local mouse = plr:GetMouse()
+local httprequest = (syn and syn.request) or (http and http.request) or http_request or request
+local FPDH = Workspace.FallenPartsDestroyHeight
+
+-- ================= الحالة =================
+local targetName = ""
+local gens = {}      -- لإيقاف الحلقات
+local conns = {}     -- اتصالات
+local resetters = {} -- تُطفأ عند إعادة الإحياء
+local oldPos = nil
+local fovValue = 100
+local spinSpeed = 50
+local flySpeed = 66
+
+-- ================= أدوات مساعدة =================
+local function char(p) return p and p.Character end
+local function hum(p) local c = char(p) return c and c:FindFirstChildOfClass("Humanoid") end
+local function rootOf(p) local c = char(p) return c and c:FindFirstChild("HumanoidRootPart") end
+local function myHum() return hum(plr) end
+local function myRoot() return rootOf(plr) end
+
+local function notify(text, dur)
+	pcall(function()
+		StarterGui:SetCore("SendNotification", {Title = "Ali hub", Text = text, Duration = dur or 4})
+	end)
+end
+
+local function newGen(key)
+	gens[key] = (gens[key] or 0) + 1
+	return gens[key]
+end
+local function alive(key, g) return gens[key] == g end
+local function stop(key) gens[key] = (gens[key] or 0) + 1 end
+
+local function findPlayer(name, excludeSelf)
+	if not name or name == "" then return nil end
+	name = name:lower()
+	if name == "random" then
+		local list = {}
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= plr then table.insert(list, p) end
+		end
+		return #list > 0 and list[math.random(#list)] or nil
+	end
+	for _, p in ipairs(Players:GetPlayers()) do
+		if not (excludeSelf and p == plr) then
+			if p.Name:lower():sub(1, #name) == name or p.DisplayName:lower():sub(1, #name) == name then
+				return p
+			end
+		end
+	end
+	return nil
+end
+
+local function targetPlayer()
+	return findPlayer(targetName, true)
+end
+
+local function teleportTo(tr, off)
+	local r = myRoot()
+	if r and tr then
+		r.Velocity = Vector3.zero
+		r.CFrame = tr.CFrame * off
+	end
+end
+
+-- ================= الفلنج =================
+local function flingPlayer(target, raid)
+	local lr, lh = myRoot(), myHum()
+	local tc = char(target)
+	if not (lr and lh and tc) then return end
+	local th = tc:FindFirstChildOfClass("Humanoid")
+	local tRoot = tc:FindFirstChild("HumanoidRootPart")
+	local head = tc:FindFirstChild("Head")
+	local part = tRoot or head
+	if not (th and part) then return end
+
+	if lr.Velocity.Magnitude < 50 then oldPos = lr.CFrame end
+	cam.CameraSubject = head or th
+
+	local bv = Instance.new("BodyVelocity")
+	bv.Name = "EpixVel"
+	bv.Velocity = Vector3.new(9e8, 9e8, 9e8)
+	bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+	bv.Parent = lr
+	lh:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+	Workspace.FallenPartsDestroyHeight = 0 / 0
+
+	local angle = 100
+	local function place(off)
+		lr.CFrame = CFrame.new(part.Position) * off * CFrame.Angles(math.rad(angle), 0, 0)
+		lr.Velocity = Vector3.new(9e7, 9e8, 9e7)
+		lr.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+	end
+	local function step(off)
+		place(off)
+		task.wait()
+	end
+
+	local t0 = tick()
+	while part.Parent and th.Parent and lh.Health > 0 and tick() - t0 < 0.3 do
+		local md = th.MoveDirection
+		local s = part.Velocity.Magnitude / 1.25
+		if not raid and part.Velocity.Magnitude >= 50 then
+			for _ = 1, 4 do step(CFrame.new() + md * s) end
+			for _ = 1, 2 do step(CFrame.new() + md) end
+		else
+			angle = angle + 100
+			step(CFrame.new(0, 1.5, 0) + md * s)
+			step(CFrame.new(0, -1.5, 0) + md * s)
+			step(CFrame.new(2.25, 1.5, -2.25) + md * s)
+			step(CFrame.new(-2.25, -1.5, 2.25) + md * s)
+			step(CFrame.new(0, 1.5, 0) + md)
+			step(CFrame.new(0, -1.5, 0) + md)
+		end
+		if part.Velocity.Magnitude > 500 or th.Sit or lh.Health <= 0 then break end
+	end
+
+	bv:Destroy()
+	lh:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+	cam.CameraSubject = lh
+
+	if oldPos then
+		local s0 = tick()
+		repeat
+			lr.CFrame = oldPos * CFrame.new(0, 0.5, 0)
+			lr.Velocity = Vector3.zero
+			lr.RotVelocity = Vector3.zero
+			task.wait()
+		until not lr.Parent or (lr.Position - oldPos.Position).Magnitude < 25 or tick() - s0 > 3
+	end
+	Workspace.FallenPartsDestroyHeight = FPDH
+end
+
+local function flingLoop(key, raid)
+	local g = newGen(key)
+	task.spawn(function()
+		while alive(key, g) do
+			local list = Players:GetPlayers()
+			local p = list[math.random(#list)]
+			if p ~= plr and p.Character then
+				local h = myHum()
+				if h then h.PlatformStand = true end
+				flingPlayer(p, raid)
+				local h2 = myHum()
+				if h2 then h2.PlatformStand = false end
+			end
+			task.wait()
+		end
+	end)
+end
+
+-- ================= الهدف: Bang / Face Bang / Suck / Headsit / Facesit =================
+local function bangStart()
+	local t = targetPlayer()
+	if not t or t == plr then notify("اختر هدفاً أولاً") return false end
+	local g = newGen("bang")
+	task.spawn(function()
+		while alive("bang", g) do
+			local tr = rootOf(t)
+			if not tr then break end
+			local h = myHum()
+			if h then h.PlatformStand = true; h.Sit = false end
+			for z = 1, 8 do
+				if not alive("bang", g) then break end
+				teleportTo(tr, CFrame.new(0, 0, z * 0.5))
+				task.wait()
+			end
+			for z = 8, 1, -1 do
+				if not alive("bang", g) then break end
+				teleportTo(tr, CFrame.new(0, 0, z * 0.5))
+				task.wait()
+			end
+			task.wait()
+		end
+	end)
+	return true
+end
+
+local function faceBangStart()
+	local t = targetPlayer()
+	if not t or t == plr then notify("اختر هدفاً أولاً") return false end
+	local g = newGen("facebang")
+	task.spawn(function()
+		while alive("facebang", g) do
+			local hd = char(t) and char(t):FindFirstChild("Head")
+			if not hd then break end
+			for v = 1, 8 do
+				if not alive("facebang", g) then break end
+				local r = myRoot()
+				if r then
+					r.Velocity = Vector3.zero
+					r.CFrame = (hd.CFrame + hd.CFrame.LookVector * (v * 0.5)) * CFrame.Angles(0, math.pi, 0)
+				end
+				task.wait()
+			end
+			for v = 8, 1, -1 do
+				if not alive("facebang", g) then break end
+				local r = myRoot()
+				if r then
+					r.Velocity = Vector3.zero
+					r.CFrame = (hd.CFrame + hd.CFrame.LookVector * (v * 0.5)) * CFrame.Angles(0, math.pi, 0)
+				end
+				task.wait()
+			end
+			task.wait()
+		end
+	end)
+	return true
+end
+
+local function stopHumanoidFlags()
+	local h = myHum()
+	if h then h.PlatformStand = false; h.Sit = false end
+end
+
+local function inverseBang()
+	local t = targetPlayer()
+	if not t or t == plr then notify("اختر هدفاً أولاً") return end
+	local r, h = myRoot(), myHum()
+	if not (r and rootOf(t) and h) then return end
+	local orig = r.CFrame
+	local g = newGen("benx")
+	task.spawn(function()
+		for v = 1, 6 do
+			if not alive("benx", g) then break end
+			task.wait()
+			h.Sit = true
+			teleportTo(rootOf(t) or r, CFrame.new(0, 0, -v) * CFrame.Angles(-1.5, 0, 0))
+		end
+		for v = 6, 1, -1 do
+			if not alive("benx", g) then break end
+			task.wait()
+			h.Sit = true
+			teleportTo(rootOf(t) or r, CFrame.new(0, 0, -v) * CFrame.Angles(-1.5, 0, 0))
+		end
+		if alive("benx", g) then
+			local rr = myRoot()
+			if rr then rr.CFrame = orig end
+		end
+		stop("benx")
+		h.Sit = false
+	end)
+end
+
+local function suckStart()
+	local t = targetPlayer()
+	if not t or t == plr then notify("اختر هدفاً أولاً") return false end
+	local g = newGen("suck")
+	local steps = {1, 1.5, 2, 2.5, 3, 3.5, 4, 3.5, 3, 2.5, 2, 1.5, 1}
+	task.spawn(function()
+		while alive("suck", g) do
+			local h = myHum()
+			if not (h and rootOf(t)) then break end
+			h.Sit = true
+			for _, z in ipairs(steps) do
+				if not alive("suck", g) then break end
+				local tr, r = rootOf(t), myRoot()
+				if tr and r then
+					r.CFrame = tr.CFrame * CFrame.new(0, -2, 0) * CFrame.Angles(0, math.pi, 0) * CFrame.new(0, 0, z)
+				end
+				task.wait()
+			end
+		end
+	end)
+	return true
+end
+
+local function followStart(key, mode)
+	local t = targetPlayer()
+	if not t or t == plr then notify("اختر هدفاً أولاً") return false end
+	local g = newGen(key)
+	local h = myHum()
+	if h then h.Sit = true end
+	conns[key] = RunService.Stepped:Connect(function()
+		if not alive(key, g) then return end
+		local hd = char(t) and char(t):FindFirstChild("Head")
+		local r, hh = myRoot(), myHum()
+		if hd and r and hh then
+			if not hh.Sit then hh.Sit = true end
+			if mode == "head" then
+				r.CFrame = hd.CFrame * CFrame.new(0, 1, 0.4)
+			else
+				r.CFrame = hd.CFrame * CFrame.new(0, 0, -1) * CFrame.Angles(0, math.pi, 0)
+			end
+			r.Velocity = Vector3.zero
+		end
+	end)
+	return true
+end
+
+local function followStop(key)
+	stop(key)
+	if conns[key] then conns[key]:Disconnect(); conns[key] = nil end
+	stopHumanoidFlags()
+end
+
+-- ================= Stand (الأنيميشن المرافق) =================
+local STAND = {
+	jojo = {id = "13823324057", t = 10},
+	Sit = {id = "12507085924", t = 7},
+	Aura = {id = "10478338114", t = 1.5},
+	zby = {id = "10214311282", t = 3},
+}
+local STAND_OFFSET = {
+	Bottom = CFrame.new(0, 4, 2),
+	Left = CFrame.new(-3, 4, 2),
+	Right = CFrame.new(3, 5, 2),
+}
+local standTrack = nil
+
+local function standOff()
+	stop("stand")
+	if standTrack then standTrack:Stop(); standTrack = nil end
+	local a = plr.Character and plr.Character:FindFirstChild("Animate")
+	if a then a.Disabled = false end
+end
+
+local function standStart(key, side)
+	standOff()
+	local t = targetPlayer()
+	if not t or t == plr then notify("اختر هدفاً أولاً") return false end
+	local h = myHum()
+	if not h then return false end
+	local info = STAND[key]
+	local g = newGen("stand")
+	local anim = Instance.new("Animation")
+	anim.AnimationId = "rbxassetid://" .. info.id
+	standTrack = h:LoadAnimation(anim)
+	standTrack:AdjustSpeed(0.1)
+	standTrack:Play()
+	local off = STAND_OFFSET[side]
+	task.spawn(function()
+		while alive("stand", g) do
+			local r, tr = myRoot(), rootOf(t)
+			if not (r and tr and t.Parent) then break end
+			r.Velocity = Vector3.zero
+			if standTrack then standTrack.TimePosition = info.t end
+			r.CFrame = tr.CFrame * off
+			task.wait()
+		end
+		if alive("stand", g) then standOff() end
+	end)
+	return true
+end
+
+-- ================= اللعب: Anti / Jerk / Fake lag / Spin =================
+local function fakeLagStart()
+	local g = newGen("fakelag")
+	task.spawn(function()
+		while alive("fakelag", g) do
+			local r = myRoot()
+			if r then
+				r.Anchored = true
+				task.wait(0.4)
+				r.Anchored = false
+			end
+			task.wait(0.05)
+		end
+	end)
+end
+
+local function fakeLagStop()
+	stop("fakelag")
+	local r = myRoot()
+	if r then r.Anchored = false end
+end
+
+local function antiBangStart()
+	local g = newGen("antibang")
+	task.spawn(function()
+		while alive("antibang", g) do
+			task.wait()
+			local r = myRoot()
+			if r then
+				for _, p in ipairs(Players:GetPlayers()) do
+					if p ~= plr then
+						local pr, ph = rootOf(p), hum(p)
+						if pr and ph and ph.Health > 0 and (pr.Position - r.Position).Magnitude <= 2 then
+							local back = r.CFrame
+							r.CFrame = CFrame.new(10, -1000.51605, 10)
+							task.wait()
+							if alive("antibang", g) then r.CFrame = back end
+						end
+					end
+				end
+			end
+		end
+	end)
+end
+
+local function jerkStart()
+	local g = newGen("jerk")
+	task.spawn(function()
+		local h = plr.Character and plr.Character:FindFirstChildWhichIsA("Humanoid")
+		if not (h and h.RigType == Enum.HumanoidRigType.R15) then return end
+		local anim = Instance.new("Animation")
+		anim.AnimationId = "rbxassetid://698251653"
+		local track = h:LoadAnimation(anim)
+		while alive("jerk", g) do
+			track:Play()
+			track:AdjustSpeed(0.7)
+			track.TimePosition = 0.6
+			task.wait(0.01)
+			while track.TimePosition < 0.7 and alive("jerk", g) do
+				task.wait(0.01)
+			end
+			track:Stop()
+		end
+		track:Stop()
+	end)
+end
+
+local function touchFlingStart()
+	local g = newGen("touch")
+	task.spawn(function()
+		local v = 0.1
+		while alive("touch", g) do
+			RunService.Heartbeat:Wait()
+			local c = plr.Character
+			local r = c and (c:FindFirstChild("HumanoidRootPart") or c:FindFirstChild("Torso") or c:FindFirstChild("UpperTorso"))
+			if c and r then
+				local vel = r.Velocity
+				r.Velocity = vel * 9999999 + Vector3.new(0, 10000, 0)
+				RunService.RenderStepped:Wait()
+				if c.Parent and r.Parent then r.Velocity = vel end
+				RunService.Stepped:Wait()
+				if c.Parent and r.Parent then
+					r.Velocity = vel + Vector3.new(0, v, 0)
+					v = -v
+				end
+			end
+		end
+	end)
+end
+
+local spinOn = false
+RunService.RenderStepped:Connect(function(dt)
+	if spinOn then
+		local r = myRoot()
+		if r then r.CFrame = r.CFrame * CFrame.Angles(0, math.rad(spinSpeed * dt * 60), 0) end
+	end
+end)
+
+local function flingAuraStart()
+	local g = newGen("aura")
+	task.spawn(function()
+		while alive("aura", g) do
+			task.wait()
+			local r = myRoot()
+			if r then
+				for _, p in ipairs(Players:GetPlayers()) do
+					local pr = rootOf(p)
+					if p ~= plr and pr and (pr.Position - r.Position).Magnitude < 15 then
+						flingPlayer(p)
+						task.wait(0.1)
+					end
+				end
+			end
+		end
+	end)
+end
+
+-- ================= الشخصية: Noclip / Fly / FOV / Reset =================
+local function noclipStart()
+	conns.noclip = RunService.Stepped:Connect(function()
+		local c = plr.Character
+		if not c then return end
+		for _, d in ipairs(c:GetDescendants()) do
+			if d:IsA("BasePart") and d.Name ~= "HumanoidRootPart" then d.CanCollide = false end
+		end
+	end)
+end
+
+local function noclipStop()
+	if conns.noclip then conns.noclip:Disconnect(); conns.noclip = nil end
+	local c = plr.Character
+	if c then
+		for _, d in ipairs(c:GetDescendants()) do
+			if d:IsA("BasePart") and d.Name ~= "HumanoidRootPart" then d.CanCollide = true end
+		end
+	end
+end
+
+local flyBV, flyGyro
+local function flyStop()
+	if conns.fly then conns.fly:Disconnect(); conns.fly = nil end
+	if flyBV then flyBV:Destroy(); flyBV = nil end
+	if flyGyro then flyGyro:Destroy(); flyGyro = nil end
+	stopHumanoidFlags()
+end
+
+local function flyStart()
+	local r, h = myRoot(), myHum()
+	if not (r and h) then return false end
+	flyStop()
+	flyBV = Instance.new("BodyVelocity")
+	flyBV.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+	flyBV.Velocity = Vector3.zero
+	flyBV.Parent = r
+	flyGyro = Instance.new("BodyGyro")
+	flyGyro.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+	flyGyro.CFrame = r.CFrame
+	flyGyro.Parent = r
+	h.PlatformStand = true
+	conns.fly = RunService.RenderStepped:Connect(function()
+		local r2, h2 = myRoot(), myHum()
+		if not (r2 and h2 and flyBV and flyGyro) then return end
+		local v = h2.MoveDirection * flySpeed
+		if h2.Jump or UIS:IsKeyDown(Enum.KeyCode.Space) then v = v + Vector3.new(0, flySpeed, 0) end
+		if UIS:IsKeyDown(Enum.KeyCode.Q) or UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+			v = v - Vector3.new(0, flySpeed, 0)
+		end
+		flyBV.Velocity = v
+		flyGyro.CFrame = cam.CFrame
+	end)
+	return true
+end
+
+local function setAnim(ids)
+	local a = plr.Character and plr.Character:FindFirstChild("Animate")
+	local h = myHum()
+	if not (a and h) then return end
+	pcall(function()
+		a.Disabled = true
+		local function set(folder, id)
+			if folder then folder.AnimationId = "http://www.roblox.com/asset/?id=" .. id end
+		end
+		set(a.idle.Animation1, ids[1])
+		set(a.idle.Animation2, ids[2])
+		set(a.walk.WalkAnim, ids[3])
+		set(a.run.RunAnim, ids[4])
+		set(a.jump.JumpAnim, ids[5])
+		set(a.climb.ClimbAnim, ids[6])
+		set(a.fall.FallAnim, ids[7])
+		h:ChangeState(3)
+	end)
+	a.Disabled = false
+end
+
+local ANIM_SETS = {
+	{"بايريت", {"750781874", "750782770", "750785693", "750783738", "750782230", "750779899", "750780242"}},
+	{"خفي", {"1132473842", "1132477671", "1132510133", "1132494274", "1132489853", "1132461372", "1132469004"}},
+	{"واثق", {"1069977950", "1069987858", "1070017263", "1070001516", "1069984524", "1069946257", "1069973677"}},
+	{"نجم بوب", {"1212900985", "1212900985", "1212980338", "1212980348", "1212954642", "1213044953", "1212900995"}},
+	{"دورية", {"1149612882", "1150842221", "1151231493", "1150967949", "1150944216", "1148811837", "1148863382"}},
+	{"كاوبوي", {"1014390418", "1014398616", "1014421541", "1014401683", "1014394726", "1014380606", "1014384571"}},
+	{"أميرة", {"941003647", "941013098", "941028902", "941015281", "941008832", "940996062", "941000007"}},
+	{"زومبي", {"3489171152", "3489171152", "3489174223", "3489173414", "616161997", "616156119", "616157476"}},
+}
+
+local function resetCharacter()
+	local h, r = myHum(), myRoot()
+	local cf = r and r.CFrame
+	if h then h.Health = 0 end
+	plr.CharacterAdded:Wait()
+	local nr = plr.Character and plr.Character:WaitForChild("HumanoidRootPart", 5)
+	if nr and cf then nr.CFrame = cf end
+end
+
+local function serverHop()
+	local ok, body = pcall(function()
+		local url = string.format("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100", game.PlaceId)
+		local raw = httprequest and httprequest({Url = url}).Body or game:HttpGetAsync(url)
+		return HttpService:JSONDecode(raw)
+	end)
+	if not ok or not body or not body.data then
+		notify("فشل جلب السيرفرات")
+		return
+	end
+	local list = {}
+	for _, s in ipairs(body.data) do
+		if s.playing < s.maxPlayers and s.id ~= game.JobId then table.insert(list, s.id) end
+	end
+	if #list > 0 then
+		TeleportService:TeleportToPlaceInstance(game.PlaceId, list[math.random(#list)], plr)
+	end
+end
+
+local function runRemote(url)
+	pcall(function() loadstring(game:HttpGet(url))() end)
+end
+
+-- ================= الواجهة (شكل Ali hub) =================
+local old = plr.PlayerGui:FindFirstChild("AliHub")
+if old then old:Destroy() end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "AliHub"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = plr:WaitForChild("PlayerGui")
+
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+main.Size = UDim2.new(0, 500, 0, 350)
+main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+main.BackgroundTransparency = 0.4
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+main.Parent = gui
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 16)
+if cam.ViewportSize.X < 700 then
+	main.Size = UDim2.new(0, 340, 0, 240)
+end
+
+local title = Instance.new("TextLabel")
+title.Name = "TitleBar"
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+title.BackgroundTransparency = 0.25
+title.BorderSizePixel = 0
+title.Text = "Ali hub"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.Oswald
+title.TextScaled = true
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = main
+Instance.new("UIPadding", title).PaddingLeft = UDim.new(0, 10)
+
+local sidebar = Instance.new("Frame")
+sidebar.Name = "SectionList"
+sidebar.Position = UDim2.new(0, 0, 0, 30)
+sidebar.Size = UDim2.new(0, 105, 1, -30)
+sidebar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+sidebar.BackgroundTransparency = 0.5
+sidebar.BorderSizePixel = 0
+sidebar.Parent = main
+local sideLayout = Instance.new("UIListLayout", sidebar)
+sideLayout.Padding = UDim.new(0, 6)
+sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0, 6)
+
+local pages = {}
+local function showPage(page)
+	for _, p in ipairs(pages) do p.Visible = (p == page) end
+end
+
+local function makeSection(text)
+	local page = Instance.new("ScrollingFrame")
+	page.Name = text
+	page.Position = UDim2.new(0, 105, 0, 30)
+	page.Size = UDim2.new(1, -105, 1, -30)
+	page.BackgroundTransparency = 1
+	page.BorderSizePixel = 0
+	page.ScrollBarThickness = 4
+	page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	page.CanvasSize = UDim2.new(0, 0, 0, 0)
+	page.Visible = false
+	page.Parent = main
+	local l = Instance.new("UIListLayout", page)
+	l.Padding = UDim.new(0, 6)
+	l.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+	local tab = Instance.new("TextButton")
+	tab.Size = UDim2.new(1, -12, 0, 30)
+	tab.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+	tab.BackgroundTransparency = 0.5
+	tab.BorderSizePixel = 0
+	tab.Text = text
+	tab.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tab.Font = Enum.Font.Oswald
+	tab.TextScaled = true
+	tab.Parent = sidebar
+	Instance.new("UICorner", tab).CornerRadius = UDim.new(0, 8)
+	tab.MouseButton1Click:Connect(function() showPage(page) end)
+
+	table.insert(pages, page)
+	return page
+end
+
+local function addButton(page, text, cb)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(0.95, 0, 0, 32)
+	b.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+	b.BackgroundTransparency = 0.5
+	b.BorderSizePixel = 0
+	b.Text = text
+	b.TextColor3 = Color3.fromRGB(255, 255, 255)
+	b.Font = Enum.Font.Oswald
+	b.TextScaled = true
+	b.Parent = page
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+	if cb then b.MouseButton1Click:Connect(cb) end
+	return b
+end
+
+-- زر تشغيل/إيقاف بمؤشر لون. persist = لا يُطفأ عند إعادة الإحياء
+local function addToggle(page, text, cb, persist)
+	local state = false
+	local b = addButton(page, text)
+	local led = Instance.new("Frame")
+	led.Size = UDim2.new(0, 10, 0, 10)
+	led.Position = UDim2.new(1, -18, 0.5, -5)
+	led.BorderSizePixel = 0
+	led.Parent = b
+	Instance.new("UICorner", led).CornerRadius = UDim.new(1, 0)
+	local function set(v, silent)
+		state = v
+		led.BackgroundColor3 = v and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+		if not silent and cb then cb(v) end
+	end
+	set(false, true)
+	b.MouseButton1Click:Connect(function() set(not state) end)
+	if not persist then table.insert(resetters, function() set(false) end) end
+	return set
+end
+
+local function addInput(page, placeholder, cb)
+	local t = Instance.new("TextBox")
+	t.Size = UDim2.new(0.95, 0, 0, 32)
+	t.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	t.BackgroundTransparency = 0.5
+	t.BorderSizePixel = 0
+	t.PlaceholderText = placeholder
+	t.Text = ""
+	t.TextColor3 = Color3.fromRGB(255, 255, 255)
+	t.Font = Enum.Font.Oswald
+	t.TextScaled = true
+	t.Parent = page
+	Instance.new("UICorner", t).CornerRadius = UDim.new(0, 8)
+	t.FocusLost:Connect(function() cb(t.Text, tonumber(t.Text)) end)
+	return t
+end
+
+local function addLabel(page, text, h)
+	local l = Instance.new("TextLabel")
+	l.Size = UDim2.new(0.95, 0, 0, h or 30)
+	l.BackgroundTransparency = 1
+	l.Text = text
+	l.TextColor3 = Color3.fromRGB(255, 255, 255)
+	l.Font = Enum.Font.Oswald
+	l.TextScaled = true
+	l.Parent = page
+	return l
+end
+
+local function giveTool(name, texture, onActivate)
+	local bp = plr.Backpack
+	for _, x in ipairs({bp:FindFirstChild(name), plr.Character and plr.Character:FindFirstChild(name)}) do
+		if x then x:Destroy() end
+	end
+	local tool = Instance.new("Tool")
+	tool.Name = name
+	tool.RequiresHandle = false
+	tool.TextureId = texture
+	tool.Parent = bp
+	tool.Activated:Connect(function() onActivate() end)
+end
+
+local function playerFromPart(part)
+	local p = part
+	while p and not p:FindFirstChildOfClass("Humanoid") do p = p.Parent end
+	return p and Players:GetPlayerFromCharacter(p)
+end
+
+-- ============ الصفحات ============
+local homePage = makeSection("الرئيسية")
+local targetPage = makeSection("الهدف")
+local mainPage = makeSection("اللعب")
+local charPage = makeSection("الشخصية")
+local miscPage = makeSection("أخرى")
+
+-- ============ الرئيسية ============
+addLabel(homePage, "مرحباً " .. plr.DisplayName, 30)
+addLabel(homePage, "B: فتح/إغلاق القائمة", 28)
+addLabel(homePage, "X: طيران", 28)
+addLabel(homePage, "المطور: علاوي", 30)
+addLabel(homePage, "Ali hub", 28)
+
+-- ============ الهدف ============
+addInput(targetPage, "اكتب اسم اللاعب", function(text)
+	targetName = text
+	local p = findPlayer(text, true)
+	if p then notify("الهدف: " .. p.DisplayName, 4) end
+end)
+
+addButton(targetPage, "هدف عشوائي", function()
+	local p = findPlayer("random")
+	if p then
+		targetName = p.Name
+		notify("الهدف: " .. p.DisplayName, 4)
+	end
+end)
+
+addButton(targetPage, "اختيار الهدف بالنقر", function()
+	giveTool("ClickTarget", "rbxassetid://117609145053554", function()
+		local p = playerFromPart(mouse.Target)
+		if p then
+			targetName = p.Name
+			notify("الهدف: " .. p.DisplayName, 4)
+		end
+	end)
+end)
+
+local viewOn = false
+addToggle(targetPage, "مشاهدة الهدف", function(v)
+	viewOn = v
+	if not v then
+		local h = myHum()
+		cam.CameraSubject = h or Workspace
+	end
+end)
+RunService.RenderStepped:Connect(function()
+	if viewOn then
+		local th = hum(targetPlayer())
+		if th and cam.CameraSubject ~= th then cam.CameraSubject = th end
+	end
+end)
+
+addButton(targetPage, "انتقال للهدف", function()
+	local tr, r = rootOf(targetPlayer()), myRoot()
+	if tr and r then r.CFrame = tr.CFrame + Vector3.new(0, 3, 0) end
+end)
+
+addButton(targetPage, "نسخ أنيميشن الهدف", function()
+	local t = targetPlayer()
+	local src = t and char(t) and char(t):FindFirstChild("Animate")
+	local dst = plr.Character and plr.Character:FindFirstChild("Animate")
+	if src and dst then
+		dst:ClearAllChildren()
+		for _, c in ipairs(src:GetChildren()) do c:Clone().Parent = dst end
+	end
+end)
+
+addButton(targetPage, "Fling", function()
+	local t = targetPlayer()
+	if t then task.spawn(flingPlayer, t) end
+end)
+
+addToggle(targetPage, "Loop Fling", function(v)
+	if not v then return stop("loopfling") end
+	local g = newGen("loopfling")
+	task.spawn(function()
+		while alive("loopfling", g) do
+			local t = targetPlayer()
+			if t then flingPlayer(t) end
+			task.wait(0.01)
+		end
+	end)
+end)
+
+addToggle(targetPage, "Headsit", function(v)
+	if v then
+		if not followStart("headsit", "head") then return end
+	else
+		followStop("headsit")
+	end
+end)
+
+addToggle(targetPage, "Facesit", function(v)
+	if v then
+		if not followStart("facesit", "face") then return end
+	else
+		followStop("facesit")
+	end
+end)
+
+addToggle(targetPage, "Bang", function(v)
+	if v then bangStart() else stop("bang"); stopHumanoidFlags() end
+end)
+
+addToggle(targetPage, "Face Bang", function(v)
+	if v then faceBangStart() else stop("facebang"); stopHumanoidFlags() end
+end)
+
+addButton(targetPage, "Inverse Bang", inverseBang)
+
+addToggle(targetPage, "Suck", function(v)
+	if v then suckStart() else stop("suck"); stopHumanoidFlags() end
+end)
+
+addToggle(targetPage, "Stand 1", function(v)
+	if v then standStart("Aura", "Bottom") else standOff() end
+end)
+addToggle(targetPage, "Stand 2", function(v)
+	if v then standStart("Sit", "Left") else standOff() end
+end)
+addToggle(targetPage, "Stand 3", function(v)
+	if v then standStart("jojo", "Bottom") else standOff() end
+end)
+
+-- ============ اللعب ============
+addToggle(mainPage, "Touch Fling", function(v)
+	if v then touchFlingStart() else stop("touch") end
+end)
+
+addToggle(mainPage, "Fake Lag", function(v)
+	if v then fakeLagStart() else fakeLagStop() end
+end)
+
+addToggle(mainPage, "Fling All", function(v)
+	if v then flingLoop("flingall", false) else stop("flingall") end
+end)
+
+addToggle(mainPage, "Raid All", function(v)
+	if v then flingLoop("raidall", true) else stop("raidall") end
+end)
+
+addToggle(mainPage, "Fling Aura", function(v)
+	if v then flingAuraStart() else stop("aura") end
+end)
+
+addButton(mainPage, "Click Fling", function()
+	giveTool("ClickFling", "rbxassetid://134249614939233", function()
+		local cam2 = Workspace.CurrentCamera
+		local best, bestD = nil, nil
+		for _, p in ipairs(Players:GetPlayers()) do
+			local pr = rootOf(p)
+			if p ~= plr and pr then
+				local pos, onScreen = cam2:WorldToViewportPoint(pr.Position)
+				if onScreen then
+					local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(mouse.X, mouse.Y)).Magnitude
+					if not bestD or d < bestD then best, bestD = p, d end
+				end
+			end
+		end
+		if best then task.spawn(flingPlayer, best) end
+	end)
+end)
+
+addToggle(mainPage, "Anti-Fling", function(v)
+	if v then
+		conns.antifling = RunService.Stepped:Connect(function()
+			for _, p in ipairs(Players:GetPlayers()) do
+				if p ~= plr and p.Character then
+					for _, d in ipairs(p.Character:GetDescendants()) do
+						if d:IsA("BasePart") then d.CanCollide = false end
+					end
+				end
+			end
+		end)
+	elseif conns.antifling then
+		conns.antifling:Disconnect()
+		conns.antifling = nil
+	end
+end, true)
+
+addToggle(mainPage, "Anti Bang / Headsit", function(v)
+	if v then
+		antiBangStart()
+		workspace.FallenPartsDestroyHeight = 0 / 0
+	else
+		stop("antibang")
+		Workspace.FallenPartsDestroyHeight = FPDH
+	end
+end, true)
+
+addToggle(mainPage, "Jerk", function(v)
+	if v then jerkStart() else stop("jerk") end
+end)
+
+addToggle(mainPage, "Spin", function(v) spinOn = v end)
+addInput(mainPage, "سرعة الدوران (افتراضي 50)", function(_, n)
+	if n then spinSpeed = n end
+end)
+
+-- ============ الشخصية ============
+addInput(charPage, "سرعة المشي WalkSpeed", function(_, n)
+	local h = myHum()
+	if h and n then h.WalkSpeed = n end
+end)
+
+addInput(charPage, "قوة القفز JumpPower", function(_, n)
+	local h = myHum()
+	if h and n then
+		h.UseJumpPower = true
+		h.JumpPower = n
+	end
+end)
+
+addToggle(charPage, "FOV", function(v)
+	cam.FieldOfView = v and fovValue or 70
+end)
+addInput(charPage, "قيمة FOV (افتراضي 100)", function(_, n)
+	if n then
+		fovValue = n
+	end
+end)
+
+addToggle(charPage, "Noclip", function(v)
+	if v then noclipStart() else noclipStop() end
+end, true)
+
+local flyOn = false
+local flySet
+flySet = addToggle(charPage, "طيران (X)", function(v)
+	flyOn = v
+	if v then
+		if not flyStart() then flySet(false, true) end
+	else
+		flyStop()
+	end
+end)
+
+addInput(charPage, "سرعة الطيران (افتراضي 66)", function(_, n)
+	if n then flySpeed = n end
+end)
+
+addButton(charPage, "إعادة الإحياء (Reset)", function()
+	task.spawn(resetCharacter)
+end)
+
+addButton(charPage, "Fix Animation", function()
+	pcall(function()
+		ReplicatedStorage.RemoteEvents.PushEvent:FireServer()
+	end)
+	if keypress and keyrelease then
+		for _ = 1, 5 do
+			keypress("0x46")
+			task.wait(0.1)
+			keyrelease("0x46")
+		end
+	end
+end)
+
+for _, set in ipairs(ANIM_SETS) do
+	addButton(charPage, set[1], function() setAnim(set[2]) end)
+end
+
+addButton(charPage, "Free Emotes", function()
+	runRemote("https://raw.githubusercontent.com/7yd7/Hub/refs/heads/Branch/GUIS/Emotes.lua")
+end)
+
+-- ============ أخرى ============
+addToggle(miscPage, "Anti-AFK", function(v)
+	if v then
+		conns.afk = plr.Idled:Connect(function()
+			VirtualUser:CaptureController()
+			VirtualUser:ClickButton2(Vector2.new())
+		end)
+	elseif conns.afk then
+		conns.afk:Disconnect()
+		conns.afk = nil
+	end
+end, true)
+
+addButton(miscPage, "Rejoin", function()
+	TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, plr)
+end)
+
+addButton(miscPage, "Server Hop", serverHop)
+
+addButton(miscPage, "Fly (Mobile)", function()
+	runRemote("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt")
+end)
+
+addButton(miscPage, "All-Emote", function()
+	runRemote("https://yarhm.goteamst.com/scr?channel=afem")
+end)
+
+addButton(miscPage, "RTX / Shader", function()
+	runRemote("https://raw.githubusercontent.com/randomstring0/pshade-ultimate/refs/heads/main/src/cd.lua")
+end)
+
+addButton(miscPage, "Infinite Yield", function()
+	runRemote("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
+end)
+
+addButton(miscPage, "Visual Menu", function()
+	runRemote("https://raw.githubusercontent.com/GLAMOHGA/fling/refs/heads/main/visual.md")
+end)
+
+addButton(miscPage, "R3X", function()
+	pcall(function()
+		loadstring(game:GetObjects("rbxassetid://6695644299")[1].Source)()
+	end)
+end)
+
+-- ============ زر الفتح/الإغلاق الدائري ============
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "OpenClose"
+toggleBtn.AnchorPoint = Vector2.new(0, 0.5)
+toggleBtn.Position = UDim2.new(0, 10, 0.6, 0)
+toggleBtn.Size = UDim2.new(0, 40, 0, 40)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(70, 10, 10)
+toggleBtn.BackgroundTransparency = 0.6
+toggleBtn.BorderSizePixel = 0
+toggleBtn.Text = "A"
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.Font = Enum.Font.Oswald
+toggleBtn.TextScaled = true
+toggleBtn.Parent = gui
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1, 0)
+
+toggleBtn.MouseButton1Click:Connect(function()
+	main.Visible = not main.Visible
+end)
+
+UIS.InputBegan:Connect(function(input, processed)
+	if processed then return end
+	if input.KeyCode == Enum.KeyCode.B then
+		main.Visible = not main.Visible
+	elseif input.KeyCode == Enum.KeyCode.X then
+		flySet(not flyOn)
+	end
+end)
+
+-- ============ إعادة الإحياء: إطفاء ما يجب إطفاؤه ============
+plr.CharacterAdded:Connect(function()
+	task.wait(0.5)
+	for _, f in ipairs(resetters) do pcall(f) end
+	stop("bang"); stop("facebang"); stop("suck"); stop("benx"); stop("stand")
+	stop("fakelag"); stop("jerk"); stop("aura")
+	if conns.headsit then conns.headsit:Disconnect(); conns.headsit = nil end
+	if conns.facesit then conns.facesit:Disconnect(); conns.facesit = nil end
+	standTrack = nil
+	flyOn = false
+end)
+
+showPage(homePage)
+end
