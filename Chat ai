@@ -1,754 +1,769 @@
+--==============================================================
+-- ALI HUB | 100 LOCAL FEATURES | Roblox Studio
+-- Install: LocalScript داخل StarterPlayer > StarterPlayerScripts
+-- الصق الجزء الأول ثم الجزء الثاني في نفس الملف، بالترتيب.
+-- ملاحظة: التأثيرات محلية على جهاز اللاعب. لا تغيّر بيانات اللاعبين الآخرين.
+--==============================================================
 
--- ALAWI MEGA HUB
--- PART 1
--- Local Features
+--============================== PART 1/2 ==============================
+-- المجموعات 1 إلى 5 + واجهة القائمة
 
 local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
-local UserInputService = game:GetService("UserInputService")
-
-local Player = Players.LocalPlayer
-
-local redzlib = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"
-))()
-
-local Window = redzlib:MakeWindow({
-    Title = "ALAWI MEGA HUB",
-    SubTitle = "Part 1 | Local Settings",
-    SaveFolder = "AlawiMegaHub"
-})
-
-local Tab = Window:MakeTab({"اللاعب", "user"})
-local CameraTab = Window:MakeTab({"الكاميرا", "camera"})
-local InfoTab = Window:MakeTab({"معلومات", "info"})
-
-local Humanoid
-
-local function UpdateCharacter()
-    local Character = Player.Character or Player.CharacterAdded:Wait()
-    Humanoid = Character:WaitForChild("Humanoid")
-end
-
-UpdateCharacter()
-
-Player.CharacterAdded:Connect(function()
-    task.wait(1)
-    UpdateCharacter()
-end)
-
--- السرعة
-Tab:AddSlider({
-    Name = "سرعة الحركة",
-    Min = 1,
-    Max = 100,
-    Increase = 1,
-    Default = 16,
-    Callback = function(Value)
-        if Humanoid then
-            Humanoid.WalkSpeed = Value
-        end
-    end
-})
-
--- القفز
-Tab:AddSlider({
-    Name = "قوة القفز",
-    Min = 1,
-    Max = 100,
-    Increase = 1,
-    Default = 50,
-    Callback = function(Value)
-        if Humanoid then
-            Humanoid.UseJumpPower = true
-            Humanoid.JumpPower = Value
-        end
-    end
-})
-
--- استعادة الإعدادات
-Tab:AddButton({
-    Name = "إعادة الإعدادات",
-    Callback = function()
-        if Humanoid then
-            Humanoid.WalkSpeed = 16
-            Humanoid.UseJumpPower = true
-            Humanoid.JumpPower = 50
-        end
-    end
-})
-
--- معلومات اللاعب
-InfoTab:AddParagraph({
-    "اسم اللاعب",
-    Player.Name
-})
-
-InfoTab:AddParagraph({
-    "اسم العرض",
-    Player.DisplayName
-})
-
-InfoTab:AddParagraph({
-    "User ID",
-    tostring(Player.UserId)
-})
-
-InfoTab:AddParagraph({
-    "منصة اللعب",
-    UserInputService.TouchEnabled and "Touch" or "Keyboard"
-})
-
--- إعدادات الكاميرا
-CameraTab:AddSlider({
-    Name = "مجال الرؤية FOV",
-    Min = 40,
-    Max = 120,
-    Increase = 1,
-    Default = 70,
-    Callback = function(Value)
-        workspace.CurrentCamera.FieldOfView = Value
-    end
-})
-
-CameraTab:AddButton({
-    Name = "إعادة مجال الرؤية",
-    Callback = function()
-        workspace.CurrentCamera.FieldOfView = 70
-    end
-})
-
--- الإضاءة المحلية
-CameraTab:AddToggle({
-    Name = "إضاءة النهار",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            Lighting.ClockTime = 14
-        else
-            Lighting.ClockTime = 12
-        end
-    end
-})
-
-Window:SelectTab(Tab)
-
-print("ALAWI MEGA HUB PART 1 LOADED")
-
-
--- ALAWI MEGA HUB
--- PART 2
--- Display & Camera Features
-
-local DisplayTab = Window:MakeTab({"العرض", "eye"})
-local SoundTab = Window:MakeTab({"الصوت", "volume-2"})
-
-local RunService = game:GetService("RunService")
-local Camera = workspace.CurrentCamera
-
--- إظهار وإخفاء أسماء اللاعبين محلياً
-local NameTagsEnabled = false
-local NameTags = {}
-
-local function ClearNameTags()
-    for _, gui in pairs(NameTags) do
-        if gui then
-            gui:Destroy()
-        end
-    end
-    table.clear(NameTags)
-end
-
-local function UpdateNameTags()
-    ClearNameTags()
-
-    if not NameTagsEnabled then
-        return
-    end
-
-    for _, target in ipairs(Players:GetPlayers()) do
-        if target ~= Player and target.Character then
-            local Head = target.Character:FindFirstChild("Head")
-
-            if Head then
-                local Billboard = Instance.new("BillboardGui")
-                Billboard.Name = "AlawiNameTag"
-                Billboard.Adornee = Head
-                Billboard.Size = UDim2.fromOffset(150, 35)
-                Billboard.StudsOffset = Vector3.new(0, 2, 0)
-                Billboard.AlwaysOnTop = true
-                Billboard.Parent = Player:WaitForChild("PlayerGui")
-
-                local Label = Instance.new("TextLabel")
-                Label.Size = UDim2.fromScale(1, 1)
-                Label.BackgroundTransparency = 1
-                Label.Text = target.DisplayName
-                Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-                Label.TextStrokeTransparency = 0
-                Label.TextScaled = true
-                Label.Parent = Billboard
-
-                table.insert(NameTags, Billboard)
-            end
-        end
-    end
-end
-
-DisplayTab:AddToggle({
-    Name = "أسماء اللاعبين",
-    Default = false,
-    Callback = function(Value)
-        NameTagsEnabled = Value
-        UpdateNameTags()
-    end
-})
-
-DisplayTab:AddButton({
-    Name = "تحديث الأسماء",
-    Callback = function()
-        UpdateNameTags()
-    end
-})
-
-Players.PlayerAdded:Connect(function()
-    task.wait(2)
-    UpdateNameTags()
-end)
-
-Players.PlayerRemoving:Connect(function()
-    task.wait(0.2)
-    UpdateNameTags()
-end)
-
--- إعدادات الكاميرا
-DisplayTab:AddSlider({
-    Name = "حساسية الكاميرا",
-    Min = 1,
-    Max = 100,
-    Increase = 1,
-    Default = 50,
-    Callback = function(Value)
-        Player:SetAttribute("AlawiCameraSensitivity", Value)
-    end
-})
-
-DisplayTab:AddToggle({
-    Name = "إخفاء واجهة اللاعب",
-    Default = false,
-    Callback = function(Value)
-        local PlayerGui = Player:FindFirstChild("PlayerGui")
-
-        if PlayerGui then
-            for _, gui in ipairs(PlayerGui:GetChildren()) do
-                if gui:IsA("ScreenGui") and gui.Name ~= "AlawiMegaHub" then
-                    gui.Enabled = not Value
-                end
-            end
-        end
-    end
-})
-
--- الصوت
+local TweenService = game:GetService("TweenService")
 local SoundService = game:GetService("SoundService")
+local StarterGui = game:GetService("StarterGui")
+local Workspace = game:GetService("Workspace")
 
-SoundTab:AddSlider({
-    Name = "مستوى الصوت",
-    Min = 0,
-    Max = 10,
-    Increase = 1,
-    Default = 10,
-    Callback = function(Value)
-        SoundService.Volume = Value / 10
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local camera = Workspace.CurrentCamera
+
+local old = playerGui:FindFirstChild("ALI_HUB_100")
+if old then old:Destroy() end
+
+local state = {
+    speed = 16, jump = 50, flySpeed = 45,
+    fly = false, infiniteJump = false, fullbright = false,
+    xray = false, esp = false, noclip = false,
+    lowGravity = false, spin = false, hideNames = false,
+    fov = 70, zoom = 12, savedPosition = nil,
+    originalLighting = nil, originalCameraType = nil,
+    originalWalkSpeed = 16, originalJumpPower = 50,
+}
+local connections = {}
+local highlights = {}
+local waypoints = {}
+local featureButtons = {}
+local currentGroup = 1
+local minimized = false
+
+local function character()
+    return player.Character
+end
+local function humanoid()
+    local c = character()
+    return c and c:FindFirstChildOfClass("Humanoid")
+end
+local function root()
+    local c = character()
+    return c and c:FindFirstChild("HumanoidRootPart")
+end
+local function notify(msg)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "ALI HUB", Text = tostring(msg), Duration = 3
+        })
+    end)
+end
+local function disconnect(name)
+    if connections[name] then
+        connections[name]:Disconnect()
+        connections[name] = nil
     end
-})
+end
+local function setToggle(name, enabled, callback)
+    state[name] = enabled
+    if callback then callback(enabled) end
+end
+local function tween(obj, props, time)
+    TweenService:Create(obj, TweenInfo.new(time or .2), props):Play()
+end
 
-SoundTab:AddButton({
-    Name = "إعادة مستوى الصوت",
-    Callback = function()
-        SoundService.Volume = 1
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "ALI_HUB_100"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.DisplayOrder = 20
+gui.Parent = playerGui
+
+local open = Instance.new("TextButton")
+open.Name = "OpenButton"
+open.Size = UDim2.fromOffset(48,48)
+open.Position = UDim2.new(0,18,.5,-24)
+open.BackgroundColor3 = Color3.fromRGB(28,28,30)
+open.BackgroundTransparency = .35
+open.Text = "ALI"
+open.TextColor3 = Color3.new(1,1,1)
+open.TextSize = 15
+open.Font = Enum.Font.GothamBold
+open.Parent = gui
+Instance.new("UICorner",open).CornerRadius = UDim.new(1,0)
+local openStroke = Instance.new("UIStroke",open)
+openStroke.Color = Color3.fromRGB(220,220,220)
+openStroke.Transparency = .25
+
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = UDim2.fromOffset(390,440)
+main.Position = UDim2.new(.5,-195,.5,-220)
+main.BackgroundColor3 = Color3.fromRGB(27,27,29)
+main.BackgroundTransparency = .12
+main.Visible = false
+main.Parent = gui
+Instance.new("UICorner",main).CornerRadius = UDim.new(0,13)
+local mainStroke = Instance.new("UIStroke",main)
+mainStroke.Color = Color3.fromRGB(175,175,180)
+mainStroke.Transparency = .25
+
+local top = Instance.new("Frame")
+top.Size = UDim2.new(1,0,0,42)
+top.BackgroundColor3 = Color3.fromRGB(37,37,40)
+top.Parent = main
+Instance.new("UICorner",top).CornerRadius = UDim.new(0,13)
+local title = Instance.new("TextLabel")
+title.BackgroundTransparency = 1
+title.Size = UDim2.new(1,-100,1,0)
+title.Position = UDim2.fromOffset(12,0)
+title.Font = Enum.Font.GothamBold
+title.Text = "ALI HUB  |  100 FEATURES"
+title.TextColor3 = Color3.new(1,1,1)
+title.TextSize = 14
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = top
+
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.fromOffset(34,30)
+minimize.Position = UDim2.new(1,-76,0,6)
+minimize.Text = "–"
+minimize.Font = Enum.Font.GothamBold
+minimize.TextSize = 22
+minimize.TextColor3 = Color3.new(1,1,1)
+minimize.BackgroundColor3 = Color3.fromRGB(65,65,68)
+minimize.Parent = top
+Instance.new("UICorner",minimize).CornerRadius = UDim.new(0,7)
+
+local close = Instance.new("TextButton")
+close.Size = UDim2.fromOffset(34,30)
+close.Position = UDim2.new(1,-38,0,6)
+close.Text = "×"
+close.Font = Enum.Font.GothamBold
+close.TextSize = 22
+close.TextColor3 = Color3.new(1,1,1)
+close.BackgroundColor3 = Color3.fromRGB(120,48,48)
+close.Parent = top
+Instance.new("UICorner",close).CornerRadius = UDim.new(0,7)
+
+local search = Instance.new("TextBox")
+search.PlaceholderText = "بحث عن ميزة..."
+search.Text = ""
+search.ClearTextOnFocus = false
+search.Size = UDim2.new(1,-20,0,32)
+search.Position = UDim2.fromOffset(10,50)
+search.BackgroundColor3 = Color3.fromRGB(43,43,46)
+search.TextColor3 = Color3.new(1,1,1)
+search.PlaceholderColor3 = Color3.fromRGB(165,165,165)
+search.Font = Enum.Font.Gotham
+search.TextSize = 13
+search.Parent = main
+Instance.new("UICorner",search).CornerRadius = UDim.new(0,7)
+
+local tabs = Instance.new("ScrollingFrame")
+tabs.Size = UDim2.new(1,-20,0,36)
+tabs.Position = UDim2.fromOffset(10,90)
+tabs.BackgroundTransparency = 1
+tabs.BorderSizePixel = 0
+tabs.ScrollBarThickness = 3
+tabs.ScrollingDirection = Enum.ScrollingDirection.X
+tabs.CanvasSize = UDim2.fromOffset(1050,0)
+tabs.Parent = main
+local tabLayout = Instance.new("UIListLayout",tabs)
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.Padding = UDim.new(0,5)
+
+local list = Instance.new("ScrollingFrame")
+list.Size = UDim2.new(1,-20,1,-142)
+list.Position = UDim2.fromOffset(10,132)
+list.BackgroundColor3 = Color3.fromRGB(20,20,22)
+list.BackgroundTransparency = .12
+list.BorderSizePixel = 0
+list.ScrollBarThickness = 4
+list.CanvasSize = UDim2.fromOffset(0,0)
+list.Parent = main
+Instance.new("UICorner",list).CornerRadius = UDim.new(0,8)
+local layout = Instance.new("UIListLayout",list)
+layout.Padding = UDim.new(0,5)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    list.CanvasSize = UDim2.fromOffset(0,layout.AbsoluteContentSize.Y+8)
+end)
+
+local groupNames = {
+    "الحركة","القفز","الشخصية","اللاعبون","الكاميرا",
+    "الإضاءة","النقاط","العالم","الصوت","الأدوات"
+}
+local groups = {}
+for i=1,10 do groups[i] = {} end
+
+local function addFeature(group, name, description, callback)
+    table.insert(groups[group], {name=name, description=description, callback=callback})
+end
+local function clearList()
+    for _,v in ipairs(list:GetChildren()) do
+        if v:IsA("GuiObject") then v:Destroy() end
     end
-})
-
--- تنظيف عند إيقاف السكربت
-print("ALAWI MEGA HUB PART 2 LOADED")
-
-
--- ALAWI MEGA HUB
--- PART 3
--- Local Utility Features
-
-local UtilityTab = Window:MakeTab({"أدوات", "wrench"})
-local LightingTab = Window:MakeTab({"الإضاءة", "sun"})
-local UtilityPlayerGui = Player:WaitForChild("PlayerGui")
-
--- 1: إظهار مؤشر اللمس
-UtilityTab:AddToggle({
-    Name = "مؤشر اللمس",
-    Default = false,
-    Callback = function(Value)
-        Player:SetAttribute("AlawiTouchIndicator", Value)
-    end
-})
-
--- 2: معلومات الشخصية
-UtilityTab:AddButton({
-    Name = "عرض معلومات الشخصية",
-    Callback = function()
-        local Character = Player.Character
-        local Hum = Character and Character:FindFirstChildOfClass("Humanoid")
-
-        if Hum then
-            print("Health:", Hum.Health)
-            print("WalkSpeed:", Hum.WalkSpeed)
-            print("JumpPower:", Hum.JumpPower)
+end
+local function render()
+    clearList()
+    local order = 0
+    for _,item in ipairs(groups[currentGroup]) do
+        if search.Text == "" or string.find(string.lower(item.name),string.lower(search.Text),1,true) then
+            order += 1
+            local b = Instance.new("TextButton")
+            b.LayoutOrder = order
+            b.Size = UDim2.new(1,-8,0,48)
+            b.BackgroundColor3 = Color3.fromRGB(43,43,46)
+            b.Text = ""
+            b.Parent = list
+            Instance.new("UICorner",b).CornerRadius = UDim.new(0,7)
+            local n = Instance.new("TextLabel")
+            n.BackgroundTransparency = 1
+            n.Position = UDim2.fromOffset(10,3)
+            n.Size = UDim2.new(1,-20,0,20)
+            n.Font = Enum.Font.GothamSemibold
+            n.Text = item.name
+            n.TextColor3 = Color3.new(1,1,1)
+            n.TextSize = 13
+            n.TextXAlignment = Enum.TextXAlignment.Left
+            n.Parent = b
+            local d = Instance.new("TextLabel")
+            d.BackgroundTransparency = 1
+            d.Position = UDim2.fromOffset(10,23)
+            d.Size = UDim2.new(1,-20,0,18)
+            d.Font = Enum.Font.Gotham
+            d.Text = item.description
+            d.TextColor3 = Color3.fromRGB(170,170,175)
+            d.TextSize = 10
+            d.TextXAlignment = Enum.TextXAlignment.Left
+            d.Parent = b
+            b.MouseButton1Click:Connect(function()
+                local ok,err = pcall(item.callback)
+                if not ok then notify("تعذر تنفيذ الميزة: "..tostring(err)) end
+            end)
         end
     end
-})
+end
+local function renderTabs()
+    for _,v in ipairs(tabs:GetChildren()) do
+        if v:IsA("TextButton") then v:Destroy() end
+    end
+    for i,name in ipairs(groupNames) do
+        local b = Instance.new("TextButton")
+        b.Size = UDim2.fromOffset(96,30)
+        b.BackgroundColor3 = i==currentGroup and Color3.fromRGB(95,95,100) or Color3.fromRGB(48,48,51)
+        b.Text = name
+        b.TextColor3 = Color3.new(1,1,1)
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 12
+        b.Parent = tabs
+        Instance.new("UICorner",b).CornerRadius = UDim.new(0,7)
+        b.MouseButton1Click:Connect(function()
+            currentGroup=i
+            renderTabs()
+            render()
+        end)
+    end
+end
+search:GetPropertyChangedSignal("Text"):Connect(render)
+open.MouseButton1Click:Connect(function() main.Visible = not main.Visible end)
+close.MouseButton1Click:Connect(function() main.Visible=false end)
+minimize.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    search.Visible = not minimized
+    tabs.Visible = not minimized
+    list.Visible = not minimized
+    main.Size = minimized and UDim2.fromOffset(390,42) or UDim2.fromOffset(390,440)
+end)
 
--- 3: إعادة الكاميرا
-UtilityTab:AddButton({
-    Name = "إعادة الكاميرا",
-    Callback = function()
-        local Character = Player.Character
-        local Hum = Character and Character:FindFirstChildOfClass("Humanoid")
+-- سحب القائمة وزر الفتح باللمس أو الفأرة
+local function makeDraggable(handle, target)
+    local dragging, dragInput, startPos, startFrame
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+            dragging=true; startPos=input.Position; startFrame=target.Position
+            input.Changed:Connect(function()
+                if input.UserInputState==Enum.UserInputState.End then dragging=false end
+            end)
+        end
+    end)
+    handle.InputChanged:Connect(function(input)
+        if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then
+            dragInput=input
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input==dragInput then
+            local delta=input.Position-startPos
+            target.Position=UDim2.new(startFrame.X.Scale,startFrame.X.Offset+delta.X,startFrame.Y.Scale,startFrame.Y.Offset+delta.Y)
+        end
+    end)
+end
+makeDraggable(top,main)
+makeDraggable(open,open)
 
-        if Hum then
-            workspace.CurrentCamera.CameraSubject = Hum
-            workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+--==================== المجموعة 1: الحركة والطيران ====================
+addFeature(1,"الطيران تشغيل/إيقاف","طيران محلي بتحكم WASD واللمس.",function()
+    state.fly=not state.fly
+    local r=root()
+    if not r then return end
+    if state.fly then
+        local att=Instance.new("Attachment"); att.Name="ALI_FlyAttachment"; att.Parent=r
+        local lv=Instance.new("LinearVelocity"); lv.Name="ALI_FlyVelocity"
+        lv.Attachment0=att; lv.MaxForce=1e6; lv.VectorVelocity=Vector3.zero
+        lv.RelativeTo=Enum.ActuatorRelativeTo.World; lv.Parent=r
+        local ao=Instance.new("AlignOrientation"); ao.Name="ALI_FlyOrientation"
+        ao.Attachment0=att; ao.MaxTorque=1e6; ao.Responsiveness=15; ao.Parent=r
+        connections.fly=RunService.RenderStepped:Connect(function()
+            local c=character(); local hrp=root()
+            if not c or not hrp or not state.fly then return end
+            local move=humanoid() and humanoid().MoveDirection or Vector3.zero
+            local vertical=0
+            if UIS:IsKeyDown(Enum.KeyCode.Space) then vertical=1 end
+            if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then vertical=-1 end
+            lv.VectorVelocity=(move+Vector3.new(0,vertical,0))*state.flySpeed
+            ao.CFrame=camera.CFrame
+        end)
+        notify("الطيران يعمل")
+    else
+        disconnect("fly")
+        if r:FindFirstChild("ALI_FlyVelocity") then r.ALI_FlyVelocity:Destroy() end
+        if r:FindFirstChild("ALI_FlyOrientation") then r.ALI_FlyOrientation:Destroy() end
+        if r:FindFirstChild("ALI_FlyAttachment") then r.ALI_FlyAttachment:Destroy() end
+        notify("تم إيقاف الطيران")
+    end
+end)
+addFeature(1,"زيادة سرعة الحركة","يرفع سرعة المشي إلى 32.",function()
+    local h=humanoid(); if h then h.WalkSpeed=32 end
+end)
+addFeature(1,"سرعة مشي عادية","يعيد سرعة المشي إلى 16.",function()
+    local h=humanoid(); if h then h.WalkSpeed=16 end
+end)
+addFeature(1,"سرعة مشي عالية","يضبط سرعة المشي إلى 60.",function()
+    local h=humanoid(); if h then h.WalkSpeed=60 end
+end)
+addFeature(1,"إيقاف الحركة","يوقف حركة الشخصية مؤقتاً.",function()
+    local h=humanoid(); if h then h.WalkSpeed=0 end
+end)
+addFeature(1,"استعادة الحركة","يعيد سرعة المشي الافتراضية.",function()
+    local h=humanoid(); if h then h.WalkSpeed=16 end
+end)
+addFeature(1,"اندفاع للأمام","دفعة قصيرة باتجاه النظر.",function()
+    local r=root(); if r then r.AssemblyLinearVelocity=camera.CFrame.LookVector*75+Vector3.new(0,12,0) end
+end)
+addFeature(1,"اندفاع للأعلى","دفعة عمودية قصيرة.",function()
+    local r=root(); if r then r.AssemblyLinearVelocity=Vector3.new(0,65,0) end
+end)
+addFeature(1,"توقف الاندفاع","يلغي سرعة الشخصية الحالية.",function()
+    local r=root(); if r then r.AssemblyLinearVelocity=Vector3.zero end
+end)
+addFeature(1,"تغيير سرعة الطيران","يضبط سرعة الطيران إلى 80.",function()
+    state.flySpeed=80; notify("سرعة الطيران: 80")
+end)
+
+--==================== المجموعة 2: القفز ====================
+addFeature(2,"قفز لا نهائي","يسمح بالقفز أثناء الهواء.",function()
+    state.infiniteJump=not state.infiniteJump
+    disconnect("infiniteJump")
+    if state.infiniteJump then
+        connections.infiniteJump=UIS.JumpRequest:Connect(function()
+            local h=humanoid(); if h then h:ChangeState(Enum.HumanoidStateType.Jumping) end
+        end)
+    end
+    notify("القفز اللانهائي: "..tostring(state.infiniteJump))
+end)
+addFeature(2,"قفزة عالية","يضبط قوة القفز إلى 100.",function()
+    local h=humanoid(); if h then h.UseJumpPower=true; h.JumpPower=100 end
+end)
+addFeature(2,"قفزة منخفضة","يضبط قوة القفز إلى 25.",function()
+    local h=humanoid(); if h then h.UseJumpPower=true; h.JumpPower=25 end
+end)
+addFeature(2,"قفز عادي","يعيد قوة القفز إلى 50.",function()
+    local h=humanoid(); if h then h.UseJumpPower=true; h.JumpPower=50 end
+end)
+addFeature(2,"قفزة فورية","يجعل الشخصية تقفز مرة واحدة.",function()
+    local h=humanoid(); if h then h:ChangeState(Enum.HumanoidStateType.Jumping) end
+end)
+addFeature(2,"جاذبية منخفضة","يخفض الجاذبية محلياً إلى 90.",function()
+    state.lowGravity=not state.lowGravity
+    Workspace.Gravity=state.lowGravity and 90 or 196.2
+end)
+addFeature(2,"جاذبية مرتفعة","يرفع الجاذبية محلياً إلى 260.",function()
+    Workspace.Gravity=260; state.lowGravity=false
+end)
+addFeature(2,"جاذبية افتراضية","يعيد الجاذبية إلى 196.2.",function()
+    Workspace.Gravity=196.2; state.lowGravity=false
+end)
+addFeature(2,"قفز معزز","يضبط JumpHeight إلى 12 ويوقف JumpPower.",function()
+    local h=humanoid(); if h then h.UseJumpPower=false; h.JumpHeight=12 end
+end)
+addFeature(2,"إعادة إعدادات القفز","يعيد JumpPower وJumpHeight الافتراضيين.",function()
+    local h=humanoid(); if h then h.UseJumpPower=true; h.JumpPower=50; h.JumpHeight=7.2 end
+end)
+
+--==================== المجموعة 3: الشخصية ====================
+addFeature(3,"اختفاء محلي للشخصية","يخفي أجزاء شخصيتك على جهازك فقط.",function()
+    local c=character(); if not c then return end
+    for _,v in ipairs(c:GetDescendants()) do
+        if v:IsA("BasePart") and v.Name~="HumanoidRootPart" then v.LocalTransparencyModifier=1 end
+    end
+end)
+addFeature(3,"إظهار الشخصية","يعيد إظهار أجزاء شخصيتك.",function()
+    local c=character(); if not c then return end
+    for _,v in ipairs(c:GetDescendants()) do
+        if v:IsA("BasePart") then v.LocalTransparencyModifier=0 end
+    end
+end)
+addFeature(3,"تدوير الشخصية","تشغيل/إيقاف دوران الشخصية.",function()
+    state.spin=not state.spin; disconnect("spin")
+    if state.spin then
+        connections.spin=RunService.Heartbeat:Connect(function(dt)
+            local r=root(); if r then r.CFrame=r.CFrame*CFrame.Angles(0,math.rad(180*dt),0) end
+        end)
+    end
+end)
+addFeature(3,"تجميد الشخصية","يثبت حركة الجذر محلياً.",function()
+    local r=root(); if r then r.Anchored=true end
+end)
+addFeature(3,"فك تجميد الشخصية","يفك تثبيت الجذر.",function()
+    local r=root(); if r then r.Anchored=false end
+end)
+addFeature(3,"إزالة السرعة الدورانية","يصفر AngularVelocity.",function()
+    local r=root(); if r then r.AssemblyAngularVelocity=Vector3.zero end
+end)
+addFeature(3,"إزالة سرعة الشخصية","يصفر LinearVelocity.",function()
+    local r=root(); if r then r.AssemblyLinearVelocity=Vector3.zero end
+end)
+addFeature(3,"إعادة الشخصية","يعيد تحميل الشخصية عبر Humanoid.",function()
+    local h=humanoid(); if h then h.Health=0 end
+end)
+addFeature(3,"إظهار اسم الشخصية","يعرض اسم اللاعب فوق الشخصية.",function()
+    local h=humanoid(); if h then h.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.Viewer end
+end)
+addFeature(3,"إخفاء اسم الشخصية","يخفي اسم اللاعب فوق الشخصية.",function()
+    local h=humanoid(); if h then h.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.None end
+end)
+
+--==================== المجموعة 4: اللاعبون والمعلومات ====================
+addFeature(4,"عدد اللاعبين","يعرض عدد اللاعبين الحاليين.",function()
+    notify("عدد اللاعبين: "..#Players:GetPlayers())
+end)
+addFeature(4,"اسم حسابك","يعرض اسم الحساب واسم العرض.",function()
+    notify(player.Name.." | "..player.DisplayName)
+end)
+addFeature(4,"معرف حسابك","يعرض UserId.",function()
+    notify("UserId: "..player.UserId)
+end)
+addFeature(4,"فريقك","يعرض اسم الفريق الحالي.",function()
+    notify("الفريق: "..(player.Team and player.Team.Name or "بدون فريق"))
+end)
+addFeature(4,"قائمة أسماء اللاعبين","يعرض أسماء الموجودين في Output عبر إشعار مختصر.",function()
+    local names={}; for _,p in ipairs(Players:GetPlayers()) do table.insert(names,p.Name) end
+    notify(table.concat(names,", "):sub(1,180))
+end)
+addFeature(4,"معلومات الشخصية","يعرض الصحة وسرعة المشي.",function()
+    local h=humanoid(); if h then notify("HP: "..math.floor(h.Health).." | Speed: "..h.WalkSpeed) end
+end)
+addFeature(4,"مراقبة الصحة","يعرض تنبيهاً عند انخفاض الصحة.",function()
+    disconnect("healthWatch")
+    local h=humanoid(); if h then
+        connections.healthWatch=h.HealthChanged:Connect(function(v)
+            if v<=25 then notify("تنبيه: صحتك منخفضة") end
+        end)
+    end
+end)
+addFeature(4,"إيقاف مراقبة الصحة","يوقف تنبيهات الصحة.",function() disconnect("healthWatch") end)
+addFeature(4,"تمييز شخصيتك","يضيف Highlight على شخصيتك.",function()
+    local c=character(); if not c then return end
+    if c:FindFirstChild("ALI_SelfHighlight") then return end
+    local hi=Instance.new("Highlight"); hi.Name="ALI_SelfHighlight"; hi.FillTransparency=.75; hi.Parent=c
+end)
+addFeature(4,"إزالة تمييز شخصيتك","يحذف Highlight الخاص بك.",function()
+    local c=character(); if c and c:FindFirstChild("ALI_SelfHighlight") then c.ALI_SelfHighlight:Destroy() end
+end)
+
+--==================== المجموعة 5: الكاميرا والرؤية ====================
+addFeature(5,"مجال رؤية واسع","يضبط FOV إلى 100.",function() camera.FieldOfView=100 end)
+addFeature(5,"مجال رؤية ضيق","يضبط FOV إلى 50.",function() camera.FieldOfView=50 end)
+addFeature(5,"مجال رؤية عادي","يعيد FOV إلى 70.",function() camera.FieldOfView=70 end)
+addFeature(5,"تقريب الكاميرا","يضبط أقصى تقريب إلى 5.",function() player.CameraMaxZoomDistance=5 end)
+addFeature(5,"إبعاد الكاميرا","يضبط أقصى تقريب إلى 40.",function() player.CameraMaxZoomDistance=40 end)
+addFeature(5,"إعادة تقريب الكاميرا","يعيد مسافة التقريب الافتراضية.",function() player.CameraMaxZoomDistance=12.5 end)
+addFeature(5,"كاميرا الشخص الأول","يضبط أقل وأقصى تقريب إلى 0.5.",function() player.CameraMode=Enum.CameraMode.LockFirstPerson end)
+addFeature(5,"كاميرا الشخص الثالث","يعيد نمط الكاميرا إلى Classic.",function() player.CameraMode=Enum.CameraMode.Classic end)
+addFeature(5,"إخفاء واجهة اللاعب","يخفي عناصر CoreGui المتاحة.",function()
+    pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All,false) end)
+end)
+addFeature(5,"إظهار واجهة اللاعب","يعيد إظهار عناصر CoreGui.",function()
+    pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All,true) end)
+end)
+
+--============================== END PART 1 ==============================
+-- لا تشغّل هذا الجزء وحده؛ ألصق الجزء الثاني تحته في نفس LocalScript.
+
+--============================== PART 2/2 ==============================
+-- المجموعات 6 إلى 10 + تشغيل الواجهة والتنظيف
+
+--==================== المجموعة 6: الإضاءة والمؤثرات ====================
+addFeature(6,"إضاءة كاملة تشغيل/إيقاف","يرفع إضاءة المشهد محلياً.",function()
+    state.fullbright=not state.fullbright
+    if state.fullbright then
+        if not state.originalLighting then
+            state.originalLighting={
+                Brightness=Lighting.Brightness,
+                ClockTime=Lighting.ClockTime,
+                FogEnd=Lighting.FogEnd,
+                GlobalShadows=Lighting.GlobalShadows,
+                Ambient=Lighting.Ambient,
+                OutdoorAmbient=Lighting.OutdoorAmbient
+            }
+        end
+        Lighting.Brightness=3
+        Lighting.ClockTime=14
+        Lighting.FogEnd=100000
+        Lighting.GlobalShadows=false
+        Lighting.Ambient=Color3.fromRGB(180,180,180)
+        Lighting.OutdoorAmbient=Color3.fromRGB(180,180,180)
+    else
+        local o=state.originalLighting
+        if o then
+            for k,v in pairs(o) do Lighting[k]=v end
         end
     end
-})
-
--- 4: عرض وقت اللعبة
-local ClockLabel = UtilityTab:AddParagraph({
-    "الوقت",
-    "اضغط تحديث الوقت"
-})
-
-UtilityTab:AddButton({
-    Name = "تحديث الوقت",
-    Callback = function()
-        print("Game time:", Lighting.ClockTime)
+end)
+addFeature(6,"نهار","يضبط وقت الإضاءة إلى الظهر.",function() Lighting.ClockTime=12 end)
+addFeature(6,"غروب","يضبط وقت الإضاءة إلى الغروب.",function() Lighting.ClockTime=18 end)
+addFeature(6,"ليل","يضبط وقت الإضاءة إلى منتصف الليل.",function() Lighting.ClockTime=0 end)
+addFeature(6,"ضباب كثيف","يقلل FogEnd محلياً.",function() Lighting.FogEnd=100 end)
+addFeature(6,"إزالة الضباب","يجعل FogEnd بعيداً جداً.",function() Lighting.FogEnd=100000 end)
+addFeature(6,"ظلال تشغيل/إيقاف","يبدل GlobalShadows.",function() Lighting.GlobalShadows=not Lighting.GlobalShadows end)
+addFeature(6,"تأثير Blur","يضيف أو يزيل BlurEffect.",function()
+    local e=Lighting:FindFirstChild("ALI_Blur")
+    if e then e:Destroy() else
+        e=Instance.new("BlurEffect"); e.Name="ALI_Blur"; e.Size=12; e.Parent=Lighting
     end
-})
-
--- 5: تغيير وقت الإضاءة محلياً
-LightingTab:AddSlider({
-    Name = "وقت النهار",
-    Min = 0,
-    Max = 24,
-    Increase = 1,
-    Default = 14,
-    Callback = function(Value)
-        Lighting.ClockTime = Value
+end)
+addFeature(6,"تأثير ألوان","يضيف أو يزيل ColorCorrection.",function()
+    local e=Lighting:FindFirstChild("ALI_Color")
+    if e then e:Destroy() else
+        e=Instance.new("ColorCorrectionEffect"); e.Name="ALI_Color"
+        e.Saturation=.25; e.Contrast=.12; e.Parent=Lighting
     end
-})
-
--- 6: سطوع الإضاءة
-LightingTab:AddSlider({
-    Name = "السطوع",
-    Min = 0,
-    Max = 5,
-    Increase = 0.1,
-    Default = 2,
-    Callback = function(Value)
-        Lighting.Brightness = Value
-    end
-})
-
--- 7: تفعيل تأثيرات الإضاءة المحلية
-LightingTab:AddToggle({
-    Name = "تأثيرات الإضاءة",
-    Default = true,
-    Callback = function(Value)
-        Lighting.GlobalShadows = Value
-    end
-})
-
--- 8: إرجاع الإضاءة
-LightingTab:AddButton({
-    Name = "إعادة الإضاءة",
-    Callback = function()
-        Lighting.ClockTime = 14
-        Lighting.Brightness = 2
-        Lighting.GlobalShadows = true
-    end
-})
-
--- 9: عرض إحداثيات اللاعب
-UtilityTab:AddButton({
-    Name = "إحداثياتي",
-    Callback = function()
-        local Character = Player.Character
-        local Root = Character and Character:FindFirstChild("HumanoidRootPart")
-
-        if Root then
-            print("Position:", Root.Position)
-        end
-    end
-})
-
--- 10: عرض عدد اللاعبين
-UtilityTab:AddButton({
-    Name = "عدد اللاعبين",
-    Callback = function()
-        print("Players:", #Players:GetPlayers())
-    end
-})
-
--- 11: إعادة تعيين FOV
-UtilityTab:AddButton({
-    Name = "FOV الافتراضي",
-    Callback = function()
-        workspace.CurrentCamera.FieldOfView = 70
-    end
-})
-
--- 12: تعطيل تأثيرات الظلال
-LightingTab:AddToggle({
-    Name = "الظلال",
-    Default = true,
-    Callback = function(Value)
-        Lighting.GlobalShadows = Value
-    end
-})
-
--- 13: إظهار اسم حسابك
-UtilityTab:AddButton({
-    Name = "نسخ اسم الحساب إلى Output",
-    Callback = function()
-        print(Player.Name)
-    end
-})
-
--- 14: إظهار اسم العرض
-UtilityTab:AddButton({
-    Name = "اسم العرض",
-    Callback = function()
-        print(Player.DisplayName)
-    end
-})
-
--- 15: إعادة سرعة الحركة
-UtilityTab:AddButton({
-    Name = "سرعة افتراضية",
-    Callback = function()
-        local Character = Player.Character
-        local Hum = Character and Character:FindFirstChildOfClass("Humanoid")
-
-        if Hum then
-            Hum.WalkSpeed = 16
-        end
-    end
-})
-
-print("ALAWI MEGA HUB PART 3 LOADED")
-
-
--- ALAWI MEGA HUB
--- PART 4
--- Player & UI Utilities
-
-local PlayerToolsTab = Window:MakeTab({"إدارة اللاعب", "user-cog"})
-local InterfaceTab = Window:MakeTab({"تخصيص الواجهة", "layout"})
-local HttpService = game:GetService("HttpService")
-
--- 1: إعادة الشخصية
-PlayerToolsTab:AddButton({
-    Name = "إعادة الشخصية",
-    Callback = function()
-        local Character = Player.Character
-        local Hum = Character and Character:FindFirstChildOfClass("Humanoid")
-
-        if Hum then
-            Hum.Health = 0
-        end
-    end
-})
-
--- 2: إظهار صحة الشخصية
-PlayerToolsTab:AddButton({
-    Name = "عرض الصحة",
-    Callback = function()
-        local Character = Player.Character
-        local Hum = Character and Character:FindFirstChildOfClass("Humanoid")
-
-        if Hum then
-            print("Health:", Hum.Health, "/", Hum.MaxHealth)
-        end
-    end
-})
-
--- 3: إظهار حالة الشخصية
-PlayerToolsTab:AddButton({
-    Name = "حالة الشخصية",
-    Callback = function()
-        local Character = Player.Character
-        local Hum = Character and Character:FindFirstChildOfClass("Humanoid")
-
-        if Hum then
-            print("State:", Hum:GetState().Name)
-        end
-    end
-})
-
--- 4: إظهار موقع الشخصية
-PlayerToolsTab:AddButton({
-    Name = "موقعي الحالي",
-    Callback = function()
-        local Character = Player.Character
-        local Root = Character and Character:FindFirstChild("HumanoidRootPart")
-
-        if Root then
-            print("Position:", tostring(Root.Position))
-        end
-    end
-})
-
--- 5: عرض اسم الفريق
-PlayerToolsTab:AddButton({
-    Name = "معلومات الفريق",
-    Callback = function()
-        print("Team:", Player.Team and Player.Team.Name or "No Team")
-    end
-})
-
--- 6: عرض عدد أعضاء الفريق
-PlayerToolsTab:AddButton({
-    Name = "عدد أعضاء فريقي",
-    Callback = function()
-        local Count = 0
-
-        for _, P in ipairs(Players:GetPlayers()) do
-            if P.Team == Player.Team and Player.Team ~= nil then
-                Count += 1
-            end
-        end
-
-        print("Team Members:", Count)
-    end
-})
-
--- 7: إظهار حالة الجلوس
-PlayerToolsTab:AddButton({
-    Name = "حالة الجلوس",
-    Callback = function()
-        local Character = Player.Character
-        local Hum = Character and Character:FindFirstChildOfClass("Humanoid")
-
-        if Hum then
-            print("Sitting:", Hum.Sit)
-        end
-    end
-})
-
--- 8: إظهار اسم المكان الحالي
-PlayerToolsTab:AddButton({
-    Name = "اسم المكان",
-    Callback = function()
-        print("Place ID:", game.PlaceId)
-        print("Job ID:", game.JobId)
-    end
-})
-
--- 9: إظهار عدد أجزاء الشخصية
-PlayerToolsTab:AddButton({
-    Name = "عدد أجزاء الشخصية",
-    Callback = function()
-        local Character = Player.Character
-
-        if Character then
-            print("Parts:", #Character:GetDescendants())
-        end
-    end
-})
-
--- 10: تحديث معلومات الشخصية
-PlayerToolsTab:AddButton({
-    Name = "تحديث معلومات الشخصية",
-    Callback = function()
-        print("Character:", Player.Character)
-    end
-})
-
--- 11: إخفاء اسم القائمة من قائمة الواجهات
-InterfaceTab:AddToggle({
-    Name = "تأثير شفافية واجهة القائمة غير متاح",
-    Default = false,
-    Callback = function(Value)
-        print("UI option:", Value)
-    end
-})
-
--- 12: حجم مجال الرؤية
-InterfaceTab:AddSlider({
-    Name = "مجال الرؤية",
-    Min = 40,
-    Max = 120,
-    Increase = 1,
-    Default = 70,
-    Callback = function(Value)
-        workspace.CurrentCamera.FieldOfView = Value
-    end
-})
-
--- 13: إعادة مجال الرؤية
-InterfaceTab:AddButton({
-    Name = "إعادة مجال الرؤية",
-    Callback = function()
-        workspace.CurrentCamera.FieldOfView = 70
-    end
-})
-
--- 14: عرض إصدار Roblox
-InterfaceTab:AddButton({
-    Name = "معلومات المنصة",
-    Callback = function()
-        print("Platform:", UserInputService.TouchEnabled and "Touch" or "Desktop")
-    end
-})
-
--- 15: عرض تاريخ تشغيل القائمة
-local StartedAt = os.date("%Y-%m-%d %H:%M:%S")
-
-InterfaceTab:AddButton({
-    Name = "وقت تشغيل القائمة",
-    Callback = function()
-        print("Started at:", StartedAt)
-    end
-})
-
-print("ALAWI MEGA HUB PART 4 LOADED")
-
-
--- ALAWI MEGA HUB
--- PART 5 / 5
--- Final Local Utilities
-
-local FinalTab = Window:MakeTab({"الإضافات", "plus"})
-local PerformanceTab = Window:MakeTab({"الأداء", "activity"})
-
-local RunService = game:GetService("RunService")
-local Stats = game:GetService("Stats")
-
--- 1: عرض FPS
-local FPS = 0
-local Frames = 0
-local LastUpdate = os.clock()
-
-RunService.RenderStepped:Connect(function()
-    Frames += 1
-    local Now = os.clock()
-
-    if Now - LastUpdate >= 1 then
-        FPS = Frames
-        Frames = 0
-        LastUpdate = Now
+end)
+addFeature(6,"إزالة مؤثرات ALI","يحذف Blur وColorCorrection الخاصين بالقائمة.",function()
+    for _,n in ipairs({"ALI_Blur","ALI_Color"}) do
+        local e=Lighting:FindFirstChild(n); if e then e:Destroy() end
     end
 end)
 
-PerformanceTab:AddButton({
-    Name = "عرض FPS",
-    Callback = function()
-        print("FPS:", FPS)
+--==================== المجموعة 7: النقاط والحفظ ====================
+addFeature(7,"حفظ موقعي","يحفظ مكان شخصيتك الحالي محلياً.",function()
+    local r=root(); if r then state.savedPosition=r.CFrame; notify("تم حفظ موقعك") end
+end)
+addFeature(7,"العودة لموقعي المحفوظ","يعيدك إلى الموقع الذي حفظته.",function()
+    local r=root(); if r and state.savedPosition then r.CFrame=state.savedPosition+Vector3.new(0,3,0) else notify("لا يوجد موقع محفوظ") end
+end)
+addFeature(7,"حفظ نقطة 1","يحفظ نقطة تنقل أولى.",function()
+    local r=root(); if r then waypoints[1]=r.CFrame; notify("تم حفظ النقطة 1") end
+end)
+addFeature(7,"الانتقال إلى نقطة 1","ينقلك إلى نقطة 1 المحفوظة.",function()
+    local r=root(); if r and waypoints[1] then r.CFrame=waypoints[1]+Vector3.new(0,3,0) else notify("النقطة 1 غير محفوظة") end
+end)
+addFeature(7,"حفظ نقطة 2","يحفظ نقطة تنقل ثانية.",function()
+    local r=root(); if r then waypoints[2]=r.CFrame; notify("تم حفظ النقطة 2") end
+end)
+addFeature(7,"الانتقال إلى نقطة 2","ينقلك إلى نقطة 2 المحفوظة.",function()
+    local r=root(); if r and waypoints[2] then r.CFrame=waypoints[2]+Vector3.new(0,3,0) else notify("النقطة 2 غير محفوظة") end
+end)
+addFeature(7,"حفظ نقطة 3","يحفظ نقطة تنقل ثالثة.",function()
+    local r=root(); if r then waypoints[3]=r.CFrame; notify("تم حفظ النقطة 3") end
+end)
+addFeature(7,"الانتقال إلى نقطة 3","ينقلك إلى نقطة 3 المحفوظة.",function()
+    local r=root(); if r and waypoints[3] then r.CFrame=waypoints[3]+Vector3.new(0,3,0) else notify("النقطة 3 غير محفوظة") end
+end)
+addFeature(7,"حذف النقاط المحفوظة","يمسح نقاط التنقل الثلاث.",function()
+    waypoints={}; state.savedPosition=nil; notify("تم حذف النقاط")
+end)
+addFeature(7,"إظهار إحداثياتي","يعرض إحداثيات موقعك الحالي.",function()
+    local r=root(); if r then
+        local p=r.Position
+        notify(string.format("X %.1f | Y %.1f | Z %.1f",p.X,p.Y,p.Z))
     end
-})
+end)
 
--- 2: عرض Ping
-PerformanceTab:AddButton({
-    Name = "عرض Ping",
-    Callback = function()
-        local Success, Value = pcall(function()
-            return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
-        end)
-
-        if Success then
-            print("Ping:", Value, "ms")
-        else
-            warn("Ping unavailable")
+--==================== المجموعة 8: العالم والتفاعل ====================
+addFeature(8,"إظهار أسماء الأجزاء","يعرض اسم الجزء الذي تشير إليه الكاميرا.",function()
+    local ray= camera:ViewportPointToRay(camera.ViewportSize.X/2,camera.ViewportSize.Y/2)
+    local params=RaycastParams.new(); params.FilterType=Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances={character()}
+    local hit=Workspace:Raycast(ray.Origin,ray.Direction*500,params)
+    notify(hit and hit.Instance:GetFullName() or "لا يوجد جزء أمامك")
+end)
+addFeature(8,"فحص ما أمامك","يعرض اسم الجسم والمسافة التقريبية.",function()
+    local ray=camera:ViewportPointToRay(camera.ViewportSize.X/2,camera.ViewportSize.Y/2)
+    local params=RaycastParams.new(); params.FilterType=Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances={character()}
+    local hit=Workspace:Raycast(ray.Origin,ray.Direction*500,params)
+    if hit then notify(hit.Instance.Name.." | "..math.floor(hit.Distance).." studs") else notify("المسار فارغ") end
+end)
+addFeature(8,"إظهار نقطة التصويب","ينشئ علامة صغيرة بمنتصف الشاشة.",function()
+    local m=gui:FindFirstChild("ALI_Crosshair")
+    if m then m:Destroy() else
+        m=Instance.new("TextLabel"); m.Name="ALI_Crosshair"; m.Size=UDim2.fromOffset(24,24)
+        m.Position=UDim2.new(.5,-12,.5,-12); m.BackgroundTransparency=1
+        m.Text="+"; m.TextColor3=Color3.new(1,1,1); m.TextSize=22; m.Parent=gui
+    end
+end)
+addFeature(8,"إزالة نقطة التصويب","يحذف علامة منتصف الشاشة.",function()
+    local m=gui:FindFirstChild("ALI_Crosshair"); if m then m:Destroy() end
+end)
+addFeature(8,"تمييز الأجزاء القريبة","يحدد أقرب BasePart ضمن 25 studs.",function()
+    local r=root(); if not r then return end
+    local nearest,dist=nil,25
+    for _,v in ipairs(Workspace:GetDescendants()) do
+        if v:IsA("BasePart") and not v:IsDescendantOf(character()) then
+            local d=(v.Position-r.Position).Magnitude
+            if d<dist then nearest=v; dist=d end
         end
     end
-})
+    if nearest then
+        local h=Instance.new("Highlight"); h.Name="ALI_NearPart"; h.Adornee=nearest; h.Parent=gui
+        task.delay(5,function() if h then h:Destroy() end end)
+        notify("تم تمييز: "..nearest.Name)
+    else notify("لا يوجد جزء قريب") end
+end)
+addFeature(8,"إزالة تمييز الأجزاء","يحذف التمييز المؤقت.",function()
+    local h=gui:FindFirstChild("ALI_NearPart"); if h then h:Destroy() end
+end)
+addFeature(8,"فحص الأرض","يرسم شعاعاً للأسفل ويعرض اسم الأرض.",function()
+    local r=root(); if not r then return end
+    local hit=Workspace:Raycast(r.Position,Vector3.new(0,-200,0))
+    notify(hit and ("الأرض: "..hit.Instance.Name) or "لا توجد أرض أسفل اللاعب")
+end)
+addFeature(8,"مسافة عن الأرض","يعرض المسافة إلى أقرب سطح أسفل اللاعب.",function()
+    local r=root(); if not r then return end
+    local hit=Workspace:Raycast(r.Position,Vector3.new(0,-500,0))
+    notify(hit and ("المسافة: "..math.floor(hit.Distance).." studs") or "لا يوجد سطح أسفل اللاعب")
+end)
+addFeature(8,"نسخ اسم المكان","يعرض اسم التجربة الحالية.",function()
+    notify("المكان: "..game.Name)
+end)
+addFeature(8,"معلومات المكان","يعرض PlaceId وJobId المختصر.",function()
+    notify("PlaceId: "..game.PlaceId.." | Job: "..string.sub(game.JobId,1,8))
+end)
 
--- 3: عرض الذاكرة
-PerformanceTab:AddButton({
-    Name = "استهلاك الذاكرة",
-    Callback = function()
-        print("Memory:", Stats:GetTotalMemoryUsageMb(), "MB")
+--==================== المجموعة 9: الصوت والدردشة ====================
+addFeature(9,"كتم الصوت المحلي","يخفض مستوى صوت اللعبة إلى صفر.",function()
+    SoundService.Volume=0
+end)
+addFeature(9,"إعادة الصوت المحلي","يعيد مستوى الصوت إلى 1.",function()
+    SoundService.Volume=1
+end)
+addFeature(9,"خفض الصوت","يضبط مستوى الصوت إلى 0.25.",function()
+    SoundService.Volume=.25
+end)
+addFeature(9,"رفع الصوت","يضبط مستوى الصوت إلى 1.",function()
+    SoundService.Volume=1
+end)
+addFeature(9,"معلومات الصوت","يعرض مستوى الصوت الحالي.",function()
+    notify("Volume: "..tostring(SoundService.Volume))
+end)
+addFeature(9,"إيقاف الأصوات المحلية","يوقف الأصوات الموجودة في SoundService محلياً.",function()
+    for _,s in ipairs(SoundService:GetDescendants()) do
+        if s:IsA("Sound") then s:Pause() end
     end
-})
+end)
+addFeature(9,"تشغيل الأصوات المحلية","يستأنف الأصوات الموجودة في SoundService.",function()
+    for _,s in ipairs(SoundService:GetDescendants()) do
+        if s:IsA("Sound") then s:Resume() end
+    end
+end)
+addFeature(9,"إظهار نافذة الدردشة","يفتح واجهة الدردشة إذا كانت متاحة.",function()
+    pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat,true) end)
+end)
+addFeature(9,"إخفاء نافذة الدردشة","يخفي واجهة الدردشة محلياً.",function()
+    pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat,false) end)
+end)
+addFeature(9,"إظهار قائمة اللاعبين","يفتح لوحة اللاعبين الافتراضية.",function()
+    pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList,true) end)
+end)
 
--- 4: إعادة الكاميرا
-FinalTab:AddButton({
-    Name = "إعادة الكاميرا",
-    Callback = function()
-        local Character = Player.Character
-        local Hum = Character and Character:FindFirstChildOfClass("Humanoid")
-
-        if Hum then
-            workspace.CurrentCamera.CameraSubject = Hum
-            workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+--==================== المجموعة 10: الأدوات والإعدادات ====================
+addFeature(10,"إخفاء قائمة ALI","يخفي النافذة الرئيسية.",function() main.Visible=false end)
+addFeature(10,"إظهار قائمة ALI","يظهر النافذة الرئيسية.",function() main.Visible=true end)
+addFeature(10,"تبديل القائمة","يبدل ظهور النافذة.",function() main.Visible=not main.Visible end)
+addFeature(10,"تصغير القائمة","يصغر النافذة إلى الشريط العلوي.",function()
+    minimized=true; search.Visible=false; tabs.Visible=false; list.Visible=false
+    main.Size=UDim2.fromOffset(390,42)
+end)
+addFeature(10,"تكبير القائمة","يعيد حجم النافذة الكامل.",function()
+    minimized=false; search.Visible=true; tabs.Visible=true; list.Visible=true
+    main.Size=UDim2.fromOffset(390,440)
+end)
+addFeature(10,"إعادة موضع القائمة","يعيد النافذة إلى منتصف الشاشة.",function()
+    main.Position=UDim2.new(.5,-195,.5,-220)
+end)
+addFeature(10,"إعادة موضع زر الفتح","يعيد زر ALI إلى يسار الشاشة.",function()
+    open.Position=UDim2.new(0,18,.5,-24)
+end)
+addFeature(10,"لقطة معلومات الأداء","يعرض معدل الإطارات التقريبي.",function()
+    local t=os.clock(); local frames=0
+    local c; c=RunService.RenderStepped:Connect(function()
+        frames+=1
+        if os.clock()-t>=1 then
+            c:Disconnect(); notify("FPS تقريبي: "..frames)
         end
+    end)
+end)
+addFeature(10,"تنظيف مؤثرات القائمة","يحذف المؤثرات والتمييزات التي أنشأها ALI.",function()
+    for _,v in ipairs(gui:GetChildren()) do
+        if v.Name=="ALI_NearPart" or v.Name=="ALI_Crosshair" then v:Destroy() end
     end
-})
-
--- 5: إعادة إعدادات الشخصية
-FinalTab:AddButton({
-    Name = "إعادة إعدادات الشخصية",
-    Callback = function()
-        local Character = Player.Character
-        local Hum = Character and Character:FindFirstChildOfClass("Humanoid")
-
-        if Hum then
-            Hum.WalkSpeed = 16
-            Hum.UseJumpPower = true
-            Hum.JumpPower = 50
+    local l=Lighting:FindFirstChild("ALI_Blur"); if l then l:Destroy() end
+    l=Lighting:FindFirstChild("ALI_Color"); if l then l:Destroy() end
+end)
+addFeature(10,"إيقاف أنظمة ALI","يوقف الطيران والقفز اللانهائي والدوران.",function()
+    state.fly=false; disconnect("fly")
+    state.infiniteJump=false; disconnect("infiniteJump")
+    state.spin=false; disconnect("spin")
+    local r=root()
+    if r then
+        for _,n in ipairs({"ALI_FlyVelocity","ALI_FlyOrientation","ALI_FlyAttachment"}) do
+            local v=r:FindFirstChild(n); if v then v:Destroy() end
         end
+        r.Anchored=false
     end
-})
+    notify("تم إيقاف أنظمة ALI")
+end)
 
--- 6: معلومات المكان
-FinalTab:AddButton({
-    Name = "معلومات المكان",
-    Callback = function()
-        print("Place:", game.PlaceId)
-        print("Creator:", game.CreatorId)
-        print("Players:", #Players:GetPlayers())
+-- تحقق من العدد: 10 ميزات في كل مجموعة = 100
+for i=1,10 do
+    if #groups[i] ~= 10 then
+        warn("ALI HUB: group "..i.." has "..#groups[i].." features, expected 10")
     end
-})
+end
 
--- 7: إعادة FOV
-FinalTab:AddButton({
-    Name = "إعادة FOV",
-    Callback = function()
-        workspace.CurrentCamera.FieldOfView = 70
+renderTabs()
+render()
+notify("ALI HUB جاهز | 100 ميزة")
+
+-- عند إعادة ظهور الشخصية، أعد بعض إعدادات الحركة الآمنة.
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    local h=humanoid()
+    if h then
+        h.WalkSpeed=16
+        h.UseJumpPower=true
+        h.JumpPower=50
     end
-})
+    state.fly=false
+    state.infiniteJump=false
+    state.spin=false
+    disconnect("fly")
+    disconnect("infiniteJump")
+    disconnect("spin")
+end)
 
--- 8: وقت تشغيل القائمة
-FinalTab:AddButton({
-    Name = "وقت التشغيل",
-    Callback = function()
-        print("Uptime:", os.clock())
-    end
-})
-
--- 9: معلومات الجهاز
-FinalTab:AddButton({
-    Name = "نوع الجهاز",
-    Callback = function()
-        print(
-            UserInputService.TouchEnabled and "Mobile" or "Desktop"
-        )
-    end
-})
-
--- 10: إنهاء معلومات القائمة
-FinalTab:AddButton({
-    Name = "حالة القائمة",
-    Callback = function()
-        print("ALAWI MEGA HUB is running")
-    end
-})
-
-print("ALAWI MEGA HUB - ALL PARTS LOADED")
+--============================== END PART 2 ==============================
