@@ -350,34 +350,6 @@ Holder.Position = UDim2.new(1, -250, 1, -220)
 Holder.Size = UDim2.new(0, 250, 0, 220)
 Holder.ZIndex = 10
 
--- زوايا متحركة: إطار دوّار بألوان أحمر وأسود ورصاصي
-do
-	local HoldCorner = Instance.new("UICorner")
-	HoldCorner.CornerRadius = UDim.new(0, 14)
-	HoldCorner.Parent = Holder
-
-	local HoldStroke = Instance.new("UIStroke")
-	HoldStroke.Thickness = 3
-	HoldStroke.Color = Color3.new(1, 1, 1)
-	HoldStroke.Parent = Holder
-
-	local HoldGradient = Instance.new("UIGradient")
-	HoldGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(220, 20, 20)),
-		ColorSequenceKeypoint.new(0.25, Color3.fromRGB(15, 15, 15)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 150, 150)),
-		ColorSequenceKeypoint.new(0.75, Color3.fromRGB(15, 15, 15)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 20, 20)),
-	})
-	HoldGradient.Parent = HoldStroke
-
-	local HoldTime = 0
-	RunService.RenderStepped:Connect(function(dt)
-		HoldTime = HoldTime + dt
-		-- الدوران يحرّك الألوان حول الإطار فعلياً
-		HoldGradient.Rotation = (HoldTime * 90) % 360
-	end)
-end
 table.insert(shade2,Holder)
 
 Title.Name = "Title"
@@ -388,7 +360,7 @@ Title.BorderSizePixel = 0
 Title.Size = UDim2.new(0, 250, 0, 20)
 Title.Font = Enum.Font.SourceSans
 Title.TextSize = 18
-Title.Text = "Infinite Yield FE v" .. currentVersion
+Title.Text = "infinity yield Arabic v1.0"
 
 do
 	local emoji = ({
@@ -4964,6 +4936,41 @@ for i = 1, #CMDs do
 			end
 		end)
 	end
+end
+
+-- حدود متحركة لكل زر أمر (والصفوف الفارغة تعمل كفواصل)
+do
+	local cmdGradients = {}
+	local function addAnimatedBorder(obj)
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 5)
+		corner.Parent = obj
+		local stroke = Instance.new("UIStroke")
+		stroke.Thickness = 1.5
+		stroke.Color = Color3.new(1, 1, 1)
+		stroke.Parent = obj
+		local grad = Instance.new("UIGradient")
+		grad.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(220, 20, 20)),
+			ColorSequenceKeypoint.new(0.25, Color3.fromRGB(15, 15, 15)),
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 150, 150)),
+			ColorSequenceKeypoint.new(0.75, Color3.fromRGB(15, 15, 15)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 20, 20)),
+		})
+		grad.Parent = stroke
+		table.insert(cmdGradients, grad)
+	end
+	for _, child in ipairs(CMDsF:GetChildren()) do
+		if child.Name == "CMD" then
+			addAnimatedBorder(child)
+		end
+	end
+	RunService.RenderStepped:Connect(function()
+		local rot = (tick() * 90) % 360
+		for _, g in ipairs(cmdGradients) do
+			g.Rotation = rot
+		end
+	end)
 end
 
 IndexContents("", true)
