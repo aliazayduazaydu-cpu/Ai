@@ -1,0 +1,243 @@
+-- ==========================================================
+-- MINI MENU
+-- 1) Command system   : addcmd(name, aliases, func)
+-- 2) Button system    : addButton(text, func)
+-- 3) Toggle system    : addToggle(text, onFunc, offFunc)
+-- 4) Menu list        : every button/toggle/cmd is shown in the list
+-- ==========================================================
+
+if getgenv().MINI_MENU_LOADED then return end
+getgenv().MINI_MENU_LOADED = true
+
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local TeleportService = game:GetService("TeleportService")
+local GuiService = game:GetService("GuiService")
+local CoreGui = game:GetService("CoreGui")
+
+local LocalPlayer = Players.LocalPlayer
+local PlaceId, JobId = game.PlaceId, game.JobId
+local setclip = setclipboard or toclipboard or set_clipboard
+
+-- ==========================================================
+-- Helpers
+-- ==========================================================
+local function notify(title, text)
+	pcall(function()
+		StarterGui:SetCore("SendNotification", {Title = title, Text = text, Duration = 4})
+	end)
+end
+
+local function toClipboard(text)
+	if setclip then setclip(text) end
+end
+
+-- ==========================================================
+-- 1) COMMAND SYSTEM
+-- ==========================================================
+local cmds = {}
+
+function addcmd(name, alias, func)
+	cmds[#cmds + 1] = {NAME = name, ALIAS = alias or {}, FUNC = func}
+end
+
+function execCmd(str)
+	local words = {}
+	for w in str:gmatch("%S+") do
+		words[#words + 1] = w
+	end
+	local name = table.remove(words, 1)
+	if not name then return end
+	name = name:lower()
+
+	for _, c in ipairs(cmds) do
+		local match = (c.NAME == name)
+		for _, a in ipairs(c.ALIAS) do
+			if a == name then match = true end
+		end
+		if match then
+			local ok, err = pcall(c.FUNC, words, LocalPlayer)
+			if not ok then notify("Error", tostring(err)) end
+			return true
+		end
+	end
+	notify("Unknown command", name)
+	return false
+end
+
+-- ==========================================================
+-- GUI
+-- ==========================================================
+local gui = Instance.new("ScreenGui")
+gui.Name = "MiniMenu"
+gui.ResetOnSpawn = false
+gui.Parent = (gethui and gethui()) or CoreGui
+
+local frame = Instance.new("Frame")
+frame.Name = "Main"
+frame.Size = UDim2.new(0, 230, 0, 420)
+frame.Position = UDim2.new(0, 20, 0, 100)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local cmdBar = Instance.new("TextBox")
+cmdBar.Name = "CmdBar"
+cmdBar.Size = UDim2.new(1, -10, 0, 28)
+cmdBar.Position = UDim2.new(0, 5, 0, 5)
+cmdBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+cmdBar.TextColor3 = Color3.new(1, 1, 1)
+cmdBar.PlaceholderText = "type a command..."
+cmdBar.Text = ""
+cmdBar.Font = Enum.Font.SourceSans
+cmdBar.TextSize = 16
+cmdBar.ClearTextOnFocus = false
+cmdBar.Parent = frame
+
+local scroll = Instance.new("ScrollingFrame")
+scroll.Name = "List"
+scroll.Size = UDim2.new(1, -10, 1, -45)
+scroll.Position = UDim2.new(0, 5, 0, 40)
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.ScrollBarThickness = 6
+scroll.Parent = frame
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 4)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = scroll
+
+cmdBar.FocusLost:Connect(function(enterPressed)
+	if enterPressed and cmdBar.Text ~= "" then
+		execCmd(cmdBar.Text)
+		cmdBar.Text = ""
+	end
+end)
+
+-- Makes one row in the list (used by buttons and toggles)
+local function makeRow(text)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(1, -6, 0, 30)
+	b.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	b.BorderSizePixel = 0
+	b.TextColor3 = Color3.new(1, 1, 1)
+	b.Font = Enum.Font.SourceSans
+	b.TextSize = 16
+	b.Text = text
+	b.AutoButtonColor = true
+	b.Parent = scroll
+	return b
+end
+
+-- ==========================================================
+-- 2) BUTTON SYSTEM
+-- ==========================================================
+function addButton(text, func)
+	local b = makeRow(text)
+	b.MouseButton1Click:Connect(function()
+		local ok, err = pcall(func)
+		if not ok then notify("Error", tostring(err)) end
+	end)
+	return b
+end
+
+-- A button that runs a command from the cmd list
+function addCmdButton(cmdText)
+	return addButton(cmdText, function()
+		execCmd(cmdText)
+	end)
+end
+
+-- ==========================================================
+-- 3) TOGGLE SYSTEM
+-- ==========================================================
+function addToggle(text, onFunc, offFunc, default)
+	local state = default or false
+	local b = makeRow(text .. ": " .. (state and "ON" or "OFF"))
+	b.BackgroundColor3 = state and Color3.fromRGB(40, 110, 60) or Color3.fromRGB(50, 50, 50)
+
+	b.MouseButton1Click:Connect(function()
+		state = not state
+		b.Text = text .. ": " .. (state and "ON" or "OFF")
+		b.BackgroundColor3 = state and Color3.fromRGB(40, 110, 60) or Color3.fromRGB(50, 50, 50)
+		local f = state and onFunc or offFunc
+		if f then
+			local ok, err = pcall(f)
+			if not ok then notify("Error", tostring(err)) end
+		end
+	end)
+	return b
+end
+
+-- ==========================================================
+-- 10 TEST COMMANDS (copied from Infinite Yield)
+-- ==========================================================
+addcmd("jobid", {}, function(args, speaker)
+	toClipboard("roblox://placeId=" .. PlaceId .. "&gameInstanceId=" .. JobId)
+end)
+
+addcmd("notifyjobid", {}, function(args, speaker)
+	notify("JobId / PlaceId", JobId .. " / " .. PlaceId)
+end)
+
+addcmd("breakloops", {"break"}, function(args, speaker)
+	lastBreakTime = tick()
+end)
+
+addcmd("gametp", {"gameteleport"}, function(args, speaker)
+	TeleportService:Teleport(tonumber(args[1]) or PlaceId)
+end)
+
+addcmd("clearerror", {"clearerrors"}, function(args, speaker)
+	GuiService:ClearError()
+end)
+
+addcmd("cancelteleport", {"canceltp"}, function(args, speaker)
+	TeleportService:TeleportCancel()
+end)
+
+addcmd("volume", {"vol"}, function(args, speaker)
+	UserSettings():GetService("UserGameSettings").MasterVolume = (tonumber(args[1]) or 5) / 10
+end)
+
+addcmd("notify", {}, function(args, speaker)
+	notify("Notify", table.concat(args, " "))
+end)
+
+addcmd("screenshot", {"scrnshot"}, function(args, speaker)
+	CoreGui:TakeScreenshot()
+end)
+
+addcmd("rec", {"record"}, function(args, speaker)
+	CoreGui:ToggleRecording()
+end)
+
+-- ==========================================================
+-- SHOW THE 10 COMMANDS IN THE LIST
+-- ==========================================================
+for _, name in ipairs({"jobid", "notifyjobid", "breakloops", "gametp", "clearerror",
+	"cancelteleport", "volume", "notify", "screenshot", "rec"}) do
+	addCmdButton(name)
+end
+
+-- ==========================================================
+-- EXAMPLES: how to add a button and a toggle
+-- ==========================================================
+addButton("Example Button", function()
+	notify("Button", "You pressed the button")
+end)
+
+addToggle("Example Toggle",
+	function() notify("Toggle", "ON") end,   -- runs when turned ON
+	function() notify("Toggle", "OFF") end   -- runs when turned OFF
+)
+
+-- How to add a new command:  addcmd("name", {"alias"}, function(args, speaker) ... end)
+-- How to add a new button:   addButton("Text", function() ... end)
+-- How to add a new toggle:   addToggle("Text", onFunction, offFunction)
+-- How to show a command in the list: addCmdButton("name")
