@@ -362,6 +362,32 @@ Title.Font = Enum.Font.SourceSans
 Title.TextSize = 18
 Title.Text = "infinity yield Arabic v1.0"
 
+local IYEdgeGrads = {}
+local function addEdgeGlow(obj)
+	local stroke = Instance.new("UIStroke")
+	stroke.Thickness = 2
+	stroke.Color = Color3.new(1, 1, 1)
+	stroke.Parent = obj
+	local grad = Instance.new("UIGradient")
+	grad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(220, 20, 20)),
+		ColorSequenceKeypoint.new(0.25, Color3.fromRGB(15, 15, 15)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 150, 150)),
+		ColorSequenceKeypoint.new(0.75, Color3.fromRGB(15, 15, 15)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 20, 20)),
+	})
+	grad.Parent = stroke
+	table.insert(IYEdgeGrads, grad)
+end
+RunService.RenderStepped:Connect(function()
+	local rot = (tick() * 90) % 360
+	for _, g in ipairs(IYEdgeGrads) do
+		g.Rotation = rot
+	end
+end)
+addEdgeGlow(Title)
+
+
 do
 	local emoji = ({
 		["01 01"] = "🎆",
@@ -419,7 +445,7 @@ Cmdbar.TextXAlignment = Enum.TextXAlignment.Left
 Cmdbar.TextColor3 = Color3.new(1, 1, 1)
 Cmdbar.Text = ""
 Cmdbar.ZIndex = 10
-Cmdbar.PlaceholderText = "Command Bar"
+Cmdbar.PlaceholderText = "شريط الأوامر"
 
 CMDsF.Name = "CMDs"
 CMDsF.Parent = Holder
@@ -436,6 +462,7 @@ CMDsF.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
 CMDsF.VerticalScrollBarInset = 'Always'
 CMDsF.ZIndex = 10
 table.insert(scroll,CMDsF)
+addEdgeGlow(CMDsF)
 
 cmdListLayout.Parent = CMDsF
 
@@ -491,7 +518,7 @@ Prefix.Position = UDim2.new(0, 5, 0, 5)
 Prefix.Size = UDim2.new(1, -10, 0, 20)
 Prefix.Font = Enum.Font.SourceSans
 Prefix.TextSize = 14
-Prefix.Text = "Prefix"
+Prefix.Text = "البادئة"
 Prefix.TextColor3 = Color3.new(1, 1, 1)
 Prefix.TextXAlignment = Enum.TextXAlignment.Left
 Prefix.ZIndex = 10
@@ -550,19 +577,19 @@ function makeSettingsButton(name,iconID,off)
 	return button
 end
 
-ColorsButton = makeSettingsButton("Edit Theme",getcustomasset("infiniteyield/assets/edittheme.png"))
+ColorsButton = makeSettingsButton("تعديل السمة",getcustomasset("infiniteyield/assets/edittheme.png"))
 ColorsButton.Position = UDim2.new(0, 5, 0, 55)
 ColorsButton.Size = UDim2.new(1, -10, 0, 25)
 ColorsButton.Name = "Colors"
 ColorsButton.Parent = SettingsHolder
 
-Keybinds = makeSettingsButton("Edit Keybinds",getcustomasset("infiniteyield/assets/editkeybinds.png"))
+Keybinds = makeSettingsButton("تعديل الاختصارات",getcustomasset("infiniteyield/assets/editkeybinds.png"))
 Keybinds.Position = UDim2.new(0, 5, 0, 85)
 Keybinds.Size = UDim2.new(1, -10, 0, 25)
 Keybinds.Name = "Keybinds"
 Keybinds.Parent = SettingsHolder
 
-Aliases = makeSettingsButton("Edit Aliases",getcustomasset("infiniteyield/assets/editaliases.png"))
+Aliases = makeSettingsButton("تعديل الأسماء المستعارة",getcustomasset("infiniteyield/assets/editaliases.png"))
 Aliases.Position = UDim2.new(0, 5, 0, 115)
 Aliases.Size = UDim2.new(1, -10, 0, 25)
 Aliases.Name = "Aliases"
@@ -577,7 +604,7 @@ StayOpen.Position = UDim2.new(0, 5, 0, 30)
 StayOpen.Size = UDim2.new(1, -10, 0, 20)
 StayOpen.Font = Enum.Font.SourceSans
 StayOpen.TextSize = 14
-StayOpen.Text = "Keep Menu Open"
+StayOpen.Text = "إبقاء القائمة مفتوحة"
 StayOpen.TextColor3 = Color3.new(1, 1, 1)
 StayOpen.TextXAlignment = Enum.TextXAlignment.Left
 StayOpen.ZIndex = 10
@@ -606,19 +633,19 @@ On.Text = ""
 On.TextColor3 = Color3.new(0, 0, 0)
 On.ZIndex = 10
 
-Positions = makeSettingsButton("Edit/Goto Waypoints",getcustomasset("infiniteyield/assets/editwaypoints.png"))
+Positions = makeSettingsButton("تعديل/الانتقال لنقاط التوقف",getcustomasset("infiniteyield/assets/editwaypoints.png"))
 Positions.Position = UDim2.new(0, 5, 0, 145)
 Positions.Size = UDim2.new(1, -10, 0, 25)
 Positions.Name = "Waypoints"
 Positions.Parent = SettingsHolder
 
-EventBind = makeSettingsButton("Edit Event Binds",getcustomasset("infiniteyield/assets/bindsandplugins.png"),759)
+EventBind = makeSettingsButton("تعديل ربط الأحداث",getcustomasset("infiniteyield/assets/bindsandplugins.png"),759)
 EventBind.Position = UDim2.new(0, 5, 0, 205)
 EventBind.Size = UDim2.new(1, -10, 0, 25)
 EventBind.Name = "EventBinds"
 EventBind.Parent = SettingsHolder
 
-Plugins = makeSettingsButton("Manage Plugins",getcustomasset("infiniteyield/assets/bindsandplugins.png"),743)
+Plugins = makeSettingsButton("إدارة الإضافات",getcustomasset("infiniteyield/assets/bindsandplugins.png"),743)
 Plugins.Position = UDim2.new(0, 5, 0, 175)
 Plugins.Size = UDim2.new(1, -10, 0, 25)
 Plugins.Name = "Plugins"
@@ -632,7 +659,7 @@ Example.Size = UDim2.new(0, 190, 0, 20)
 Example.Visible = false
 Example.Font = Enum.Font.SourceSans
 Example.TextSize = 18
-Example.Text = "Example"
+Example.Text = "مثال"
 Example.TextColor3 = Color3.new(1, 1, 1)
 Example.TextXAlignment = Enum.TextXAlignment.Left
 Example.ZIndex = 10
@@ -654,7 +681,7 @@ Title_2.BorderSizePixel = 0
 Title_2.Size = UDim2.new(0, 250, 0, 20)
 Title_2.Font = Enum.Font.SourceSans
 Title_2.TextSize = 14
-Title_2.Text = "Notification Title"
+Title_2.Text = "عنوان الإشعار"
 Title_2.TextColor3 = Color3.new(1, 1, 1)
 Title_2.ZIndex = 10
 table.insert(shade2,Title_2)
@@ -668,7 +695,7 @@ Text_2.Position = UDim2.new(0, 5, 0, 25)
 Text_2.Size = UDim2.new(0, 240, 0, 75)
 Text_2.Font = Enum.Font.SourceSans
 Text_2.TextSize = 16
-Text_2.Text = "Notification Text"
+Text_2.Text = "نص الإشعار"
 Text_2.TextColor3 = Color3.new(1, 1, 1)
 Text_2.TextWrapped = true
 Text_2.ZIndex = 10
@@ -795,7 +822,7 @@ Close.Position = UDim2.new(0, 205, 0, 150)
 Close.Size = UDim2.new(0, 40, 0, 20)
 Close.Font = Enum.Font.SourceSans
 Close.TextSize = 14
-Close.Text = "Close"
+Close.Text = "إغلاق"
 Close.TextColor3 = Color3.new(1, 1, 1)
 Close.ZIndex = 10
 table.insert(shade2,Close)
@@ -809,7 +836,7 @@ Add.Position = UDim2.new(0, 5, 0, 150)
 Add.Size = UDim2.new(0, 40, 0, 20)
 Add.Font = Enum.Font.SourceSans
 Add.TextSize = 14
-Add.Text = "Add"
+Add.Text = "إضافة"
 Add.TextColor3 = Color3.new(1, 1, 1)
 Add.ZIndex = 10
 table.insert(shade2,Add)
@@ -823,7 +850,7 @@ Delete.Position = UDim2.new(0, 50, 0, 150)
 Delete.Size = UDim2.new(0, 40, 0, 20)
 Delete.Font = Enum.Font.SourceSans
 Delete.TextSize = 14
-Delete.Text = "Clear"
+Delete.Text = "مسح"
 Delete.TextColor3 = Color3.new(1, 1, 1)
 Delete.ZIndex = 10
 table.insert(shade2,Delete)
@@ -876,7 +903,7 @@ Delete_2.Position = UDim2.new(0, 200, 0, 0)
 Delete_2.Size = UDim2.new(0, 40, 0, 20)
 Delete_2.Font = Enum.Font.SourceSans
 Delete_2.TextSize = 14
-Delete_2.Text = "Delete"
+Delete_2.Text = "حذف"
 Delete_2.TextColor3 = Color3.new(0, 0, 0)
 Delete_2.ZIndex = 10
 table.insert(shade3,Delete_2)
@@ -918,7 +945,7 @@ Directions.Position = UDim2.new(0, 10, 0, 15)
 Directions.Size = UDim2.new(0, 115, 0, 90)
 Directions.ZIndex = 10
 Directions.Font = Enum.Font.SourceSans
-Directions.Text = "Click the button below and press a key/mouse button. Then select what you want to bind it to."
+Directions.Text = "اضغط الزر بالأسفل ثم اضغط مفتاحاً أو زر الفأرة، وبعدها اختر ما تريد ربطه به."
 Directions.TextColor3 = Color3.fromRGB(255, 255, 255)
 Directions.TextSize = 14.000
 Directions.TextWrapped = true
@@ -933,7 +960,7 @@ BindTo.Position = UDim2.new(0, 10, 0, 95)
 BindTo.Size = UDim2.new(0, 115, 0, 50)
 BindTo.ZIndex = 10
 BindTo.Font = Enum.Font.SourceSans
-BindTo.Text = "Click to bind"
+BindTo.Text = "اضغط للربط"
 BindTo.TextColor3 = Color3.fromRGB(255, 255, 255)
 BindTo.TextSize = 16.000
 table.insert(shade2,BindTo)
@@ -946,7 +973,7 @@ TriggerLabel.Position = UDim2.new(0, 10, 0, 155)
 TriggerLabel.Size = UDim2.new(0, 45, 0, 20)
 TriggerLabel.ZIndex = 10
 TriggerLabel.Font = Enum.Font.SourceSans
-TriggerLabel.Text = "Trigger:"
+TriggerLabel.Text = "المشغّل:"
 TriggerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TriggerLabel.TextSize = 14.000
 TriggerLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -974,7 +1001,7 @@ Add_2.Position = UDim2.new(0, 310, 0, 35)
 Add_2.Size = UDim2.new(0, 40, 0, 20)
 Add_2.ZIndex = 10
 Add_2.Font = Enum.Font.SourceSans
-Add_2.Text = "Add"
+Add_2.Text = "إضافة"
 Add_2.TextColor3 = Color3.fromRGB(255, 255, 255)
 Add_2.TextSize = 14.000
 table.insert(shade2,Add_2)
@@ -1001,7 +1028,7 @@ ClickTP.BorderSizePixel = 0
 ClickTP.Size = UDim2.new(0, 200, 0, 20)
 ClickTP.ZIndex = 10
 ClickTP.Font = Enum.Font.SourceSans
-ClickTP.Text = "    Click TP (Hold Key & Click)"
+ClickTP.Text = "    انتقال بالنقر (اضغط مفتاحاً واضغط)"
 ClickTP.TextColor3 = Color3.fromRGB(255, 255, 255)
 ClickTP.TextSize = 14.000
 ClickTP.TextXAlignment = Enum.TextXAlignment.Left
@@ -1016,7 +1043,7 @@ Select.Position = UDim2.new(0, 160, 0, 0)
 Select.Size = UDim2.new(0, 40, 0, 20)
 Select.ZIndex = 10
 Select.Font = Enum.Font.SourceSans
-Select.Text = "Add"
+Select.Text = "إضافة"
 Select.TextColor3 = Color3.fromRGB(0, 0, 0)
 Select.TextSize = 14.000
 table.insert(shade3,Select)
@@ -1030,7 +1057,7 @@ ClickDelete.Position = UDim2.new(0, 0, 0, 25)
 ClickDelete.Size = UDim2.new(0, 200, 0, 20)
 ClickDelete.ZIndex = 10
 ClickDelete.Font = Enum.Font.SourceSans
-ClickDelete.Text = "    Click Delete (Hold Key & Click)"
+ClickDelete.Text = "    حذف بالنقر (اضغط مفتاحاً واضغط)"
 ClickDelete.TextColor3 = Color3.fromRGB(255, 255, 255)
 ClickDelete.TextSize = 14.000
 ClickDelete.TextXAlignment = Enum.TextXAlignment.Left
@@ -1045,7 +1072,7 @@ Select_2.Position = UDim2.new(0, 160, 0, 0)
 Select_2.Size = UDim2.new(0, 40, 0, 20)
 Select_2.ZIndex = 10
 Select_2.Font = Enum.Font.SourceSans
-Select_2.Text = "Add"
+Select_2.Text = "إضافة"
 Select_2.TextColor3 = Color3.fromRGB(0, 0, 0)
 Select_2.TextSize = 14.000
 table.insert(shade3,Select_2)
@@ -1059,7 +1086,7 @@ Cmdbar_2.Position = UDim2.new(0, 150, 0, 35)
 Cmdbar_2.Size = UDim2.new(0, 150, 0, 20)
 Cmdbar_2.ZIndex = 10
 Cmdbar_2.Font = Enum.Font.SourceSans
-Cmdbar_2.PlaceholderText = "Command"
+Cmdbar_2.PlaceholderText = "أمر"
 Cmdbar_2.Text = ""
 Cmdbar_2.TextColor3 = Color3.fromRGB(255, 255, 255)
 Cmdbar_2.TextSize = 14.000
@@ -1073,7 +1100,7 @@ Cmdbar_3.Position = UDim2.new(0, 150, 0, 60)
 Cmdbar_3.Size = UDim2.new(0, 150, 0, 20)
 Cmdbar_3.ZIndex = 10
 Cmdbar_3.Font = Enum.Font.SourceSans
-Cmdbar_3.PlaceholderText = "Command 2"
+Cmdbar_3.PlaceholderText = "أمر 2"
 Cmdbar_3.Text = ""
 Cmdbar_3.TextColor3 = Color3.fromRGB(255, 255, 255)
 Cmdbar_3.TextSize = 14.000
@@ -1088,7 +1115,7 @@ CreateToggle.Position = UDim2.new(0, 152, 0, 10)
 CreateToggle.Size = UDim2.new(0, 198, 0, 20)
 CreateToggle.ZIndex = 10
 CreateToggle.Font = Enum.Font.SourceSans
-CreateToggle.Text = "Create Toggle"
+CreateToggle.Text = "إنشاء تبديل"
 CreateToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 CreateToggle.TextSize = 14.000
 CreateToggle.TextXAlignment = Enum.TextXAlignment.Left
@@ -1130,7 +1157,7 @@ PopupText_2.BackgroundTransparency = 1
 PopupText_2.Size = UDim2.new(1, 0, 0.949999988, 0)
 PopupText_2.ZIndex = 10
 PopupText_2.Font = Enum.Font.SourceSans
-PopupText_2.Text = "Set Keybinds"
+PopupText_2.Text = "تعيين الاختصارات"
 PopupText_2.TextColor3 = Color3.fromRGB(255, 255, 255)
 PopupText_2.TextSize = 14.000
 PopupText_2.TextWrapped = true
@@ -1170,7 +1197,7 @@ Close_3.Position = UDim2.new(0, 205, 0, 150)
 Close_3.Size = UDim2.new(0, 40, 0, 20)
 Close_3.Font = Enum.Font.SourceSans
 Close_3.TextSize = 14
-Close_3.Text = "Close"
+Close_3.Text = "إغلاق"
 Close_3.TextColor3 = Color3.new(1, 1, 1)
 Close_3.ZIndex = 10
 table.insert(shade2,Close_3)
@@ -1184,7 +1211,7 @@ Delete_5.Position = UDim2.new(0, 50, 0, 150)
 Delete_5.Size = UDim2.new(0, 40, 0, 20)
 Delete_5.Font = Enum.Font.SourceSans
 Delete_5.TextSize = 14
-Delete_5.Text = "Clear"
+Delete_5.Text = "مسح"
 Delete_5.TextColor3 = Color3.new(1, 1, 1)
 Delete_5.ZIndex = 10
 table.insert(shade2,Delete_5)
@@ -1198,7 +1225,7 @@ Part.Position = UDim2.new(0, 5, 0, 150)
 Part.Size = UDim2.new(0, 40, 0, 20)
 Part.Font = Enum.Font.SourceSans
 Part.TextSize = 14
-Part.Text = "Part"
+Part.Text = "جزء"
 Part.TextColor3 = Color3.new(1, 1, 1)
 Part.ZIndex = 10
 table.insert(shade2,Part)
@@ -1238,7 +1265,7 @@ Text_5.Position = UDim2.new(0, 10, 0, 0)
 Text_5.Size = UDim2.new(0, 240, 0, 20)
 Text_5.Font = Enum.Font.SourceSans
 Text_5.TextSize = 14
-Text_5.Text = "Position"
+Text_5.Text = "الموضع"
 Text_5.TextColor3 = Color3.new(1, 1, 1)
 Text_5.TextXAlignment = Enum.TextXAlignment.Left
 Text_5.ZIndex = 10
@@ -1253,7 +1280,7 @@ Delete_6.Position = UDim2.new(0, 200, 0, 0)
 Delete_6.Size = UDim2.new(0, 40, 0, 20)
 Delete_6.Font = Enum.Font.SourceSans
 Delete_6.TextSize = 14
-Delete_6.Text = "Delete"
+Delete_6.Text = "حذف"
 Delete_6.TextColor3 = Color3.new(0, 0, 0)
 Delete_6.ZIndex = 10
 table.insert(shade3,Delete_6)
@@ -1267,7 +1294,7 @@ TP.Position = UDim2.new(0, 155, 0, 0)
 TP.Size = UDim2.new(0, 40, 0, 20)
 TP.Font = Enum.Font.SourceSans
 TP.TextSize = 14
-TP.Text = "Goto"
+TP.Text = "الانتقال"
 TP.TextColor3 = Color3.new(0, 0, 0)
 TP.ZIndex = 10
 table.insert(shade3,TP)
@@ -1291,7 +1318,7 @@ Close_2.Position = UDim2.new(0, 205, 0, 150)
 Close_2.Size = UDim2.new(0, 40, 0, 20)
 Close_2.Font = Enum.Font.SourceSans
 Close_2.TextSize = 14
-Close_2.Text = "Close"
+Close_2.Text = "إغلاق"
 Close_2.TextColor3 = Color3.new(1, 1, 1)
 Close_2.ZIndex = 10
 table.insert(shade2,Close_2)
@@ -1305,7 +1332,7 @@ Delete_3.Position = UDim2.new(0, 5, 0, 150)
 Delete_3.Size = UDim2.new(0, 40, 0, 20)
 Delete_3.Font = Enum.Font.SourceSans
 Delete_3.TextSize = 14
-Delete_3.Text = "Clear"
+Delete_3.Text = "مسح"
 Delete_3.TextColor3 = Color3.new(1, 1, 1)
 Delete_3.ZIndex = 10
 table.insert(shade2,Delete_3)
@@ -1358,7 +1385,7 @@ Delete_4.Position = UDim2.new(0, 200, 0, 0)
 Delete_4.Size = UDim2.new(0, 40, 0, 20)
 Delete_4.Font = Enum.Font.SourceSans
 Delete_4.TextSize = 14
-Delete_4.Text = "Delete"
+Delete_4.Text = "حذف"
 Delete_4.TextColor3 = Color3.new(0, 0, 0)
 Delete_4.ZIndex = 10
 table.insert(shade3,Delete_4)
@@ -1382,7 +1409,7 @@ Close_4.Position = UDim2.new(0, 205, 0, 150)
 Close_4.Size = UDim2.new(0, 40, 0, 20)
 Close_4.Font = Enum.Font.SourceSans
 Close_4.TextSize = 14
-Close_4.Text = "Close"
+Close_4.Text = "إغلاق"
 Close_4.TextColor3 = Color3.new(1, 1, 1)
 Close_4.ZIndex = 10
 table.insert(shade2,Close_4)
@@ -1396,7 +1423,7 @@ Add_3.Position = UDim2.new(0, 5, 0, 150)
 Add_3.Size = UDim2.new(0, 40, 0, 20)
 Add_3.Font = Enum.Font.SourceSans
 Add_3.TextSize = 14
-Add_3.Text = "Add"
+Add_3.Text = "إضافة"
 Add_3.TextColor3 = Color3.new(1, 1, 1)
 Add_3.ZIndex = 10
 table.insert(shade2,Add_3)
@@ -1435,7 +1462,7 @@ Text_6.Position = UDim2.new(0, 10, 0, 0)
 Text_6.Size = UDim2.new(0, 240, 0, 20)
 Text_6.Font = Enum.Font.SourceSans
 Text_6.TextSize = 14
-Text_6.Text = "F4 > Toggle Fly"
+Text_6.Text = "F4 > تبديل الطيران"
 Text_6.TextColor3 = Color3.new(1, 1, 1)
 Text_6.TextXAlignment = Enum.TextXAlignment.Left
 Text_6.ZIndex = 10
@@ -1450,7 +1477,7 @@ Delete_7.Position = UDim2.new(0, 200, 0, 0)
 Delete_7.Size = UDim2.new(0, 40, 0, 20)
 Delete_7.Font = Enum.Font.SourceSans
 Delete_7.TextSize = 14
-Delete_7.Text = "Delete"
+Delete_7.Text = "حذف"
 Delete_7.TextColor3 = Color3.new(0, 0, 0)
 Delete_7.ZIndex = 10
 table.insert(shade3,Delete_7)
@@ -1501,7 +1528,7 @@ AddPlugin.Position = UDim2.new(0, 235, 0, 100)
 AddPlugin.Size = UDim2.new(0, 115, 0, 50)
 AddPlugin.Font = Enum.Font.SourceSans
 AddPlugin.TextSize = 14
-AddPlugin.Text = "Add Plugin"
+AddPlugin.Text = "إضافة إضافة"
 AddPlugin.TextColor3 = Color3.new(1, 1, 1)
 AddPlugin.ZIndex = 10
 table.insert(shade2,AddPlugin)
@@ -1515,7 +1542,7 @@ FileName.Position = UDim2.new(0.028, 0, 0.625, 0)
 FileName.Size = UDim2.new(0, 200, 0, 50)
 FileName.Font = Enum.Font.SourceSans
 FileName.TextSize = 14
-FileName.Text = "Plugin File Name"
+FileName.Text = "اسم ملف الإضافة"
 FileName.TextColor3 = Color3.new(1, 1, 1)
 FileName.ZIndex = 10
 table.insert(shade2,FileName)
@@ -1529,7 +1556,7 @@ About.Position = UDim2.new(0, 17, 0, 10)
 About.Size = UDim2.new(0, 187, 0, 49)
 About.Font = Enum.Font.SourceSans
 About.TextSize = 14
-About.Text = "Plugins are .iy files and should be located in the 'workspace' folder of your exploit."
+About.Text = "الإضافات ملفات .iy ويجب أن تكون في مجلد 'workspace' الخاص بالإكسبلويت."
 About.TextColor3 = Color3.fromRGB(255, 255, 255)
 About.TextWrapped = true
 About.TextYAlignment = Enum.TextYAlignment.Top
@@ -1544,7 +1571,7 @@ Directions_2.Position = UDim2.new(0, 17, 0, 60)
 Directions_2.Size = UDim2.new(0, 187, 0, 49)
 Directions_2.Font = Enum.Font.SourceSans
 Directions_2.TextSize = 14
-Directions_2.Text = "Type the name of the plugin file you want to add below."
+Directions_2.Text = "اكتب اسم ملف الإضافة الذي تريد إضافته بالأسفل."
 Directions_2.TextColor3 = Color3.fromRGB(255, 255, 255)
 Directions_2.TextWrapped = true
 Directions_2.TextYAlignment = Enum.TextYAlignment.Top
@@ -1566,7 +1593,7 @@ PopupText_3.Size = UDim2.new(1, 0, 0.95, 0)
 PopupText_3.ZIndex = 10
 PopupText_3.Font = Enum.Font.SourceSans
 PopupText_3.TextSize = 14
-PopupText_3.Text = "Add Plugins"
+PopupText_3.Text = "إضافة الإضافات"
 PopupText_3.TextColor3 = Color3.new(1, 1, 1)
 PopupText_3.TextWrapped = true
 table.insert(text1,PopupText_3)
@@ -1595,7 +1622,7 @@ AliasHint.Position = UDim2.new(0, 25, 0, 40)
 AliasHint.Size = UDim2.new(0, 200, 0, 50)
 AliasHint.Font = Enum.Font.SourceSansItalic
 AliasHint.TextSize = 16
-AliasHint.Text = "Add aliases by using the 'addalias' command"
+AliasHint.Text = "أضف أسماء مستعارة باستخدام أمر 'addalias'"
 AliasHint.TextColor3 = Color3.new(1, 1, 1)
 AliasHint.TextStrokeColor3 = Color3.new(1, 1, 1)
 AliasHint.TextWrapped = true
@@ -1610,7 +1637,7 @@ PluginsHint.Position = UDim2.new(0, 25, 0, 40)
 PluginsHint.Size = UDim2.new(0, 200, 0, 50)
 PluginsHint.Font = Enum.Font.SourceSansItalic
 PluginsHint.TextSize = 16
-PluginsHint.Text = "Download plugins from the IY Discord (discord.gg/78ZuWSq)"
+PluginsHint.Text = "حمّل الإضافات من ديسكورد IY (discord.gg/78ZuWSq)"
 PluginsHint.TextColor3 = Color3.new(1, 1, 1)
 PluginsHint.TextStrokeColor3 = Color3.new(1, 1, 1)
 PluginsHint.TextWrapped = true
@@ -1625,7 +1652,7 @@ PositionsHint.Position = UDim2.new(0, 25, 0, 40)
 PositionsHint.Size = UDim2.new(0, 200, 0, 70)
 PositionsHint.Font = Enum.Font.SourceSansItalic
 PositionsHint.TextSize = 16
-PositionsHint.Text = "Use the 'swp' or 'setwaypoint' command to add a position using your character (NOTE: Part teleports will not save)"
+PositionsHint.Text = "استخدم أمر 'swp' أو 'setwaypoint' لإضافة موضع بشخصيتك (ملاحظة: الانتقال للأجزاء لا يُحفظ)"
 PositionsHint.TextColor3 = Color3.new(1, 1, 1)
 PositionsHint.TextStrokeColor3 = Color3.new(1, 1, 1)
 PositionsHint.TextWrapped = true
@@ -1658,7 +1685,7 @@ ChoosePart.Position = UDim2.new(0, 100, 0, 55)
 ChoosePart.Size = UDim2.new(0, 75, 0, 30)
 ChoosePart.Font = Enum.Font.SourceSans
 ChoosePart.TextSize = 14
-ChoosePart.Text = "Select Part"
+ChoosePart.Text = "اختر جزءاً"
 ChoosePart.TextColor3 = Color3.new(1, 1, 1)
 ChoosePart.ZIndex = 10
 table.insert(shade2,ChoosePart)
@@ -1672,7 +1699,7 @@ CopyPath.Position = UDim2.new(0, 185, 0, 55)
 CopyPath.Size = UDim2.new(0, 75, 0, 30)
 CopyPath.Font = Enum.Font.SourceSans
 CopyPath.TextSize = 14
-CopyPath.Text = "Copy Path"
+CopyPath.Text = "نسخ المسار"
 CopyPath.TextColor3 = Color3.new(1, 1, 1)
 CopyPath.ZIndex = 10
 table.insert(shade2,CopyPath)
@@ -1686,7 +1713,7 @@ Directions_3.Position = UDim2.new(0, 51, 0, 17)
 Directions_3.Size = UDim2.new(0, 257, 0, 32)
 Directions_3.Font = Enum.Font.SourceSans
 Directions_3.TextSize = 14
-Directions_3.Text = 'Click on a part and then click the "Select Part" button below to set it as a teleport location'
+Directions_3.Text = 'Click on a part and then click the "اختر جزءاً" button below to set it as a teleport location'
 Directions_3.TextColor3 = Color3.new(1, 1, 1)
 Directions_3.TextWrapped = true
 Directions_3.TextYAlignment = Enum.TextYAlignment.Top
@@ -1724,7 +1751,7 @@ PopupText_5.Size = UDim2.new(1, 0, 0.95, 0)
 PopupText_5.ZIndex = 10
 PopupText_5.Font = Enum.Font.SourceSans
 PopupText_5.TextSize = 14
-PopupText_5.Text = "Teleport to Part"
+PopupText_5.Text = "الانتقال إلى جزء"
 PopupText_5.TextColor3 = Color3.new(1, 1, 1)
 PopupText_5.TextWrapped = true
 table.insert(text1,PopupText_5)
@@ -1785,7 +1812,7 @@ PopupText.Size = UDim2.new(1, 0, 0.949999988, 0)
 PopupText.ZIndex = 10
 PopupText.Font = Enum.Font.SourceSans
 PopupText.FontSize = Enum.FontSize.Size14
-PopupText.Text = "Logs"
+PopupText.Text = "السجلات"
 PopupText.TextColor3 = Color3.new(1, 1, 1)
 PopupText.TextWrapped = true
 table.insert(text1,PopupText)
@@ -1835,7 +1862,7 @@ Clear.Size = UDim2.new(0, 50, 0, 20)
 Clear.ZIndex = 10
 Clear.Font = Enum.Font.SourceSans
 Clear.FontSize = Enum.FontSize.Size14
-Clear.Text = "Clear"
+Clear.Text = "مسح"
 Clear.TextColor3 = Color3.new(1, 1, 1)
 table.insert(shade2,Clear)
 table.insert(text1,Clear)
@@ -1849,7 +1876,7 @@ SaveChatlogs.Size = UDim2.new(0, 75, 0, 20)
 SaveChatlogs.ZIndex = 10
 SaveChatlogs.Font = Enum.Font.SourceSans
 SaveChatlogs.FontSize = Enum.FontSize.Size14
-SaveChatlogs.Text = "Save To .txt"
+SaveChatlogs.Text = "حفظ كملف .txt"
 SaveChatlogs.TextColor3 = Color3.new(1, 1, 1)
 table.insert(shade2,SaveChatlogs)
 table.insert(text1,SaveChatlogs)
@@ -1916,7 +1943,7 @@ Clear_2.Size = UDim2.new(0, 50, 0, 20)
 Clear_2.ZIndex = 10
 Clear_2.Font = Enum.Font.SourceSans
 Clear_2.FontSize = Enum.FontSize.Size14
-Clear_2.Text = "Clear"
+Clear_2.Text = "مسح"
 Clear_2.TextColor3 = Color3.new(1, 1, 1)
 table.insert(shade2,Clear_2)
 table.insert(text1,Clear_2)
@@ -1944,7 +1971,7 @@ selectChat.Size = UDim2.new(0, 164, 0, 20)
 selectChat.ZIndex = 10
 selectChat.Font = Enum.Font.SourceSans
 selectChat.FontSize = Enum.FontSize.Size14
-selectChat.Text = "Chat Logs"
+selectChat.Text = "سجلات الدردشة"
 selectChat.TextColor3 = Color3.new(1, 1, 1)
 table.insert(shade2,selectChat)
 table.insert(text1,selectChat)
@@ -1958,7 +1985,7 @@ selectJoin.Size = UDim2.new(0, 164, 0, 20)
 selectJoin.ZIndex = 10
 selectJoin.Font = Enum.Font.SourceSans
 selectJoin.FontSize = Enum.FontSize.Size14
-selectJoin.Text = "Join Logs"
+selectJoin.Text = "سجلات الدخول"
 selectJoin.TextColor3 = Color3.new(1, 1, 1)
 table.insert(shade3,selectJoin)
 table.insert(text1,selectJoin)
@@ -2114,9 +2141,9 @@ end
 function toClipboard(txt)
 	if everyClipboard then
 		everyClipboard(tostring(txt)) -- some executor errored without tostring btw so dont call me out for this
-		notify("Clipboard", "Copied to clipboard")
+		notify("الحافظة", "تم النسخ إلى الحافظة")
 	else
-		notify("Clipboard", "Your exploit doesn't have the ability to use the clipboard")
+		notify("الحافظة", "الإكسبلويت لا يدعم الحافظة")
 	end
 end
 
@@ -2906,15 +2933,15 @@ reference = (function()
 	inviteButton.MouseButton1Click:Connect(function()
 		if everyClipboard then
 			toClipboard("https://discord.gg/78ZuWSq")
-			inviteButton.Text = "Copied"
+			inviteButton.Text = "تم النسخ"
 		else
-			inviteButton.Text = "No Clipboard Function, type out the link"
+			inviteButton.Text = "لا توجد وظيفة حافظة، اكتب الرابط يدوياً"
 		end
 		local pressTime = tick()
 		lastPress = pressTime
 		wait(2)
 		if lastPress ~= pressTime then return end
-		inviteButton.Text = "Copy Discord Invite Link (https://discord.gg/78ZuWSq)"
+		inviteButton.Text = "انسخ رابط دعوة ديسكورد (https://discord.gg/78ZuWSq)"
 	end)
 	dragGUI(main)
 	main.Parent = ScaledHolder
@@ -3101,7 +3128,7 @@ function saves()
 				else
 					nosaves = true
 					useFactorySettings()
-					createPopup("File Error", "There was a problem writing a save file to your PC.\n\nPlease contact the developer/support team for your exploit and tell them writefile/readfile is not working.\n\nYour settings, keybinds, waypoints, and aliases will not save if you continue.\n\nThings to try:\n> Make sure a 'workspace' folder is located in the same folder as your exploit\n> If your exploit is inside of a zip/rar file, extract it.\n> Rejoin the game and try again or restart your PC and try again.")
+					createPopup("خطأ في الملف", "حدثت مشكلة في كتابة ملف الحفظ على جهازك.\n\nالرجاء التواصل مع فريق الدعم للإكسبلويت وأخبرهم أن writefile/readfile لا يعمل.\n\nإعداداتك والاختصارات ونقاط التوقف والأسماء المستعارة لن تُحفظ إذا تابعت.\n\nجرّب التالي:\n> تأكد أن مجلد 'workspace' موجود في نفس مجلد الإكسبلويت\n> إذا كان الإكسبلويت داخل ملف zip/rar، فكّه\n> أعد الدخول للعبة وجرّب مرة أخرى أو أعد تشغيل جهازك.")
 				end
 			end
 		else
@@ -3113,14 +3140,14 @@ function saves()
 			else
 				nosaves = true
 				useFactorySettings()
-				createPopup("File Error", "There was a problem writing a save file to your PC.\n\nPlease contact the developer/support team for your exploit and tell them writefile/readfile is not working.\n\nYour settings, keybinds, waypoints, and aliases will not save if you continue.\n\nThings to try:\n> Make sure a 'workspace' folder is located in the same folder as your exploit\n> If your exploit is inside of a zip/rar file, extract it.\n> Rejoin the game and try again or restart your PC and try again.")
+				createPopup("خطأ في الملف", "حدثت مشكلة في كتابة ملف الحفظ على جهازك.\n\nالرجاء التواصل مع فريق الدعم للإكسبلويت وأخبرهم أن writefile/readfile لا يعمل.\n\nإعداداتك والاختصارات ونقاط التوقف والأسماء المستعارة لن تُحفظ إذا تابعت.\n\nجرّب التالي:\n> تأكد أن مجلد 'workspace' موجود في نفس مجلد الإكسبلويت\n> إذا كان الإكسبلويت داخل ملف zip/rar، فكّه\n> أعد الدخول للعبة وجرّب مرة أخرى أو أعد تشغيل جهازك.")
 			end
 		end
 	else
 		if jsonAttempts >= 10 then
 			nosaves = true
 			useFactorySettings()
-			createPopup("File Error", "Sorry, we have attempted to parse your save file, but it is unreadable!\n\nInfinite Yield is now using factory settings until your exploit's file system works.\n\nYour save file has not been deleted.")
+			createPopup("خطأ في الملف", "عذراً، حاولنا قراءة ملف الحفظ لكنه غير قابل للقراءة!\n\nInfinite Yield يستخدم الآن الإعدادات الافتراضية حتى يعمل نظام ملفات الإكسبلويت.\n\nلم يتم حذف ملف الحفظ.")
 		else
 			nosaves = true
 			useFactorySettings()
@@ -3355,7 +3382,7 @@ function CreateJoinLabel(player, userId)
     info1.ZIndex = 10
     info1.Font = Enum.Font.SourceSans
     info1.FontSize = Enum.FontSize.Size14
-    info1.Text = "Username: " .. player.Name .. "\nJoined Server: " .. Time()
+    info1.Text = "اسم المستخدم: " .. player.Name .. "\nدخل السيرفر: " .. Time()
     info1.TextColor3 = Color3.new(1, 1, 1)
     info1.TextWrapped = true
     info1.TextXAlignment = Enum.TextXAlignment.Left
@@ -3368,7 +3395,7 @@ function CreateJoinLabel(player, userId)
     info2.ZIndex = 10
     info2.Font = Enum.Font.SourceSans
     info2.FontSize = Enum.FontSize.Size14
-    info2.Text = "User ID: " .. userId .. "\nAccount Age: " .. player.AccountAge .. "\nJoined Roblox: Loading..."
+    info2.Text = "معرّف المستخدم: " .. userId .. "\nعمر الحساب: " .. player.AccountAge .. "\nدخل Roblox: جارٍ التحميل..."
     info2.TextColor3 = Color3.new(1, 1, 1)
     info2.TextWrapped = true
     info2.TextXAlignment = Enum.TextXAlignment.Left
@@ -3963,7 +3990,7 @@ selectJoin.MouseButton1Down:Connect(function()
 end)
 
 if not writefileExploit() then
-	notify("Saves", "Your exploit does not support read/write file. Your settings will not save.")
+	notify("الحفظ", "الإكسبلويت لا يدعم قراءة/كتابة الملفات. إعداداتك لن تُحفظ.")
 end
 
 avatarcache = {}
@@ -4016,7 +4043,7 @@ end
 SaveChatlogs.MouseButton1Down:Connect(function()
 	if writefileExploit() then
 		if #scroll_2:GetChildren() > 0 then
-			notify("Loading",'Hold on a sec')
+			notify("جارٍ التحميل",'انتظر لحظة')
 			local placeName = CleanFileName(MarketplaceService:GetProductInfo(PlaceId).Name)
 			local writelogs = '-- Infinite Yield Chat logs for "'..placeName..'"\n'
 			for _, child in pairs(scroll_2:GetChildren()) do
@@ -4035,10 +4062,10 @@ SaveChatlogs.MouseButton1Down:Connect(function()
 				end
 			end
 			nameFile()
-			notify('Chat Logs','Saved chat logs to the workspace folder within your exploit folder.')
+			notify('سجلات الدردشة','تم حفظ سجلات الدردشة في مجلد workspace داخل مجلد الإكسبلويت.')
 		end
 	else
-		notify('Chat Logs','Your exploit does not support write file. You cannot save chat logs.')
+		notify('سجلات الدردشة','الإكسبلويت لا يدعم كتابة الملفات. لا يمكنك حفظ سجلات الدردشة.')
 	end
 end)
 
@@ -4063,7 +4090,7 @@ Players.PlayerRemoving:Connect(function(player)
 			viewDied:Disconnect()
 			viewChanged:Disconnect()
 		end
-		notify('Spectate','View turned off (player left)')
+		notify('المراقبة','تم إيقاف العرض (غادر اللاعب)')
 	end
 	eventEditor.FireEvent("OnLeave", player.Name)
 end)
@@ -4109,7 +4136,7 @@ Delete.MouseButton1Click:Connect(function()
 	binds = {}
 	refreshbinds()
 	updatesaves()
-	notify('Keybinds Updated','Removed all keybinds')
+	notify('تم تحديث الاختصارات','تم حذف كل الاختصارات')
 end)
 
 Close_2.MouseButton1Click:Connect(function()
@@ -4188,7 +4215,7 @@ CopyPath.MouseButton1Click:Connect(function()
 	if Path.Text ~= "" then
 		toClipboard(Path.Text)
 	else
-		notify('Copy Path','Select a part to copy its path')
+		notify('نسخ المسار','اختر جزءاً لنسخ مساره')
 	end
 end)
 
@@ -4203,7 +4230,7 @@ ChoosePart.MouseButton1Click:Connect(function()
 				end
 			end
 			if not FoundDupe then
-				notify('Modified Waypoints',"Created waypoint: "..selected.Adornee.Name..tpNameExt)
+				notify('تم تعديل نقاط التوقف',"تم إنشاء نقطة توقف: "..selected.Adornee.Name..tpNameExt)
 				pWayPoints[#pWayPoints + 1] = {NAME = selected.Adornee.Name..tpNameExt, COORD = {selected.Adornee}}
 			else
 				if isNumber(tpNameExt) then
@@ -4217,7 +4244,7 @@ ChoosePart.MouseButton1Click:Connect(function()
 		handleWpNames()
 		refreshwaypoints()
 	else
-		notify('Part Selection','Select a part first')
+		notify('اختيار الجزء','اختر جزءاً أولاً')
 	end
 end)
 
@@ -4226,14 +4253,14 @@ customAlias = {}
 Delete_3.MouseButton1Click:Connect(function()
 	customAlias = {}
 	aliases = {}
-	notify('Aliases Modified','Removed all aliases')
+	notify('تم تعديل الأسماء المستعارة','تم حذف كل الأسماء المستعارة')
 	updatesaves()
 	refreshaliases()
 end)
 
 PrefixBox:GetPropertyChangedSignal("Text"):Connect(function()
 	prefix = PrefixBox.Text
-	Cmdbar.PlaceholderText = "Command Bar ("..prefix..")"
+	Cmdbar.PlaceholderText = "شريط الأوامر ("..prefix..")"
 	updatesaves()
 end)
 
@@ -5263,10 +5290,10 @@ function execCmd(cmdStr,speaker,store)
 						local success, err = pcall(cmd.FUNC, args, speaker)
 						if not success and _G.IY_DEBUG then
 							warn("Command Error:", cmdName, err)
-							notify("Command Error: " .. cmdName, "Check console")
+							notify("خطأ في الأمر: " .. cmdName, "راجع الكونسول")
 						end
 						if success and type(err) == "string" and not table.find(args, "nonotify") then
-							notify("Command: " .. cmdName, err)
+							notify("الأمر: " .. cmdName, err)
 						end
 						if cmdDelay ~= 0 then wait(cmdDelay) end
 					end
@@ -5295,7 +5322,7 @@ function removecmd(cmd)
 					if string.find(c.Text, "^"..cmd.."$") or string.find(c.Text, "^"..cmd.." ") or string.find(c.Text, " "..cmd.."$") or string.find(c.Text, " "..cmd.." ") then
 						c.TextTransparency = 0.7
 						c.MouseButton1Click:Connect(function()
-							notify(c.Text, "Command has been disabled by you or a plugin")
+							notify(c.Text, "تم تعطيل الأمر بواسطتك أو بواسطة إضافة")
 						end)
 					end
 				end
@@ -5754,7 +5781,7 @@ Players.LocalPlayer.Chatted:Connect(function()
 	end
 end)
 
-Cmdbar.PlaceholderText = "Command Bar ("..prefix..")"
+Cmdbar.PlaceholderText = "شريط الأوامر ("..prefix..")"
 Cmdbar:GetPropertyChangedSignal("Text"):Connect(function()
 	if Cmdbar:IsFocused() then
 		IndexContents(Cmdbar.Text,true,true)
@@ -6112,9 +6139,9 @@ function unkeybind(cmd,key)
 	refreshbinds()
 	updatesaves()
 	if key == 'RightClick' or key == 'LeftClick' then
-		notify('Keybinds Updated','Unbinded '..key..' from '..cmd)
+		notify('تم تحديث الاختصارات','تم إلغاء ربط '..key..' من '..cmd)
 	else
-		notify('Keybinds Updated','Unbinded '..key:sub(14)..' from '..cmd)
+		notify('تم تحديث الاختصارات','تم إلغاء ربط '..key:sub(14)..' من '..cmd)
 	end
 end
 
@@ -6239,7 +6266,7 @@ end)
 Add_2.MouseButton1Click:Connect(function()
 	if keySelected then
 		if string.find(Cmdbar_2.Text, "\\\\") or string.find(Cmdbar_3.Text, "\\\\") then
-			notify('Keybind Error','Only use one backslash to keybind multiple commands into one keybind or command')
+			notify('خطأ في الاختصار','استخدم شرطة مائلة عكسية واحدة فقط لربط عدة أوامر في اختصار واحد')
 		else
 			if newToggle and Cmdbar_3.Text ~= '' and Cmdbar_2.text ~= '' then
 				addbind(Cmdbar_2.Text,keyPressed,false,Cmdbar_3.Text)
@@ -6251,9 +6278,9 @@ Add_2.MouseButton1Click:Connect(function()
 			refreshbinds()
 			updatesaves()
 			if keyPressed == 'RightClick' or keyPressed == 'LeftClick' then
-				notify('Keybinds Updated','Binded '..keyPressed..' to '..Cmdbar_2.Text..(newToggle and " / "..Cmdbar_3.Text or ""))
+				notify('تم تحديث الاختصارات','تم ربط '..keyPressed..' بـ '..Cmdbar_2.Text..(newToggle and " / "..Cmdbar_3.Text or ""))
 			else
-				notify('Keybinds Updated','Binded '..keyPressed:sub(14)..' to '..Cmdbar_2.Text..(newToggle and " / "..Cmdbar_3.Text or ""))
+				notify('تم تحديث الاختصارات','تم ربط '..keyPressed:sub(14)..' بـ '..Cmdbar_2.Text..(newToggle and " / "..Cmdbar_3.Text or ""))
 			end
 		end
 	end
@@ -6326,9 +6353,9 @@ ClickTP.Select.MouseButton1Click:Connect(function()
 		refreshbinds()
 		updatesaves()
 		if keyPressed == 'RightClick' or keyPressed == 'LeftClick' then
-			notify('Keybinds Updated','Binded '..keyPressed..' to click tp')
+			notify('تم تحديث الاختصارات','تم ربط '..keyPressed..' بالانتقال بالنقر')
 		else
-			notify('Keybinds Updated','Binded '..keyPressed:sub(14)..' to click tp')
+			notify('تم تحديث الاختصارات','تم ربط '..keyPressed:sub(14)..' بالانتقال بالنقر')
 		end
 	end
 end)
@@ -6339,9 +6366,9 @@ ClickDelete.Select.MouseButton1Click:Connect(function()
 		refreshbinds()
 		updatesaves()
 		if keyPressed == 'RightClick' or keyPressed == 'LeftClick' then
-			notify('Keybinds Updated','Binded '..keyPressed..' to click delete')
+			notify('تم تحديث الاختصارات','تم ربط '..keyPressed..' بالحذف بالنقر')
 		else
-			notify('Keybinds Updated','Binded '..keyPressed:sub(14)..' to click delete')
+			notify('تم تحديث الاختصارات','تم ربط '..keyPressed:sub(14)..' بالحذف بالنقر')
 		end
 	end
 end)
@@ -6411,7 +6438,7 @@ PluginsGUI = PluginEditor.background
 
 function addPlugin(name)
 	if name:lower() == 'plugin file name' or name:lower() == 'iy_fe.iy' or name == 'iy_fe' then
-		notify('Plugin Error','Please enter a valid plugin')
+		notify('خطأ في الإضافة','الرجاء إدخال إضافة صحيحة')
 	else
 		local file
 		local fileName
@@ -6429,10 +6456,10 @@ function addPlugin(name)
 				refreshplugins()
 				pcall(eventEditor.Refresh)
 			else
-				notify('Plugin Error','This plugin is already added')
+				notify('خطأ في الإضافة','هذه الإضافة مضافة مسبقاً')
 			end
 		else
-			notify('Plugin Error','Cannot locate file "'..fileName..'". Is the file in the correct folder?')
+			notify('خطأ في الإضافة','Cannot locate file "'..fileName..'". Is the file in the correct folder?')
 		end
 	end
 end
@@ -6455,7 +6482,7 @@ function deletePlugin(name)
 	for i,v in pairs(PluginsTable) do
 		if v == pName then
 			table.remove(PluginsTable, i)
-			notify('Removed Plugin',pName..' was removed')
+			notify('تم حذف الإضافة',pName..' تمت إزالته')
 		end
 	end
 	IndexContents('',true)
@@ -6503,7 +6530,7 @@ function LoadPlugin(val,startup)
 	end
 
 	function handlePluginError(plerror)
-		notify('Plugin Error','An error occurred with the plugin, "'..val..'" and it could not be loaded')
+		notify('خطأ في الإضافة','An error occurred with the plugin, "'..val..'" and it could not be loaded')
 		if FindInTable(PluginsTable,val) then
 			for i,v in pairs(PluginsTable) do
 				if v == val then
@@ -6525,7 +6552,7 @@ function LoadPlugin(val,startup)
 
 	if plugin ~= nil then
 		if not startup then
-			notify('Loaded Plugin',"Name: "..plugin["PluginName"].."\n".."Description: "..plugin["PluginDescription"])
+			notify('تم تحميل الإضافة',"Name: "..plugin["PluginName"].."\n".."Description: "..plugin["PluginDescription"])
 		end
 		addcmdtext('',val)
 		addcmdtext(string.upper('--'..plugin["PluginName"]),val,plugin["PluginDescription"])
@@ -6594,7 +6621,7 @@ Plugins.MouseButton1Click:Connect(function()
 		wait(0.5)
 		SettingsHolder.Visible = false
 	else
-		notify('Incompatible Exploit','Your exploit is unable to use plugins (missing read/writefile)')
+		notify('إكسبلويت غير متوافق','الإكسبلويت لا يستطيع استخدام الإضافات (ينقصه read/writefile)')
 	end
 end)
 
@@ -6619,7 +6646,7 @@ addcmd('addalias',{},function(args, speaker)
 		if v.NAME:lower()==cmd or FindInTable(v.ALIAS,cmd) then
 			customAlias[alias] = v
 			aliases[#aliases + 1] = {CMD = cmd, ALIAS = alias}
-			notify('Aliases Modified',"Added "..alias.." as an alias to "..cmd)
+			notify('تم تعديل الأسماء المستعارة',"Added "..alias.." as an alias to "..cmd)
 			updatesaves()
 			refreshaliases()
 			break
@@ -6638,7 +6665,7 @@ addcmd('removealias',{},function(args, speaker)
 				table.remove(aliases, i)
 			end
 		end
-		notify('Aliases Modified',"Removed the alias "..alias.." from "..cmd)
+		notify('تم تعديل الأسماء المستعارة',"Removed the alias "..alias.." من "..cmd)
 		updatesaves()
 		refreshaliases()
 	end
@@ -6647,7 +6674,7 @@ end)
 addcmd('clraliases',{},function(args, speaker)
 	customAlias = {}
 	aliases = {}
-	notify('Aliases Modified','Removed all aliases')
+	notify('تم تعديل الأسماء المستعارة','تم حذف كل الأسماء المستعارة')
 	updatesaves()
 	refreshaliases()
 end)
@@ -6655,9 +6682,9 @@ end)
 addcmd('discord', {'support', 'help'}, function(args, speaker)
 	if everyClipboard then
 		toClipboard('https://discord.com/invite/78ZuWSq')
-		notify('Discord Invite', 'Copied to clipboard!\ndiscord.gg/78ZuWSq')
+		notify('دعوة ديسكورد', 'تم النسخ إلى الحافظة!\ndiscord.gg/78ZuWSq')
 	else
-		notify('Discord Invite', 'discord.gg/78ZuWSq')
+		notify('دعوة ديسكورد', 'discord.gg/78ZuWSq')
 	end
 	if httprequest then
 		httprequest({
@@ -6679,20 +6706,20 @@ end)
 addcmd('keepiy', {}, function(args, speaker)
 	if queueteleport then
 		KeepInfYield = true
-		notify('KeepIY','Infinite Yield will now run after you teleport')
+		notify('إبقاء IY','Infinite Yield سيعمل بعد الانتقال')
 		updatesaves()
 	else
-		notify('Incompatible Exploit','Your exploit does not support this command (missing queue_on_teleport)')
+		notify('إكسبلويت غير متوافق','الإكسبلويت لا يدعم هذا الأمر (ينقصه queue_on_teleport)')
 	end
 end)
 
 addcmd('unkeepiy', {}, function(args, speaker)
 	if queueteleport then
 		KeepInfYield = false
-		notify('KeepIY','Infinite Yield will no longer run after you teleport')
+		notify('إبقاء IY','Infinite Yield لن يعمل بعد الانتقال')
 		updatesaves()
 	else
-		notify('Incompatible Exploit','Your exploit does not support this command (missing queue_on_teleport)')
+		notify('إكسبلويت غير متوافق','الإكسبلويت لا يدعم هذا الأمر (ينقصه queue_on_teleport)')
 	end
 end)
 
@@ -6701,7 +6728,7 @@ addcmd('togglekeepiy', {}, function(args, speaker)
 		KeepInfYield = not KeepInfYield
 		updatesaves()
 	else
-		notify('Incompatible Exploit','Your exploit does not support this command (missing queue_on_teleport)')
+		notify('إكسبلويت غير متوافق','الإكسبلويت لا يدعم هذا الأمر (ينقصه queue_on_teleport)')
 	end
 end)
 
@@ -6755,7 +6782,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		PopupText.ZIndex = 10
 		PopupText.Font = Enum.Font.SourceSans
 		PopupText.TextSize = 14
-		PopupText.Text = "Server"
+		PopupText.Text = "السيرفر"
 		PopupText.TextColor3 = currentText1
 		PopupText.TextWrapped = true
 		table.insert(text1,PopupText)
@@ -6795,7 +6822,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		TextLabel.ZIndex = 10
 		TextLabel.Font = Enum.Font.SourceSansLight
 		TextLabel.TextSize = 20
-		TextLabel.Text = "Run Time:"
+		TextLabel.Text = "وقت التشغيل:"
 		TextLabel.TextColor3 = currentText1
 		TextLabel.TextXAlignment = Enum.TextXAlignment.Left
 		table.insert(text1,TextLabel)
@@ -6809,7 +6836,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		TextLabel2.ZIndex = 10
 		TextLabel2.Font = Enum.Font.SourceSansLight
 		TextLabel2.TextSize = 20
-		TextLabel2.Text = "Statistics:"
+		TextLabel2.Text = "الإحصائيات:"
 		TextLabel2.TextColor3 = currentText1
 		TextLabel2.TextXAlignment = Enum.TextXAlignment.Left
 		table.insert(text1,TextLabel2)
@@ -6823,7 +6850,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		TextLabel3.ZIndex = 10
 		TextLabel3.Font = Enum.Font.SourceSansLight
 		TextLabel3.TextSize = 20
-		TextLabel3.Text = "Local Player:"
+		TextLabel3.Text = "اللاعب المحلي:"
 		TextLabel3.TextColor3 = currentText1
 		TextLabel3.TextXAlignment = Enum.TextXAlignment.Left
 		table.insert(text1,TextLabel3)
@@ -6837,7 +6864,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		Time.ZIndex = 10
 		Time.Font = Enum.Font.SourceSans
 		Time.FontSize = Enum.FontSize.Size14
-		Time.Text = "LOADING"
+		Time.Text = "جارٍ التحميل"
 		Time.TextColor3 = currentText1
 		Time.TextXAlignment = Enum.TextXAlignment.Left
 		table.insert(text1,Time)
@@ -6851,7 +6878,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		appearance.ZIndex = 10
 		appearance.Font = Enum.Font.SourceSans
 		appearance.FontSize = Enum.FontSize.Size14
-		appearance.Text = "Appearance: LOADING"
+		appearance.Text = "المظهر: جارٍ التحميل"
 		appearance.TextColor3 = currentText1
 		appearance.TextXAlignment = Enum.TextXAlignment.Left
 		table.insert(text1,appearance)
@@ -6865,7 +6892,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		maxplayers.ZIndex = 10
 		maxplayers.Font = Enum.Font.SourceSans
 		maxplayers.FontSize = Enum.FontSize.Size14
-		maxplayers.Text = "LOADING"
+		maxplayers.Text = "جارٍ التحميل"
 		maxplayers.TextColor3 = currentText1
 		maxplayers.TextXAlignment = Enum.TextXAlignment.Left
 		table.insert(text1,maxplayers)
@@ -6879,7 +6906,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		name.ZIndex = 10
 		name.Font = Enum.Font.SourceSans
 		name.FontSize = Enum.FontSize.Size14
-		name.Text = "Place Name: LOADING"
+		name.Text = "اسم المكان: جارٍ التحميل"
 		name.TextColor3 = currentText1
 		name.TextWrapped = true
 		name.TextXAlignment = Enum.TextXAlignment.Left
@@ -6895,7 +6922,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		placeid.ZIndex = 10
 		placeid.Font = Enum.Font.SourceSans
 		placeid.FontSize = Enum.FontSize.Size14
-		placeid.Text = "Place ID: LOADING"
+		placeid.Text = "معرّف المكان: جارٍ التحميل"
 		placeid.TextColor3 = currentText1
 		placeid.TextXAlignment = Enum.TextXAlignment.Left
 		table.insert(text1,placeid)
@@ -6909,7 +6936,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		playerid.ZIndex = 10
 		playerid.Font = Enum.Font.SourceSans
 		playerid.FontSize = Enum.FontSize.Size14
-		playerid.Text = "Player ID: LOADING"
+		playerid.Text = "معرّف اللاعب: جارٍ التحميل"
 		playerid.TextColor3 = currentText1
 		playerid.TextXAlignment = Enum.TextXAlignment.Left
 		table.insert(text1,playerid)
@@ -6923,7 +6950,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		players.ZIndex = 10
 		players.Font = Enum.Font.SourceSans
 		players.FontSize = Enum.FontSize.Size14
-		players.Text = "LOADING"
+		players.Text = "جارٍ التحميل"
 		players.TextColor3 = currentText1
 		players.TextXAlignment = Enum.TextXAlignment.Left
 		table.insert(text1,players)
@@ -6936,7 +6963,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		CopyApp.Size = UDim2.new(0, 35, 0, 20)
 		CopyApp.Font = Enum.Font.SourceSans
 		CopyApp.TextSize = 14
-		CopyApp.Text = "Copy"
+		CopyApp.Text = "نسخ"
 		CopyApp.TextColor3 = currentText1
 		CopyApp.ZIndex = 10
 		table.insert(shade2,CopyApp)
@@ -6950,7 +6977,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		CopyPlrID.Size = UDim2.new(0, 35, 0, 20)
 		CopyPlrID.Font = Enum.Font.SourceSans
 		CopyPlrID.TextSize = 14
-		CopyPlrID.Text = "Copy"
+		CopyPlrID.Text = "نسخ"
 		CopyPlrID.TextColor3 = currentText1
 		CopyPlrID.ZIndex = 10
 		table.insert(shade2,CopyPlrID)
@@ -6964,7 +6991,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		CopyPlcID.Size = UDim2.new(0, 35, 0, 20)
 		CopyPlcID.Font = Enum.Font.SourceSans
 		CopyPlcID.TextSize = 14
-		CopyPlcID.Text = "Copy"
+		CopyPlcID.Text = "نسخ"
 		CopyPlcID.TextColor3 = currentText1
 		CopyPlcID.ZIndex = 10
 		table.insert(shade2,CopyPlcID)
@@ -6978,7 +7005,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		CopyPlcName.Size = UDim2.new(0, 35, 0, 20)
 		CopyPlcName.Font = Enum.Font.SourceSans
 		CopyPlcName.TextSize = 14
-		CopyPlcName.Text = "Copy"
+		CopyPlcName.Text = "نسخ"
 		CopyPlcName.TextColor3 = currentText1
 		CopyPlcName.ZIndex = 10
 		table.insert(shade2,CopyPlcName)
@@ -6994,10 +7021,10 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 			canOpenServerinfo = true
 		end)
 		local Asset = MarketplaceService:GetProductInfo(PlaceId)
-		SINFOGUI.name.Text = "Place Name: " .. Asset.Name
-		SINFOGUI.playerid.Text = "Player ID: " ..speaker.UserId
+		SINFOGUI.name.Text = "اسم المكان: " .. Asset.Name
+		SINFOGUI.playerid.Text = "معرّف اللاعب: " ..speaker.UserId
 		SINFOGUI.maxplayers.Text = Players.MaxPlayers.. " Players Max"
-		SINFOGUI.placeid.Text = "Place ID: " ..PlaceId
+		SINFOGUI.placeid.Text = "معرّف المكان: " ..PlaceId
 
 		CopyApp.MouseButton1Click:Connect(function()
 			toClipboard(speaker.CharacterAppearanceId)
@@ -7015,7 +7042,7 @@ addcmd('serverinfo',{'info','sinfo'},function(args, speaker)
 		repeat
 			players = Players:GetPlayers()
 			SINFOGUI.players.Text = #players.. " Player(s)"
-			SINFOGUI.appearance.Text = "Appearance: " ..speaker.CharacterAppearanceId
+			SINFOGUI.appearance.Text = "المظهر: " ..speaker.CharacterAppearanceId
 			local seconds = math.floor(workspace.DistributedGameTime)
 			local minutes = math.floor(workspace.DistributedGameTime / 60)
 			local hours = math.floor(workspace.DistributedGameTime / 60 / 60)
@@ -7038,7 +7065,7 @@ addcmd("jobid", {}, function(args, speaker)
 end)
 
 addcmd('notifyjobid',{},function(args, speaker)
-	notify('JobId / PlaceId',JobId..' / '..PlaceId)
+	notify('معرّف السيرفر / معرّف المكان',JobId..' / '..PlaceId)
 end)
 
 addcmd('breakloops',{'break'},function(args, speaker)
@@ -7078,7 +7105,7 @@ addcmd("rejoin", {"rj"}, function(args, speaker)
                 queueteleport(teleportRespawnHandler)
             end
         else
-            notify("Incompatible Exploit", "Your exploit does not support this argument (missing queue_on_teleport)")
+            notify("إكسبلويت غير متوافق", "الإكسبلويت لا يدعم هذه الوسيطة (ينقصه queue_on_teleport)")
         end
     end
 
@@ -7113,7 +7140,7 @@ addcmd("autorejoin", {"autorj"}, function(args, speaker)
 	GuiService.ErrorMessageChanged:Connect(function()
 		execCmd("rejoin")
 	end)
-	notify("Auto Rejoin", "Auto rejoin enabled")
+	notify("إعادة دخول تلقائية", "تم تفعيل إعادة الدخول التلقائية")
 end)
 
 addcmd("serverhop", {"shop"}, function(args, speaker)
@@ -7133,7 +7160,7 @@ addcmd("serverhop", {"shop"}, function(args, speaker)
 	if #servers > 0 then
 		TeleportService:TeleportToPlaceInstance(PlaceId, servers[math.random(1, #servers)], Players.LocalPlayer)
 	else
-		return notify("Serverhop", "Couldn't find a server.")
+		return notify("تبديل السيرفر", "تعذّر إيجاد سيرفر.")
 	end
 end)
 
@@ -7159,7 +7186,7 @@ addcmd("noclip", {}, function(args, speaker)
         end
     end)
     if args[1] and args[1] == "nonotify" then return end
-    notify("Noclip", "Noclip Enabled")
+    notify("المرور عبر الأجسام", "تم تفعيل المرور عبر الأجسام")
 end)
 
 addcmd("unnoclip", {"clip"}, function(args, speaker)
@@ -7173,7 +7200,7 @@ addcmd("unnoclip", {"clip"}, function(args, speaker)
     end
     NoclipParts = {}
     if args[1] and args[1] == "nonotify" then return end
-    notify("Noclip", "Noclip Disabled")
+    notify("المرور عبر الأجسام", "تم تعطيل المرور عبر الأجسام")
 end)
 
 addcmd("togglenoclip", {}, function(args, speaker)
@@ -7508,7 +7535,7 @@ addcmd('float', {'platform'},function(args, speaker)
 			floatPart.Size = Vector3.new(2, 0.2, 1.5)
 			floatPart.Anchored = true
 			
-			notify('Float', 'Started floating (Q = down & E = up)')
+			notify('الطفو', 'بدأ الطفو (Q = نزول و E = صعود)')
 			
 			beganListener = UserInputService.InputBegan:Connect(function(key, processed)
 				if processed then return end
@@ -7559,7 +7586,7 @@ end)
 addcmd('unfloat',{'nofloat','unplatform','noplatform'},function(args, speaker)
 	floating = false
 	local pchar = speaker.Character
-	notify('Float', 'Stopped floating')
+	notify('الطفو', 'توقف الطفو')
 	if pchar:FindFirstChild(floatName) then
 		pchar:FindFirstChild(floatName):Destroy()
 	end
@@ -7639,7 +7666,7 @@ end)
 addcmd('setwaypoint',{'swp','setwp','spos','saveposition','savepos'},function(args, speaker)
 	local WPName = tostring(getstring(1, args))
 	if getRoot(speaker.Character) then
-		notify('Modified Waypoints',"Created waypoint: "..getstring(1, args))
+		notify('تم تعديل نقاط التوقف',"تم إنشاء نقطة توقف: "..getstring(1, args))
 		local torso = getRoot(speaker.Character)
 		WayPoints[#WayPoints + 1] = {NAME = WPName, COORD = {math.floor(torso.Position.X), math.floor(torso.Position.Y), math.floor(torso.Position.Z)}, GAME = PlaceId}
 		if AllWaypoints ~= nil then
@@ -7653,7 +7680,7 @@ end)
 addcmd('waypointpos',{'wpp','setwaypointposition','setpos','setwaypoint','setwaypointpos'},function(args, speaker)
 	local WPName = tostring(getstring(1, args))
 	if getRoot(speaker.Character) then
-		notify('Modified Waypoints',"Created waypoint: "..getstring(1, args))
+		notify('تم تعديل نقاط التوقف',"تم إنشاء نقطة توقف: "..getstring(1, args))
 		WayPoints[#WayPoints + 1] = {NAME = WPName, COORD = {args[2], args[3], args[4]}, GAME = PlaceId}
 		if AllWaypoints ~= nil then
 			AllWaypoints[#AllWaypoints + 1] = {NAME = WPName, COORD = {args[2], args[3], args[4]}, GAME = PlaceId}
@@ -7793,7 +7820,7 @@ end)
 addcmd('deletewaypoint',{'dwp','dpos','deleteposition','deletepos'},function(args, speaker)
 	for i,v in pairs(WayPoints) do
 		if v.NAME:lower() == tostring(getstring(1, args)):lower() then
-			notify('Modified Waypoints',"Deleted waypoint: " .. v.NAME)
+			notify('تم تعديل نقاط التوقف',"تم حذف نقطة التوقف: " .. v.NAME)
 			table.remove(WayPoints, i)
 		end
 	end
@@ -7808,7 +7835,7 @@ addcmd('deletewaypoint',{'dwp','dpos','deleteposition','deletepos'},function(arg
 	end
 	for i,v in pairs(pWayPoints) do
 		if v.NAME:lower() == tostring(getstring(1, args)):lower() then
-			notify('Modified Waypoints',"Deleted waypoint: " .. v.NAME)
+			notify('تم تعديل نقاط التوقف',"تم حذف نقطة التوقف: " .. v.NAME)
 			table.remove(pWayPoints, i)
 		end
 	end
@@ -7822,7 +7849,7 @@ addcmd('clearwaypoints',{'cwp','clearpositions','cpos','clearpos'},function(args
 	refreshwaypoints()
 	updatesaves()
 	AllWaypoints = {}
-	notify('Modified Waypoints','Removed all waypoints')
+	notify('تم تعديل نقاط التوقف','تم حذف كل نقاط التوقف')
 end)
 
 addcmd('cleargamewaypoints',{'cgamewp'},function(args, speaker)
@@ -7845,7 +7872,7 @@ addcmd('cleargamewaypoints',{'cgamewp'},function(args, speaker)
 	end
 	refreshwaypoints()
 	updatesaves()
-	notify('Modified Waypoints','Deleted game waypoints')
+	notify('تم تعديل نقاط التوقف','تم حذف نقاط توقف اللعبة')
 end)
 
 
@@ -7947,12 +7974,12 @@ addcmd('guidelete',{},function(args, speaker)
 			end
 		end
 	end)
-	notify('GUI Delete Enabled','Hover over a GUI and press backspace to delete it')
+	notify('تم تفعيل حذف الواجهات','مرّر الماوس على الواجهة واضغط Backspace لحذفها')
 end)
 
 addcmd('unguidelete',{'noguidelete'},function(args, speaker)
 	if deleteGuiInput then deleteGuiInput:Disconnect() end
-	notify('GUI Delete Disabled','GUI backspace delete has been disabled')
+	notify('تم تعطيل حذف الواجهات','تم تعطيل حذف الواجهات بـ Backspace')
 end)
 
 local wasStayOpen = StayOpen
@@ -7965,7 +7992,7 @@ addcmd('hideiy',{},function(args, speaker)
 	end
 	minimizeNum = 0
 	minimizeHolder()
-	if not (args[1] and tostring(args[1]) == 'nonotify') then notify('IY Hidden','You can press the prefix key to access the command bar') end
+	if not (args[1] and tostring(args[1]) == 'nonotify') then notify('IY مخفي','يمكنك الضغط على مفتاح البادئة للوصول إلى شريط الأوامر') end
 end)
 
 addcmd('showiy',{'unhideiy'},function(args, speaker)
@@ -8001,11 +8028,11 @@ end)
 
 addcmd("savegame", {"saveplace"}, function(args, speaker)
 	if saveinstance then
-		notify("Loading", "Downloading game. This will take a while")
+		notify("جارٍ التحميل", "جارٍ تحميل اللعبة. سيستغرق وقتاً.")
 		saveinstance()
-		notify("Game Saved", "Saved place to the workspace folder within your exploit folder.")
+		notify("تم حفظ اللعبة", "تم حفظ المكان في مجلد workspace داخل مجلد الإكسبلويت.")
 	else
-		notify("Incompatible Exploit", "Your exploit does not support this command (missing saveinstance)")
+		notify("إكسبلويت غير متوافق", "الإكسبلويت لا يدعم هذا الأمر (ينقصه saveinstance)")
 	end
 end)
 
@@ -8029,7 +8056,7 @@ end)
 
 addcmd('clientantikick',{'antikick'},function(args, speaker)
 	if not hookmetamethod then 
-		return notify('Incompatible Exploit','Your exploit does not support this command (missing hookmetamethod)')
+		return notify('إكسبلويت غير متوافق','الإكسبلويت لا يدعم هذا الأمر (ينقصه hookmetamethod)')
 	end
 	local LocalPlayer = Players.LocalPlayer
 	local oldNamecall; oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(...)
@@ -8046,13 +8073,13 @@ addcmd('clientantikick',{'antikick'},function(args, speaker)
     	return nil
 	end))
 
-	notify('Client Antikick','Client anti kick is now active (only effective on LocalScript kick)')
+	notify('مانع الطرد من العميل','مانع الطرد من العميل مفعّل الآن (يعمل فقط ضد الطرد من LocalScript)')
 end)
 
 allow_rj = true
 addcmd('clientantiteleport',{'antiteleport'},function(args, speaker)
 	if not hookmetamethod then 
-		return notify('Incompatible Exploit','Your exploit does not support this command (missing hookmetamethod)')
+		return notify('إكسبلويت غير متوافق','الإكسبلويت لا يدعم هذا الأمر (ينقصه hookmetamethod)')
 	end
 
 	local oldTp; oldTp = hookfunction(TeleportService.Teleport, newcclosure(function(self, placeId, player, _teleportData, customLoadingScreen)
@@ -8099,12 +8126,12 @@ addcmd('clientantiteleport',{'antiteleport'},function(args, speaker)
 		return oldNamecall(...)
 	end))
 
-	notify('Client AntiTP','Client anti teleport is now active (only effective on LocalScript teleport)')
+	notify('مانع النقل من العميل','مانع النقل من العميل مفعّل الآن (يعمل فقط ضد النقل من LocalScript)')
 end)
 
 addcmd('allowrejoin',{'allowrj'},function(args, speaker)
 	allow_rj = not allow_rj
-	notify("Client AntiTP", `Scripts now may{allow_rj and "" or " not"} make you rejoin the server`)
+	notify("مانع النقل من العميل", `Scripts now may{allow_rj and "" or " not"} make you rejoin the server`)
 end)
 
 addcmd("cancelteleport", {"canceltp"}, function(args, speaker)
@@ -8173,7 +8200,7 @@ addcmd("setfpscap", {"fpscap", "maxfps"}, function(args, speaker)
 	elseif num > 0 then
 		fpsCap = num
 	else
-		return notify("Invalid argument", "Please provide a number above 0 or 'none'.")
+		return notify("وسيطة غير صالحة", "الرجاء إدخال رقم أكبر من 0 أو 'none'.")
 	end
 
 	if setfpscap and type(setfpscap) == "function" then
@@ -8210,7 +8237,7 @@ addcmd('esp',{},function(args, speaker)
 			end
 		end
 	else
-		notify('ESP','Disable chams (nochams) before using esp')
+		notify('ESP','عطّل chams (nochams) قبل استخدام ESP')
 	end
 end)
 
@@ -8223,7 +8250,7 @@ addcmd('espteam',{},function(args, speaker)
 			end
 		end
 	else
-		notify('ESP','Disable chams (nochams) before using esp')
+		notify('ESP','عطّل chams (nochams) قبل استخدام ESP')
 	end
 end)
 
@@ -8319,7 +8346,7 @@ addcmd('chams',{},function(args, speaker)
 			end
 		end
 	else
-		notify('Chams','Disable ESP (noesp) before using chams')
+		notify('Chams','عطّل ESP (noesp) قبل استخدام chams')
 	end
 end)
 
@@ -8372,7 +8399,7 @@ addcmd('view',{'spectate'},function(args, speaker)
 		end
 		viewing = Players[v]
 		workspace.CurrentCamera.CameraSubject = viewing.Character
-		notify('Spectate','Viewing ' .. Players[v].Name)
+		notify('المراقبة','جارٍ المراقبة: ' .. Players[v].Name)
 		local function viewDiedFunc()
 			repeat wait() until Players[v].Character ~= nil and getRoot(Players[v].Character)
 			workspace.CurrentCamera.CameraSubject = viewing.Character
@@ -8401,7 +8428,7 @@ addcmd('unview',{'unspectate'},function(args, speaker)
 	StopFreecam()
 	if viewing ~= nil then
 		viewing = nil
-		notify('Spectate','View turned off')
+		notify('المراقبة','تم إيقاف العرض')
 	end
 	if viewDied then
 		viewDied:Disconnect()
@@ -8722,7 +8749,7 @@ addcmd('notifyfreecamposition',{'notifyfcpos'},function(args, speaker)
 	if fcRunning then
 		local X,Y,Z = workspace.CurrentCamera.CFrame.Position.X,workspace.CurrentCamera.CFrame.Position.Y,workspace.CurrentCamera.CFrame.Position.Z
 		local Format, Round = string.format, math.round
-		notify("Current Position", Format("%s, %s, %s", Round(X), Round(Y), Round(Z)))
+		notify("الموقع الحالي", Format("%s, %s, %s", Round(X), Round(Y), Round(Z)))
 	end
 end)
 
@@ -8791,7 +8818,7 @@ addcmd("enableshiftlock", {"enablesl", "shiftlock"}, function(args, speaker)
 	end
 	speaker:GetPropertyChangedSignal("DevEnableMouseLock"):Connect(enableShiftlock)
 	enableShiftlock()
-	notify("Shiftlock", "Shift lock should now be available")
+	notify("قفل الشيفت", "قفل الشيفت متاح الآن")
 end)
 
 addcmd('firstp',{},function(args, speaker)
@@ -8806,7 +8833,7 @@ addcmd('noclipcam', {'nccam'}, function(args, speaker)
 	local sc = (debug and debug.setconstant) or setconstant
 	local gc = (debug and debug.getconstants) or getconstants
 	if not sc or not getgc or not gc then
-		return notify('Incompatible Exploit', 'Your exploit does not support this command (missing setconstant or getconstants or getgc)')
+		return notify('إكسبلويت غير متوافق', 'الإكسبلويت لا يدعم هذا الأمر (ينقصه setconstant أو getconstants أو getgc)')
 	end
 	local pop = speaker.PlayerScripts.PlayerModule.CameraModule.ZoomController.Popper
 	for _, v in pairs(getgc()) do
@@ -8865,7 +8892,7 @@ addcmd('delete',{'remove'},function(args, speaker)
 			v:Destroy()
 		end
 	end
-	notify('Item(s) Deleted','Deleted ' ..getstring(1, args))
+	notify('تم حذف العناصر','تم حذف ' ..getstring(1, args))
 end)
 
 addcmd('deleteclass',{'removeclass','deleteclassname','removeclassname','dc'},function(args, speaker)
@@ -8874,7 +8901,7 @@ addcmd('deleteclass',{'removeclass','deleteclassname','removeclassname','dc'},fu
 			v:Destroy()
 		end
 	end
-	notify('Item(s) Deleted','Deleted items with ClassName ' ..getstring(1, args))
+	notify('تم حذف العناصر','تم حذف العناصر بالصنف ' ..getstring(1, args))
 end)
 
 addcmd('chardelete',{'charremove','cd'},function(args, speaker)
@@ -8883,7 +8910,7 @@ addcmd('chardelete',{'charremove','cd'},function(args, speaker)
 			v:Destroy()
 		end
 	end
-	notify('Item(s) Deleted','Deleted ' ..getstring(1, args))
+	notify('تم حذف العناصر','تم حذف ' ..getstring(1, args))
 end)
 
 addcmd('chardeleteclass',{'charremoveclass','chardeleteclassname','charremoveclassname','cdc'},function(args, speaker)
@@ -8892,7 +8919,7 @@ addcmd('chardeleteclass',{'charremoveclass','chardeleteclassname','charremovecla
 			v:Destroy()
 		end
 	end
-	notify('Item(s) Deleted','Deleted items with ClassName ' ..getstring(1, args))
+	notify('تم حذف العناصر','تم حذف العناصر بالصنف ' ..getstring(1, args))
 end)
 
 addcmd('deletevelocity',{'dv','removevelocity','removeforces'},function(args, speaker)
@@ -8964,7 +8991,7 @@ addcmd("antiafk", {"antiidle"}, function(args, speaker)
         VirtualInputManager:Destroy()
     end)
 
-    if not (args[1] and tostring(args[1]) == "nonotify") then notify("Anti Idle", "Anti idle is enabled") end
+    if not (args[1] and tostring(args[1]) == "nonotify") then notify("مانع الخمول", "مانع الخمول مفعّل") end
 end)
 
 addcmd("datalimit", {}, function(args, speaker)
@@ -9018,7 +9045,7 @@ addcmd('age',{},function(args, speaker)
 		local p = Players[v]
 		table.insert(ages, p.Name.."'s age is: "..p.AccountAge)
 	end
-	notify('Account Age',table.concat(ages, ',\n'))
+	notify('عمر الحساب',table.concat(ages, ',\n'))
 end)
 
 addcmd('chatage',{},function(args, speaker)
@@ -9044,7 +9071,7 @@ addcmd('joindate',{'jd'},function(args, speaker)
 
 		table.insert(dates, dateJoined)
 	end
-	notify('Join Date (Month/Day/Year)',table.concat(dates, ',\n'))
+	notify('تاريخ الانضمام (شهر/يوم/سنة)',table.concat(dates, ',\n'))
 end)
 
 addcmd('chatjoindate',{'cjd'},function(args, speaker)
@@ -9075,7 +9102,7 @@ addcmd('userid',{'id'},function(args, speaker)
 	local players = getPlayer(args[1], speaker)
 	for i,v in pairs(players) do
 		local id = tostring(Players[v].UserId)
-		notify('User ID',id)
+		notify('معرّف المستخدم',id)
 	end
 end)
 
@@ -9097,33 +9124,33 @@ end)
 
 addcmd('creatorid',{'creator'},function(args, speaker)
 	if game.CreatorType == Enum.CreatorType.User then
-		notify('Creator ID',game.CreatorId)
+		notify('معرّف المنشئ',game.CreatorId)
 	elseif game.CreatorType == Enum.CreatorType.Group then
 		local OwnerID = GroupService:GetGroupInfoAsync(game.CreatorId).Owner.Id
 		speaker.UserId = OwnerID
-		notify('Creator ID',OwnerID)
+		notify('معرّف المنشئ',OwnerID)
 	end
 end)
 
 addcmd('copycreatorid',{'copycreator'},function(args, speaker)
 	if game.CreatorType == Enum.CreatorType.User then
 		toClipboard(game.CreatorId)
-		notify('Copied ID','Copied creator ID to clipboard')
+		notify('تم نسخ المعرّف','تم نسخ معرّف المنشئ إلى الحافظة')
 	elseif game.CreatorType == Enum.CreatorType.Group then
 		local OwnerID = GroupService:GetGroupInfoAsync(game.CreatorId).Owner.Id
 		toClipboard(OwnerID)
-		notify('Copied ID','Copied creator ID to clipboard')
+		notify('تم نسخ المعرّف','تم نسخ معرّف المنشئ إلى الحافظة')
 	end
 end)
 
 addcmd('setcreatorid',{'setcreator'},function(args, speaker)
 	if game.CreatorType == Enum.CreatorType.User then
 		speaker.UserId = game.CreatorId
-		notify('Set ID','Set UserId to '..game.CreatorId)
+		notify('تعيين المعرّف','تم تعيين UserId إلى '..game.CreatorId)
 	elseif game.CreatorType == Enum.CreatorType.Group then
 		local OwnerID = GroupService:GetGroupInfoAsync(game.CreatorId).Owner.Id
 		speaker.UserId = OwnerID
-		notify('Set ID','Set UserId to '..OwnerID)
+		notify('تعيين المعرّف','تم تعيين UserId إلى '..OwnerID)
 	end
 end)
 
@@ -9131,7 +9158,7 @@ addcmd('appearanceid',{'aid'},function(args, speaker)
 	local players = getPlayer(args[1], speaker)
 	for i,v in pairs(players) do
 		local aid = tostring(Players[v].CharacterAppearanceId)
-		notify('Appearance ID',aid)
+		notify('معرّف المظهر',aid)
 	end
 end)
 
@@ -9155,7 +9182,7 @@ addcmd('2022materials',{'use2022materials'},function(args, speaker)
 	if sethidden then
 		sethidden(MaterialService, "Use2022Materials", true)
 	else
-		notify('Incompatible Exploit','Your exploit does not support this command (missing sethiddenproperty)')
+		notify('إكسبلويت غير متوافق','Your exploit does not support this command (missing sethiddenproperty)')
 	end
 end)
 
@@ -9163,7 +9190,7 @@ addcmd('un2022materials',{'unuse2022materials'},function(args, speaker)
 	if sethidden then
 		sethidden(MaterialService, "Use2022Materials", false)
 	else
-		notify('Incompatible Exploit','Your exploit does not support this command (missing sethiddenproperty)')
+		notify('إكسبلويت غير متوافق','Your exploit does not support this command (missing sethiddenproperty)')
 	end
 end)
 
@@ -9230,7 +9257,7 @@ addcmd("vehiclegoto", {"vgoto", "vtp", "vehicletp"}, function(args, speaker)
     local seat = humanoid.SeatPart
     local vehicleModel = if seat then seat:FindFirstAncestorWhichIsA("Model") else nil
     if vehicleModel == nil then
-        notify("Vehicle Goto", "Make sure you're sitting in a vehicle.")
+        notify("الانتقال للمركبة", "تأكد أنك جالس في مركبة.")
         return
     end
 
@@ -9506,7 +9533,7 @@ addcmd("orbit", {}, function(args, speaker)
 			if value then execCmd("unorbit") end
 		end)
 
-		notify("Orbit", "Started orbiting " .. formatUsername(target))
+		notify("الدوران", "بدأ الدوران حول " .. formatUsername(target))
 	end
 end)
 
@@ -9514,7 +9541,7 @@ addcmd("unorbit", {}, function(args, speaker)
 	if orbit1 then orbit1:Disconnect() end
 	if orbit2 then orbit2:Disconnect() end
 	if orbit3 then orbit3:Disconnect() end
-	if args[1] ~= "nonotify" then notify("Orbit", "Stopped orbiting player") end
+	if args[1] ~= "nonotify" then notify("الدوران", "توقف الدوران حول اللاعب") end
 end)
 
 
@@ -9577,7 +9604,7 @@ end)
 
 local notifiedRespectFiltering = false
 addcmd('muteboombox',{},function(args, speaker)
-	if not notifiedRespectFiltering and SoundService.RespectFilteringEnabled then notifiedRespectFiltering = true notify('RespectFilteringEnabled','RespectFilteringEnabled is set to true (the command will still work but may only be clientsided)') end
+	if not notifiedRespectFiltering and SoundService.RespectFilteringEnabled then notifiedRespectFiltering = true notify('RespectFilteringEnabled','RespectFilteringEnabled مفعّل (الأمر سيعمل لكن قد يكون من جهة العميل فقط)') end
 	local players = getPlayer(args[1], speaker)
 	if players ~= nil then
 		for i,v in pairs(players) do
@@ -9598,7 +9625,7 @@ addcmd('muteboombox',{},function(args, speaker)
 end)
 
 addcmd('unmuteboombox',{},function(args, speaker)
-	if not notifiedRespectFiltering and SoundService.RespectFilteringEnabled then notifiedRespectFiltering = true notify('RespectFilteringEnabled','RespectFilteringEnabled is set to true (the command will still work but may only be clientsided)') end
+	if not notifiedRespectFiltering and SoundService.RespectFilteringEnabled then notifiedRespectFiltering = true notify('RespectFilteringEnabled','RespectFilteringEnabled مفعّل (الأمر سيعمل لكن قد يكون من جهة العميل فقط)') end
 	local players = getPlayer(args[1], speaker)
 	if players ~= nil then
 		for i,v in pairs(players) do
@@ -9790,7 +9817,7 @@ addcmd('invisible',{'invis'},function(args, speaker)
 		end)
 		invisRunning = false
 	end
-	notify('Invisible','You now appear invisible to other players')
+	notify('مخفي','أنت الآن مخفي عن اللاعبين الآخرين')
 end)
 
 addcmd("visible", {"vis","uninvisible"}, function(args, speaker)
@@ -10147,7 +10174,7 @@ addcmd("team", {}, function(args, speaker)
 		end
 	end
 	if not team then
-		return notify("Invalid Team", teamName .. " is not a valid team")
+		return notify("فريق غير صالح", teamName .. " ليس فريقاً صالحاً")
 	end
 	if root and firetouchinterest then
 		for _, v in ipairs(workspace:GetDescendants()) do
@@ -10201,7 +10228,7 @@ addcmd('spasm',{},function(args, speaker)
 		Spasm:Play()
 		Spasm:AdjustSpeed(99)
 	else
-		notify('R6 Required','This command requires the r6 rig type')
+		notify('يتطلب R6','هذا الأمر يتطلب نوع الهيكل R6')
 	end
 end)
 
@@ -10219,7 +10246,7 @@ addcmd('headthrow',{},function(args, speaker)
 		k:Play(0)
 		k:AdjustSpeed(1)
 	else
-		notify('R6 Required','This command requires the r6 rig type')
+		notify('يتطلب R6','هذا الأمر يتطلب نوع الهيكل R6')
 	end
 end)
 
@@ -10315,7 +10342,7 @@ addcmd("copyanimationid", {"copyanimid", "copyemoteid"}, function(args, speaker)
 		if found ~= "Animations Copied" then
 			toClipboard(found)
 		else
-			notify("Animations", "No animations to copy")
+			notify("الحركات", "لا توجد حركات لنسخها")
 		end
 	end
 
@@ -10340,7 +10367,7 @@ addcmd('refreshanimations', {'refreshanimation', 'refreshanims', 'refreshanim'},
 	local Human = Char and Char:WaitForChild('Humanoid', 15)
 	local Animate = Char and Char:WaitForChild('Animate', 15)
 	if not Human or not Animate then
-		return notify('Refresh Animations', 'Failed to get Animate/Humanoid')
+		return notify('تحديث الحركات', 'فشل الحصول على Animate/Humanoid')
 	end
 	Animate.Disabled = true
 	for _, v in ipairs(Human:GetPlayingAnimationTracks()) do
@@ -10401,7 +10428,7 @@ end)
 
 addcmd("clickteleport", {}, function(args, speaker)
     if speaker ~= Players.LocalPlayer then return end
-    notify("Click TP", "Go to Settings > Keybinds > Add to set up click teleport")
+    notify("الانتقال بالنقر", "اذهب إلى الإعدادات > الاختصارات > إضافة لإعداد الانتقال بالنقر")
 end)
 
 addcmd("mouseteleport", {"mousetp"}, function(args, speaker)
@@ -10436,7 +10463,7 @@ end)
 
 addcmd('clickdelete',{},function(args, speaker)
 	if speaker == Players.LocalPlayer then
-		notify('Click Delete','Go to Settings > Keybinds > Add to set up click delete')
+		notify('الحذف بالنقر','اذهب إلى الإعدادات > الاختصارات > إضافة لإعداد الحذف بالنقر')
 	end
 end)
 
@@ -10447,10 +10474,10 @@ addcmd('getposition',{'getpos','notifypos','notifyposition'},function(args, spea
 		local pos = char and (getRoot(char) or char:FindFirstChildWhichIsA("BasePart"))
 		pos = pos and pos.Position
 		if not pos then
-			return notify('Getposition Error','Missing character')
+			return notify('خطأ في تحديد الموقع','الشخصية مفقودة')
 		end
 		local roundedPos = math.round(pos.X) .. ", " .. math.round(pos.Y) .. ", " .. math.round(pos.Z)
-		notify('Current Position',roundedPos)
+		notify('الموقع الحالي',roundedPos)
 	end
 end)
 
@@ -10461,7 +10488,7 @@ addcmd('copyposition',{'copypos'},function(args, speaker)
 		local pos = char and (getRoot(char) or char:FindFirstChildWhichIsA("BasePart"))
 		pos = pos and pos.Position
 		if not pos then
-			return notify('Getposition Error','Missing character')
+			return notify('خطأ في تحديد الموقع','الشخصية مفقودة')
 		end
 		local roundedPos = math.round(pos.X) .. ", " .. math.round(pos.Y) .. ", " .. math.round(pos.Z)
 		toClipboard(roundedPos)
@@ -10508,7 +10535,7 @@ addcmd('spoofspeed',{'spoofws','spoofwalkspeed'},function(args, speaker)
 				return newindex(self, key, value)
 			end)
 		else
-			notify('Incompatible Exploit','Your exploit does not support this command (missing hookmetamethod)')
+			notify('إكسبلويت غير متوافق','الإكسبلويت لا يدعم هذا الأمر (ينقصه hookmetamethod)')
 		end
 	end
 end)
@@ -10559,7 +10586,7 @@ addcmd('spoofjumppower',{'spoofjp'},function(args, speaker)
 				return newindex(self, key, value)
 			end)
 		else
-			notify('Incompatible Exploit','Your exploit does not support this command (missing hookmetamethod)')
+			notify('إكسبلويت غير متوافق','الإكسبلويت لا يدعم هذا الأمر (ينقصه hookmetamethod)')
 		end
 	end
 end)
@@ -10621,7 +10648,7 @@ addcmd('tools',{'gears'},function(args, speaker)
 		end
 	end
 	copy(ReplicatedStorage)
-	notify('Tools','Copied tools from ReplicatedStorage and Lighting')
+	notify('الأدوات','تم نسخ الأدوات من ReplicatedStorage وLighting')
 end)
 
 addcmd('notools',{'rtools','clrtools','removetools','deletetools','dtools'},function(args, speaker)
@@ -10651,7 +10678,7 @@ end)
 
 addcmd('oldconsole',{},function(args, speaker)
 	-- Thanks wally!!
-	notify("Loading",'Hold on a sec')
+	notify("جارٍ التحميل",'انتظر لحظة')
 	local _, str = pcall(function()
 		return game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/console.lua", true)
 	end)
@@ -10670,34 +10697,34 @@ addcmd('oldconsole',{},function(args, speaker)
 		end
 	end
 	wait(1)
-	notify('Console','Press F9 to open the console')
+	notify('الكونسول','اضغط F9 لفتح الكونسول')
 end)
 
 addcmd("explorer", {"dex"}, function(args, speaker)
-    notify("Loading", "Hold on a sec")
+    notify("جارٍ التحميل", "انتظر لحظة")
     loadstring(game:HttpGet("https://github.com/AZYsGithub/DexPlusPlus/releases/latest/download/out.lua"))()
 end)
 
 addcmd("moondex", {"mdex"}, function(args, speaker)
-    notify("Loading", "Hold on a sec")
+    notify("جارٍ التحميل", "انتظر لحظة")
     loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
 end)
 
 addcmd("remotespy", {"rspy", "cobalt", "cspy"}, function(args, speaker)
-    notify("Loading", "Hold on a sec")
+    notify("جارٍ التحميل", "انتظر لحظة")
     -- Full credit to notpoiu, creator of Cobalt
     loadstring(game:HttpGet("https://gitlab.com/upio/cobalt/-/releases/permalink/latest/downloads/Cobalt.luau"))()
 end)
 
 addcmd("simplespy", {"sspy"}, function(args, speaker)
-    notify("Loading", "Hold on a sec")
+    notify("جارٍ التحميل", "انتظر لحظة")
     -- Full credit to exx, creator of SimpleSpy
     -- also thanks to Amity for fixing
     loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/SimpleSpyV3/main.lua"))()
 end)
 
 addcmd('audiologger',{'alogger'},function(args, speaker)
-	notify("Loading",'Hold on a sec')
+	notify("جارٍ التحميل",'انتظر لحظة')
 	loadstring(game:HttpGet(('https://raw.githubusercontent.com/infyiff/backup/main/audiologger.lua'),true))()
 end)
 
@@ -10991,7 +11018,7 @@ addcmd('carpet',{},function(args, speaker)
 			end)
 		end
 	else
-		notify('R6 Required','This command requires the r6 rig type')
+		notify('يتطلب R6','هذا الأمر يتطلب نوع الهيكل R6')
 	end
 end)
 
@@ -11145,7 +11172,7 @@ addcmd('fireclickdetectors',{'firecd','firecds'}, function(args, speaker)
 			end
 		end
 	else
-		notify("Incompatible Exploit", "Your exploit does not support this command (missing fireclickdetector)")
+		notify("إكسبلويت غير متوافق", "Your exploit does not support this command (missing fireclickdetector)")
 	end
 end)
 
@@ -11174,7 +11201,7 @@ addcmd('fireproximityprompts',{'firepp'},function(args, speaker)
 			end
 		end
 	else
-		notify("Incompatible Exploit", "Your exploit does not support this command (missing fireproximityprompt)")
+		notify("إكسبلويت غير متوافق", "Your exploit does not support this command (missing fireproximityprompt)")
 	end
 end)
 
@@ -11187,7 +11214,7 @@ addcmd('instantproximityprompts',{'instantpp'},function(args, speaker)
 			fireproximityprompt(prompt)
 		end)
 	else
-		notify('Incompatible Exploit','Your exploit does not support this command (missing fireproximityprompt)')
+		notify('إكسبلويت غير متوافق','Your exploit does not support this command (missing fireproximityprompt)')
 	end
 end)
 
@@ -11199,7 +11226,7 @@ addcmd('uninstantproximityprompts',{'uninstantpp'},function(args, speaker)
 end)
 
 addcmd('notifyping',{'ping'},function(args, speaker)
-	notify("Ping", math.round(speaker:GetNetworkPing() * 1000) .. "ms")
+	notify("البينغ", math.round(speaker:GetNetworkPing() * 1000) .. "ms")
 end)
 
 addcmd('grabtools', {}, function(args, speaker)
@@ -11220,7 +11247,7 @@ addcmd('grabtools', {}, function(args, speaker)
 		end
 	end)
 
-	notify("Grabtools", "Picking up any dropped tools")
+	notify("Grabtools", "جارٍ التقاط أي أدوات ساقطة")
 end)
 
 addcmd('nograbtools',{'ungrabtools'},function(args, speaker)
@@ -11228,7 +11255,7 @@ addcmd('nograbtools',{'ungrabtools'},function(args, speaker)
 		grabtoolsFunc:Disconnect() 
 	end
 
-	notify("Grabtools", "Grabtools has been disabled")
+	notify("Grabtools", "تم تعطيل التقاط الأدوات")
 end)
 
 local specifictoolremoval = {}
@@ -11318,12 +11345,12 @@ addcmd('spawnpoint',{'spawn'},function(args, speaker)
 	spawnpos = getRoot(speaker.Character).CFrame
 	spawnpoint = true
 	spDelay = tonumber(args[1]) or 0.1
-	notify('Spawn Point','Spawn point created at '..tostring(spawnpos))
+	notify('نقطة الإحياء','تم إنشاء نقطة الإحياء عند '..tostring(spawnpos))
 end)
 
 addcmd('nospawnpoint',{'nospawn','removespawnpoint'},function(args, speaker)
 	spawnpoint = false
-	notify('Spawn Point','Removed spawn point')
+	notify('نقطة الإحياء','تم حذف نقطة الإحياء')
 end)
 
 addcmd('flashback',{'diedtp'},function(args, speaker)
@@ -11412,7 +11439,7 @@ addcmd('clearhats',{'cleanhats'},function(args, speaker)
 			end
 		end
 	else
-		notify("Incompatible Exploit","Your exploit does not support this command (missing firetouchinterest)")
+		notify("إكسبلويت غير متوافق","Your exploit does not support this command (missing firetouchinterest)")
 	end
 end)
 
@@ -11420,7 +11447,7 @@ addcmd('split',{},function(args, speaker)
 	if r15(speaker) then
 		speaker.Character.UpperTorso.Waist:Destroy()
 	else
-		notify('R15 Required','This command requires the r15 rig type')
+		notify('يتطلب R15','هذا الأمر يتطلب نوع الهيكل R15')
 	end
 end)
 
@@ -11549,7 +11576,7 @@ addcmd('touchinterests', {'touchinterest', 'firetouchinterests', 'firetouchinter
 	local Root = getRoot(speaker.Character) or speaker.Character:FindFirstChildWhichIsA("BasePart")
 
 	if not firetouchinterest then
-		notify("Incompatible Exploit", "Your exploit does not support this command (missing firetouchinterest)")
+		notify("إكسبلويت غير متوافق", "Your exploit does not support this command (missing firetouchinterest)")
 		return
 	end
 
@@ -11868,7 +11895,7 @@ end)
 
 addcmd("chatlogswebhook", {"logswebhook"}, function(args, speaker)
 	if not httprequest then
-		return notify("Incompatible Exploit", "Your exploit does not support this command (missing request)")
+		return notify("إكسبلويت غير متوافق", "Your exploit does not support this command (missing request)")
 	end
 	logsWebhook = args[1] or nil
 	updatesaves()
@@ -12113,7 +12140,7 @@ function attach(speaker,target)
 			hrp.CFrame = hrp2.CFrame
 		until (tool.Parent ~= char or not hrp or not hrp2 or not hrp.Parent or not hrp2.Parent or n > 250) and n > 2
 	else
-		notify('Tool Required','You need to have an item in your inventory to use this command')
+		notify('يتطلب أداة','تحتاج أداة في حقيبتك لاستخدام هذا الأمر')
 	end
 end
 
@@ -12141,22 +12168,22 @@ function kill(speaker,target,fast)
 			humanoid.RootPart.CFrame = NormPos
 		end
 	else
-		notify('Tool Required','You need to have an item in your inventory to use this command')
+		notify('يتطلب أداة','تحتاج أداة في حقيبتك لاستخدام هذا الأمر')
 	end
 end
 
 addcmd("handlekill", {"hkill"}, function(args, speaker)
 	if not firetouchinterest then
-		return notify("Incompatible Exploit", "Your exploit does not support this command (missing firetouchinterest)")
+		return notify("إكسبلويت غير متوافق", "Your exploit does not support this command (missing firetouchinterest)")
 	end
 	if not speaker.Character then return end
 	local tool = speaker.Character:FindFirstChildWhichIsA("Tool")
 	local handle = tool and tool:FindFirstChild("Handle")
 	if not handle then
-		return notify("Handle Kill", "You need to hold a \"Tool\" that does damage on touch. For example a common Sword tool.")
+		return notify("قتل بالأداة", "You need to hold a \"Tool\" that does damage on touch. For example a common Sword tool.")
 	end
 	local range = tonumber(args[2]) or math.huge
-	if range ~= math.huge then notify("Handle Kill", ("Started!\nRadius: %s"):format(tostring(range):upper())) end
+	if range ~= math.huge then notify("قتل بالأداة", ("Started!\nRadius: %s"):format(tostring(range):upper())) end
 
 	while task.wait() and speaker.Character and tool.Parent and tool.Parent == speaker.Character do
 		for _, plr in next, getPlayer(args[1], speaker) do
@@ -12173,7 +12200,7 @@ addcmd("handlekill", {"hkill"}, function(args, speaker)
 		end
 	end
 
-	notify("Handle Kill", "Stopped!")
+	notify("قتل بالأداة", "توقف!")
 end)
 
 tpwalkStack = 0
@@ -12229,7 +12256,7 @@ function bring(speaker,target,fast)
 			humanoid.RootPart.CFrame = NormPos
 		end
 	else
-		notify('Tool Required','You need to have an item in your inventory to use this command')
+		notify('يتطلب أداة','تحتاج أداة في حقيبتك لاستخدام هذا الأمر')
 	end
 end
 
@@ -12259,7 +12286,7 @@ function teleport(speaker,target,target2,fast)
 			humanoid.RootPart.CFrame = NormPos
 		end
 	else
-		notify('Tool Required','You need to have an item in your inventory to use this command')
+		notify('يتطلب أداة','تحتاج أداة في حقيبتك لاستخدام هذا الأمر')
 	end
 end
 
@@ -12372,14 +12399,14 @@ addcmd('autoclick',{},function(args, speaker)
 				end
 			end
 		end)
-		notify('Auto Clicker',"Press [backspace] and [=] at the same time to stop")
+		notify('النقر التلقائي',"اضغط [backspace] و[=] معاً للإيقاف")
 		repeat wait(clickDelay)
 			mouse1press()
 			wait(releaseDelay)
 			mouse1release()
 		until autoclicking == false
 	else
-		notify('Auto Clicker',"Your exploit doesn't have the ability to use the autoclick")
+		notify('النقر التلقائي',"الإكسبلويت لا يدعم النقر التلقائي")
 	end
 end)
 
@@ -12544,7 +12571,7 @@ RolewatchConnection = Players.PlayerAdded:Connect(function(player)
 			if RolewatchData.Leave == true then
 				Players.LocalPlayer:Kick("\n\nRolewatch\nPlayer \"" .. tostring(player.Name) .. "\" has joined with the Role \"" .. RolewatchData.Role .. "\"\n")
 			else
-				notify("Rolewatch", "Player \"" .. tostring(player.Name) .. "\" has joined with the Role \"" .. RolewatchData.Role .. "\"")
+				notify("مراقبة الرتب", "Player \"" .. tostring(player.Name) .. "\" has joined with the Role \"" .. RolewatchData.Role .. "\"")
 			end
 		end
 	end
@@ -12556,7 +12583,7 @@ addcmd("rolewatch", {}, function(args, speaker)
 	if groupId and roleName then
 		RolewatchData.Group = groupId
 		RolewatchData.Role = roleName
-		notify("Rolewatch", "Watching Group ID \"" .. tostring(groupId) .. "\" for Role \"" .. roleName .. "\"")
+		notify("مراقبة الرتب", "Watching Group ID \"" .. tostring(groupId) .. "\" for Role \"" .. roleName .. "\"")
 	end
 end)
 
@@ -12564,12 +12591,12 @@ addcmd("rolewatchstop", {}, function(args, speaker)
 	RolewatchData.Group = 0
 	RolewatchData.Role = ""
 	RolewatchData.Leave = false
-	notify("Rolewatch", "Disabled")
+	notify("مراقبة الرتب", "معطّل")
 end)
 
 addcmd("rolewatchleave", {"unrolewatch"}, function(args, speaker)
 	RolewatchData.Leave = not RolewatchData.Leave
-	notify("Rolewatch", RolewatchData.Leave and "Leave has been Enabled" or "Leave has been Disabled")
+	notify("مراقبة الرتب", RolewatchData.Leave and "تم تفعيل المغادرة" or "تم تعطيل المغادرة")
 end)
 
 staffRoles = {"mod", "admin", "staff", "dev", "founder", "owner", "supervis", "manager", "management", "executive", "president", "chairman", "chairwoman", "chairperson", "director"}
@@ -12598,22 +12625,22 @@ addcmd("staffwatch", {}, function(args, speaker)
 		staffwatchjoin = Players.PlayerAdded:Connect(function(player)
 			local result = getStaffRole(player)
 			if result.Staff then
-				notify("Staffwatch", formatUsername(player) .. " is a " .. result.Role)
+				notify("مراقبة الطاقم", formatUsername(player) .. " هو " .. result.Role)
 			end
 		end)
 		for _, player in pairs(Players:GetPlayers()) do
 			local result = getStaffRole(player)
 			if result.Staff then
-				table.insert(found, formatUsername(player) .. " is a " .. result.Role)
+				table.insert(found, formatUsername(player) .. " هو " .. result.Role)
 			end
 		end
 		if #found > 0 then
-			notify("Staffwatch", table.concat(found, ",\n"))
+			notify("مراقبة الطاقم", table.concat(found, ",\n"))
 		else
-			notify("Staffwatch", "Enabled")
+			notify("مراقبة الطاقم", "مفعّل")
 		end
 	else
-		notify("Staffwatch", "Game is not owned by a Group")
+		notify("مراقبة الطاقم", "اللعبة غير مملوكة لمجموعة")
 	end
 end)
 
@@ -12621,7 +12648,7 @@ addcmd("unstaffwatch", {}, function(args, speaker)
 	if staffwatchjoin then
 		staffwatchjoin:Disconnect()
 	end
-	notify("Staffwatch", "Disabled")
+	notify("مراقبة الطاقم", "معطّل")
 end)
 
 local function playerGroups()
@@ -12673,7 +12700,7 @@ local function playerGroups()
 end
 
 addcmd("findfriendgroups", {}, function(args, speaker)
-    notify("Checking Players", "This might take a while (slow function)")
+    notify("جارٍ فحص اللاعبين", "قد يستغرق هذا وقتاً (وظيفة بطيئة)")
 
     local groups = playerGroups()
     local playerList = StarterGui:GetCoreGuiEnabled(Enum.CoreGuiType.PlayerList)
@@ -12706,7 +12733,7 @@ addcmd('clearnilinstances',{'nonilinstances','cni'},function(args, speaker)
 			v:Destroy()
 		end
 	else
-		notify('Incompatible Exploit','Your exploit does not support this command (missing getnilinstances)')
+		notify('إكسبلويت غير متوافق','Your exploit does not support this command (missing getnilinstances)')
 	end
 end)
 
@@ -12727,13 +12754,13 @@ addcmd("antivoid", {}, function(args, speaker)
 			root.Velocity = root.Velocity + Vector3.new(0, 250, 0)
 		end
 	end)
-	if args[1] ~= "nonotify" then notify("antivoid", "Enabled") end
+	if args[1] ~= "nonotify" then notify("مانع السقوط", "مفعّل") end
 end)
 
 addcmd("unantivoid", {"noantivoid"}, function(args, speaker)
 	pcall(function() antivoidloop:Disconnect() end)
 	antivoidloop = nil
-	if args[1] ~= "nonotify" then notify("antivoid", "Disabled") end
+	if args[1] ~= "nonotify" then notify("مانع السقوط", "معطّل") end
 end)
 
 antivoidWasEnabled = false
@@ -12962,7 +12989,7 @@ addcmd("phonebook", {"call"}, function(args, speaker)
 	if success and canInvite then
 		SocialService:PromptPhoneBook(speaker, "")
 	else
-		notify("Phonebook", "It seems you're not able to call anyone. Sorry!")
+		notify("دفتر الهاتف", "يبدو أنك لا تستطيع الاتصال بأحد. آسف!")
 	end
 end)
 
@@ -13143,7 +13170,7 @@ cancelAutoKeyPress = nil
 addcmd('autokeypress',{'keypress'},function(args, speaker)
 	if keypress and keyrelease and args[1] then
 		local code = keycodeMap[args[1]:lower()]
-		if not code then notify('Auto Key Press',"Invalid key") return end
+		if not code then notify('ضغط مفتاح تلقائي',"مفتاح غير صالح") return end
 		execCmd('unautokeypress')
 		wait()
 		local clickDelay = 0.1
@@ -13159,7 +13186,7 @@ addcmd('autokeypress',{'keypress'},function(args, speaker)
 				end
 			end
 		end)
-		notify("Auto Key Press", "Press [backspace] and [=] at the same time to stop (or type 'unautokeypress')")
+		notify("ضغط مفتاح تلقائي", "اضغط [backspace] و[=] معاً للإيقاف (أو اكتب 'unautokeypress')")
 		repeat wait(clickDelay)
 			keypress(code)
 			wait(releaseDelay)
@@ -13167,7 +13194,7 @@ addcmd('autokeypress',{'keypress'},function(args, speaker)
 		until autoKeyPressing == false
 		if cancelAutoKeyPress then cancelAutoKeyPress:Disconnect() keyrelease(code) end
 	else
-		notify("Auto Key Press", "Your exploit does not support this command (missing keypress or keyrelease)")
+		notify("ضغط مفتاح تلقائي", "الإكسبلويت لا يدعم هذا الأمر (ينقصه keypress أو keyrelease)")
 	end
 end)
 
@@ -13193,7 +13220,7 @@ end)
 
 addcmd("addallplugins", {"loadallplugins"}, function(args, speaker)
 	if not listfiles or not isfolder then
-		notify("Incompatible Exploit", "Your exploit does not support this command (missing listfiles/isfolder)")
+		notify("إكسبلويت غير متوافق", "Your exploit does not support this command (missing listfiles/isfolder)")
 		return
 	end
 
@@ -13238,6 +13265,7 @@ if IsOnMobile then
 	UICorner.Name = randomString()
 	UICorner.CornerRadius = UDim.new(0.5, 0)
 	UICorner.Parent = QuickCapture
+	addEdgeGlow(QuickCapture)
 	QuickCapture.MouseButton1Click:Connect(function()
 		Cmdbar:CaptureFocus()
 		maximizeHolder()
@@ -13419,7 +13447,7 @@ task.spawn(function()
 
 	if success then
 		if currentVersion ~= latestVersionInfo.Version then
-			notify("Outdated", "Get the new version at infyiff.github.io")
+			notify("نسخة قديمة", "احصل على النسخة الجديدة من infyiff.github.io")
 		end
 
 		if latestVersionInfo.Announcement and latestVersionInfo.Announcement ~= "" then
