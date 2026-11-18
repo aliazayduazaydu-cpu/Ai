@@ -1,0 +1,1108 @@
+-- اسم السكربت: Ali_Sentient_Bot_v2
+-- نوع السكربت: LocalScript
+-- ضعه في: StarterPlayer > StarterPlayerScripts
+-- ملاحظة: التجارب تتم على الشخصية نفسها وعلى أزرار الواجهة فقط.
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
+local PFS = game:GetService("PathfindingService")
+local VIM = game:GetService("VirtualInputManager")
+local HttpService = game:GetService("HttpService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local GUI_NAME = "AliSentientGui"
+
+-- ===================== 1) الإعدادات =====================
+local CFG = {
+	Think = 0.2,
+	CellSize = 8,
+	ExploreDist = 45,
+	SenseDist = 60,
+	InteractRange = 7,
+	Reach = 3.5,
+	WpTimeout = 3,
+	StuckTime = 2.5,
+	Alpha = 0.3,
+	Gamma = 0.8,
+	AbilityMin = 3,
+	AbilityReward = 1.2,
+	AutoSave = 90,
+	ExperimentChance = 0.35,
+	RuleAnnounce = 0.7,      -- الثقة اللازمة لإعلان قاعدة جديدة
+	SettleTime = 1.2,        -- وقت انتظار تأثير التجربة
+	SaveFile = "Ali_Sentient_v2_Memory.json",
+	LogMax = 25,
+}
+
+-- أزرار لا نضغطها أبداً في التجارب (حماية من الحذف والشراء والخروج)
+local DANGER_WORDS = {
+	"delete", "remove", "quit", "leave", "exit", "kick", "ban", "buy", "purchase",
+	"shop", "robux", "reset", "حذف", "خروج", "شراء", "اشتر", "مغادرة", "إزالة",
+}
+
+local ACTIONS = { "استكشف", "تفاعل", "اقفز", "التف", "تراجع", "ارتاح", "نقلة" }
+
+-- ===================== 2) الشخصية والحالة =====================
+local Mind = {
+	name = "علاوي-AI",
+	curiosity = 0.35,
+	caution = 0.5,
+	energy = 100,
+	mood = 0,
+	epsilon = 0.2,
+	thought = "أستيقظ...",
+	seq = {},
+	experimentsDone = 0,
+}
+
+local Opt = {
+	clickOn = true,
+	longOn = true,
+	eOn = true,
+	jumpOn = true,
+	experimentGui = true,
+	experimentTools = true,
+}
+
+local R = {
+	running = false,
+	busy = false,
+	target = nil,
+	lastPos = nil,
+	prevPos = nil,
+	stuckT = 0,
+	heading = Vector3.new(0, 0, -1),
+	lastSave = tick(),
+}
+
+local Log = {}
+local function say(t)
+	table.insert(Log, 1, t)
+	while #Log > CFG.LogMax do
+		table.remove(Log)
+	end
+	Mind.thought = t
+end
+
+-- ===================== 3) الذاكرة =====================
+local Mem = {
+	cells = {},
+	objects = {},
+	q = {},
+	combos = {},
+	abilities = {},
+	rules = {},      -- قواعد السبب والنتيجة: "نوع::هدف" => {ok, none, effects}
+	announced = {},
+	sessions = 0,
+}
+
+local function cellKey(p)
+	return math.floor(p.X / CFG.CellSize) .. "," .. math.floor(p.Z / CFG.CellSize)
+end
+
+local function cellData(k)
+	local d = Mem.cells[k]
+	if not d then
+		d = { visits = 0, danger = 0 }
+		Mem.cells[k] = d
+	end
+	return d
+end
+
+local function objData(obj)
+	local k = obj:GetFullName()
+	local d = Mem.objects[k]
+	if not d then
+		d = { tries = 0, wins = 0 }
+		Mem.objects[k] = d
+	end
+	return d
+end
+
+local function countKeys(t)
+	local n = 0
+	for _ in pairs(t) do
+		n += 1
+	end
+	return n
+end
+
+local function saveMemory()
+	if not writefile then
+		return false, "writefile غير مدعومة في هذا المشغّل"
+	end
+	return pcall(function()
+		writefile(CFG.SaveFile, HttpService:JSONEncode(Mem))
+	end)
+end
+
+local function loadMemory()
+	if not (isfile and readfile and isfile(CFG.SaveFile)) then return end
+	local ok, data = pcall(function()
+		return HttpService:JSONDecode(readfile(CFG.SaveFile))
+	end)
+	if ok and type(data) == "table" then
+		Mem = data
+		for _, k in ipairs({ "cells", "objects", "q", "combos", "abilities", "rules", "announced" }) do
+			Mem[k] = Mem[k] or {}
+		end
+		Mem.sessions = Mem.sessions or 0
+	end
+end
+
+local function clearMemory()
+	Mem.cells, Mem.objects, Mem.q, Mem.combos = {}, {}, {}, {}
+	Mem.abilities, Mem.rules, Mem.announced = {}, {}, {}
+	Mind.seq = {}
+	say("تم مسح الذاكرة")
+end
+
+-- ===================== 4) التعلم (Q-Learning) =====================
+local function qGet(s, a)
+	local row = Mem.q[s]
+	return row and row[a] or 0
+end
+
+local function bestAction(s)
+	local bestA, bestV = ACTIONS[1], -math.huge
+	for _, a in ipairs(ACTIONS) do
+		local v = qGet(s, a)
+		if v > bestV then
+			bestA, bestV = a, v
+		end
+	end
+	return bestA, bestV
+end
+
+local function qUpdate(s, a, r, s2)
+	local _, nextV = bestAction(s2)
+	Mem.q[s] = Mem.q[s] or {}
+	local old = qGet(s, a)
+	Mem.q[s][a] = old + CFG.Alpha * (r + CFG.Gamma * nextV - old)
+end
+
+local function chooseAction(s)
+	if math.random() < Mind.epsilon + Mind.curiosity * 0.3 then
+		return ACTIONS[math.random(#ACTIONS)]
+	end
+	return (bestAction(s))
+end
+
+local function updateMood(r)
+	Mind.mood = math.clamp(Mind.mood * 0.9 + r * 0.1, -1, 1)
+end
+
+-- ===================== 5) الإدراك =====================
+local function getChar()
+	local c = player.Character
+	local root = c and c:FindFirstChild("HumanoidRootPart")
+	local hum = c and c:FindFirstChildOfClass("Humanoid")
+	if root and hum and hum.Health > 0 then
+		return c, root, hum
+	end
+end
+
+local function rayFrom(c, o, d)
+	local p = RaycastParams.new()
+	p.FilterType = Enum.RaycastFilterType.Exclude
+	p.FilterDescendantsInstances = { c }
+	return workspace:Raycast(o, d, p)
+end
+
+local function groundAt(c, pos)
+	local r = rayFrom(c, pos + Vector3.new(0, 30, 0), Vector3.new(0, -60, 0))
+	return r and r.Position
+end
+
+local function nearPlayer(pos)
+	for _, pl in ipairs(Players:GetPlayers()) do
+		if pl ~= player and pl.Character then
+			local r = pl.Character:FindFirstChild("HumanoidRootPart")
+			if r and (r.Position - pos).Magnitude < 8 then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+local function rotate(v, ang)
+	local c, s = math.cos(ang), math.sin(ang)
+	return Vector3.new(v.X * c - v.Z * s, 0, v.X * s + v.Z * c).Unit
+end
+
+local function sense(c, root)
+	local o = root.Position
+	local f = R.heading
+	local wall = rayFrom(c, o + Vector3.new(0, -1.5, 0), f * 4)
+	local floor = rayFrom(c, o + f * 4 + Vector3.new(0, 6, 0), Vector3.new(0, -14, 0))
+	local gap = (not floor) or (floor.Position.Y < o.Y - 5)
+	local ceiling = rayFrom(c, o + Vector3.new(0, 1, 0), Vector3.new(0, 8, 0))
+	return { wall = wall ~= nil, gap = gap, ceiling = ceiling ~= nil }
+end
+
+-- حالة الشخصية لقياس تأثير أي تجربة
+local function selfState()
+	local c, root, hum = getChar()
+	if not c then return nil end
+	local tool = c:FindFirstChildOfClass("Tool")
+	return {
+		ws = hum.WalkSpeed,
+		jp = hum.JumpPower,
+		hp = hum.Health,
+		pos = root.Position,
+		tool = tool and tool.Name or "",
+	}
+end
+
+-- أزرار الواجهة الظاهرة (ما عدا واجهتنا ولا الأزرار الخطرة)
+local function isDangerous(text)
+	local t = string.lower(text or "")
+	for _, w in ipairs(DANGER_WORDS) do
+		if string.find(t, w, 1, true) then
+			return true
+		end
+	end
+	return false
+end
+
+local function guiButtons()
+	local list = {}
+	local pg = player:FindFirstChild("PlayerGui")
+	if not pg then return list end
+	for _, o in ipairs(pg:GetDescendants()) do
+		if (o:IsA("TextButton") or o:IsA("ImageButton")) and o.Visible and o.AbsoluteSize.X > 4 then
+			if not o:FindFirstAncestor(GUI_NAME) then
+				local text = o:IsA("TextButton") and o.Text or ""
+				if not isDangerous(text) and not isDangerous(o.Name) then
+					table.insert(list, o)
+				end
+			end
+		end
+	end
+	return list
+end
+
+local function buttonCenter(b)
+	local inset = GuiService:GetGuiInset()
+	return b.AbsolutePosition + b.AbsoluteSize / 2 + Vector3.new(0, inset.Y / 2, 0) * 0
+end
+
+local function toolsInBackpack()
+	local list = {}
+	local bp = player:FindFirstChildOfClass("Backpack")
+	if bp then
+		for _, t in ipairs(bp:GetChildren()) do
+			if t:IsA("Tool") then table.insert(list, t) end
+		end
+	end
+	return list
+end
+
+-- ===================== 6) المسارات والحركة =====================
+local agentParams = {
+	AgentRadius = 2,
+	AgentHeight = 5,
+	AgentCanJump = true,
+	AgentJumpHeight = 7.5,
+	AgentMaxSlope = 45,
+}
+
+local function planTo(from, to)
+	local path = PFS:CreatePath(agentParams)
+	local ok = pcall(function()
+		path:ComputeAsync(from, to)
+	end)
+	if ok and path.Status == Enum.PathStatus.Success then
+		return path:GetWaypoints()
+	end
+end
+
+local function walkTo(goal, timeout)
+	local _, root, hum = getChar()
+	if not root then return false end
+	local wps = planTo(root.Position, goal)
+	if not wps then return false end
+	local t0 = tick()
+	for i = 2, #wps do
+		if not R.running then return false end
+		local wp = wps[i]
+		if wp.Action == Enum.PathWaypointAction.Jump and Opt.jumpOn then
+			hum.Jump = true
+		end
+		hum:MoveTo(wp.Position)
+		local ws = tick()
+		local reached = false
+		while tick() - ws < CFG.WpTimeout do
+			task.wait(0.1)
+			local _, r2 = getChar()
+			if not r2 then return false end
+			local flat = Vector3.new(wp.Position.X - r2.Position.X, 0, wp.Position.Z - r2.Position.Z).Magnitude
+			if flat < CFG.Reach then
+				reached = true
+				break
+			end
+		end
+		if not reached or tick() - t0 > timeout then return false end
+	end
+	return true
+end
+
+local function randomGround(c, root, radius)
+	for _ = 1, 12 do
+		local a = math.random() * math.pi * 2
+		local d = math.random(12, radius or CFG.ExploreDist)
+		local g = groundAt(c, root.Position + Vector3.new(math.cos(a) * d, 0, math.sin(a) * d))
+		if g and not nearPlayer(g) then return g end
+	end
+end
+
+local function findWorldTarget(root)
+	local best, bestD = nil, CFG.SenseDist
+	for _, obj in ipairs(workspace:GetDescendants()) do
+		local valid = (obj:IsA("ClickDetector") and Opt.clickOn) or (obj:IsA("ProximityPrompt") and Opt.eOn)
+		if valid then
+			local part = obj:FindFirstAncestorWhichIsA("BasePart")
+			if part then
+				local d = (part.Position - root.Position).Magnitude
+				local od = Mem.objects[obj:GetFullName()]
+				if od and od.tries > 6 and od.wins == 0 then
+					d += 40 * (1 + Mind.caution)
+				end
+				if d < bestD then best, bestD = obj, d end
+			end
+		end
+	end
+	return best
+end
+
+-- ===================== 7) أدوات الفعل =====================
+local function clickScreen(x, y, hold)
+	VIM:SendMouseButtonEvent(x, y, 0, true, game, 0)
+	task.wait(hold or 0.05)
+	VIM:SendMouseButtonEvent(x, y, 0, false, game, 0)
+end
+
+local function pressKey(key, hold)
+	VIM:SendKeyEvent(true, key, false, game)
+	task.wait(hold or 0.1)
+	VIM:SendKeyEvent(false, key, false, game)
+end
+
+local function clickButton(b)
+	if not (b and b.Parent and b.Visible) then return false end
+	local p = buttonCenter(b)
+	clickScreen(p.X, p.Y, 0.05)
+	return true
+end
+
+-- استخدام أداة على نفس الشخصية فقط
+local function useToolOnSelf(name)
+	local c, _, hum = getChar()
+	if not c then return false end
+	for _, t in ipairs(toolsInBackpack()) do
+		if t.Name == name then
+			hum:EquipTool(t)
+			task.wait(0.3)
+			t:Activate()
+			task.wait(0.5)
+			hum:UnequipTools()
+			return true
+		end
+	end
+	return false
+end
+
+-- ===================== 8) التجارب والاستنتاج =====================
+local function delta(a, b)
+	local out = {}
+	if not (a and b) then return out end
+	if math.abs(b.ws - a.ws) > 1 then table.insert(out, b.ws > a.ws and "speed_up" or "speed_down") end
+	if math.abs(b.jp - a.jp) > 1 then table.insert(out, b.jp > a.jp and "jump_up" or "jump_down") end
+	if b.hp < a.hp then table.insert(out, "damage") end
+	if b.hp > a.hp then table.insert(out, "heal") end
+	if (b.pos - a.pos).Magnitude > 4 then table.insert(out, "moved") end
+	if a.tool ~= b.tool and b.tool ~= "" then table.insert(out, "equipped") end
+	return out
+end
+
+local function recordRule(kind, target, effects)
+	local key = kind .. "::" .. target
+	local rule = Mem.rules[key] or { ok = 0, none = 0, effects = {} }
+	Mem.rules[key] = rule
+	if #effects > 0 then
+		rule.ok += 1
+		for _, e in ipairs(effects) do
+			rule.effects[e] = (rule.effects[e] or 0) + 1
+		end
+	else
+		rule.none += 1
+	end
+	return key, rule
+end
+
+local function confidence(rule)
+	return rule.ok / (rule.ok + rule.none + 1)
+end
+
+-- يشغّل تجربة: يقيس قبل وبعد، ثم يسجل القاعدة
+local function experiment(kind, target, doIt)
+	local before = selfState()
+	local gb = #guiButtons()
+	pcall(doIt)
+	task.wait(CFG.SettleTime)
+	local after = selfState()
+	local effects = delta(before, after)
+	if #guiButtons() ~= gb then
+		table.insert(effects, "gui_changed")
+	end
+	local key, rule = recordRule(kind, target, effects)
+	Mind.experimentsDone += 1
+
+	if #effects > 0 then
+		say("تجربة: " .. target .. " سببت " .. table.concat(effects, "، "))
+	else
+		say("تجربة: " .. target .. " ما سببت أثراً")
+	end
+
+	local conf = confidence(rule)
+	if conf >= CFG.RuleAnnounce and not Mem.announced[key] then
+		Mem.announced[key] = true
+		say("استنتجت قاعدة: " .. target .. " (ثقة " .. math.floor(conf * 100) .. "%)")
+	end
+	return effects
+end
+
+local function experimentGui(b)
+	local key = b:GetFullName()
+	return experiment("gui", key, function()
+		clickButton(b)
+	end)
+end
+
+local function experimentTool(tool)
+	return experiment("tool", tool.Name, function()
+		useToolOnSelf(tool.Name)
+	end)
+end
+
+-- يختار زراً أو أداة لم تُجرَّب بعد
+local function pickUntested()
+	if Opt.experimentGui then
+		for _, b in ipairs(guiButtons()) do
+			if not Mem.rules["gui::" .. b:GetFullName()] then
+				return "gui", b
+			end
+		end
+	end
+	if Opt.experimentTools then
+		for _, t in ipairs(toolsInBackpack()) do
+			if not Mem.rules["tool::" .. t.Name] then
+				return "tool", t
+			end
+		end
+	end
+end
+
+-- أفضل قاعدة مؤكدة تحقق تأثيراً معيناً
+local function bestRuleFor(effect)
+	local bestKey, bestC = nil, 0.5
+	for key, rule in pairs(Mem.rules) do
+		if rule.effects[effect] then
+			local c = confidence(rule)
+			if c > bestC then
+				bestKey, bestC = key, c
+			end
+		end
+	end
+	return bestKey
+end
+
+-- تنفيذ قاعدة مُستنتجة لاستخدامها
+local function useRule(key)
+	local kind, target = key:match("^(%a+)::(.+)$")
+	if kind == "tool" then
+		return useToolOnSelf(target)
+	elseif kind == "gui" then
+		for _, b in ipairs(guiButtons()) do
+			if b:GetFullName() == target then
+				return clickButton(b)
+			end
+		end
+	end
+	return false
+end
+
+-- ===================== 9) القدرات =====================
+local function recordSeq(action, r)
+	table.insert(Mind.seq, { a = action, r = r })
+	while #Mind.seq > 3 do
+		table.remove(Mind.seq, 1)
+	end
+	if #Mind.seq < 3 then return end
+
+	local names, total = {}, 0
+	for i, e in ipairs(Mind.seq) do
+		names[i] = e.a
+		total += e.r
+	end
+	if total < CFG.AbilityReward then return end
+
+	local key = table.concat(names, "|")
+	Mem.combos[key] = (Mem.combos[key] or 0) + 1
+	if Mem.combos[key] >= CFG.AbilityMin and not Mem.abilities[key] then
+		local n = countKeys(Mem.abilities) + 1
+		Mem.abilities[key] = { name = "سلسلة " .. n, steps = names }
+		say("اكتشفت قدرة جديدة: سلسلة " .. n)
+	end
+end
+
+local A = {}
+
+A["استكشف"] = function(c, root)
+	local best, bestScore = nil, -math.huge
+	for _ = 1, 8 do
+		local g = randomGround(c, root)
+		if g then
+			local cd = cellData(cellKey(g))
+			local score = -cd.visits - cd.danger * (2 + Mind.caution * 3) + math.random() * (1 + Mind.curiosity * 2)
+			if score > bestScore then
+				best, bestScore = g, score
+			end
+		end
+	end
+	if not best then return -0.1 end
+
+	local ok = walkTo(best, 12)
+	local here = cellData(cellKey(root.Position))
+	local novelty = here.visits == 0
+	here.visits += 1
+	Mind.energy = math.max(0, Mind.energy - 2)
+	if not ok then
+		cellData(cellKey(best)).danger += 1
+		return -0.4
+	end
+	return novelty and 0.3 or 0.05
+end
+
+A["تفاعل"] = function(c, root)
+	local obj = R.target
+	if not (obj and obj:IsDescendantOf(workspace)) then
+		obj = findWorldTarget(root)
+		R.target = obj
+	end
+	if not obj then return -0.1 end
+
+	local part = obj:FindFirstAncestorWhichIsA("BasePart")
+	if not part then
+		R.target = nil
+		return -0.1
+	end
+
+	local od = objData(obj)
+	if (part.Position - root.Position).Magnitude > CFG.InteractRange then
+		if not walkTo(part.Position, 10) then
+			od.tries += 1
+			R.target = nil
+			return -0.3
+		end
+		return 0.05
+	end
+
+	od.tries += 1
+	local success = false
+	local conn
+	if obj:IsA("ClickDetector") then
+		conn = obj.MouseClick:Connect(function() success = true end)
+		local v, on = camera:WorldToViewportPoint(part.Position)
+		if on and v.Z > 0 then
+			clickScreen(v.X, v.Y, (Opt.longOn and math.random() < 0.4) and 1.2 or 0.05)
+		end
+	else
+		conn = obj.Triggered:Connect(function() success = true end)
+		pressKey(Enum.KeyCode.E, (obj.HoldDuration or 0) + 0.15)
+	end
+	task.wait(0.2)
+	conn:Disconnect()
+
+	if success then
+		od.wins += 1
+		R.target = nil
+		say("نجحت في التفاعل مع " .. obj.Name)
+		return 1
+	end
+	return -0.1
+end
+
+A["اقفز"] = function(c, root, hum)
+	if not Opt.jumpOn then return -0.5 end
+	local before = root.Position
+	hum.Jump = true
+	hum:Move(R.heading, false)
+	task.wait(0.7)
+	hum:Move(Vector3.zero, false)
+	return (root.Position - before).Magnitude > 2 and 0.3 or -0.1
+end
+
+A["التف"] = function()
+	local s = math.random() < 0.5 and 1 or -1
+	R.heading = rotate(R.heading, math.rad(math.random(60, 150)) * s)
+	return 0
+end
+
+A["تراجع"] = function(c, root)
+	cellData(cellKey(root.Position)).danger += 1
+	if R.prevPos then
+		walkTo(R.prevPos, 6)
+	end
+	return -0.2
+end
+
+A["ارتاح"] = function()
+	Mind.energy = math.min(100, Mind.energy + 15)
+	R.stuckT = 0
+	task.wait(2)
+	return 0.05
+end
+
+A["نقلة"] = function(c, root)
+	local g = randomGround(c, root, 30)
+	if g then
+		root.CFrame = CFrame.new(g + Vector3.new(0, 3.5, 0))
+	end
+	R.stuckT = 0
+	return -0.2
+end
+
+local function runAbility(ab)
+	if R.busy or not R.running then return end
+	R.busy = true
+	task.spawn(function()
+		for _, a in ipairs(ab.steps) do
+			if not R.running then break end
+			local c, root, hum = getChar()
+			if not c then break end
+			A[a](c, root, hum)
+		end
+		R.busy = false
+		say("انتهيت من " .. ab.name)
+	end)
+end
+
+-- ===================== 10) الدماغ (الأهداف والتفكير) =====================
+local function stateKey(c, root)
+	local s = sense(c, root)
+	return table.concat({
+		R.target and "1" or "0",
+		s.wall and "1" or "0",
+		s.gap and "1" or "0",
+		Mind.energy < 30 and "1" or "0",
+		R.stuckT > 1 and "1" or "0",
+	})
+end
+
+local function brain()
+	if R.busy then return end
+	local c, root, hum = getChar()
+	if not c then return end
+
+	-- كشف العلق
+	if R.lastPos and (root.Position - R.lastPos).Magnitude < 0.3 then
+		R.stuckT += CFG.Think
+	else
+		R.stuckT = 0
+	end
+	if R.lastPos and (root.Position - R.lastPos).Magnitude > 3 then
+		R.prevPos = R.lastPos
+	end
+	R.lastPos = root.Position
+
+	-- الهدف الأول: الشفاء إذا الصحة منخفضة وعندنا قاعدة مؤكدة
+	if hum.Health < hum.MaxHealth * 0.5 then
+		local key = bestRuleFor("heal")
+		if key then
+			say("صحتي قليلة، أستخدم ما تعلمته: " .. key)
+			R.busy = true
+			useRule(key)
+			R.busy = false
+			return
+		end
+	end
+
+	-- الهدف الثاني: التجربة عندما يكون فضوله عالياً
+	if math.random() < CFG.ExperimentChance * Mind.curiosity * 2 then
+		local kind, item = pickUntested()
+		if kind then
+			R.busy = true
+			if kind == "gui" then
+				experimentGui(item)
+			else
+				experimentTool(item)
+			end
+			R.busy = false
+			return
+		end
+	end
+
+	-- الهدف الثالث: التعلم بالحركة
+	local s = stateKey(c, root)
+	local action = chooseAction(s)
+	if R.stuckT > CFG.StuckTime * 2 then
+		action = "نقلة"
+	end
+	say("أفكر في: " .. action .. (R.stuckT > CFG.StuckTime and " (أنا عالق)" or ""))
+
+	R.busy = true
+	local r = A[action](c, root, hum) or 0
+	if R.stuckT > CFG.StuckTime then
+		r -= 0.5
+	end
+	R.busy = false
+
+	local c2, root2 = getChar()
+	local s2 = c2 and stateKey(c2, root2) or s
+	qUpdate(s, action, r, s2)
+	recordSeq(action, r)
+	updateMood(r)
+
+	if Mind.energy < 20 then
+		say("متعب، سأرتاح")
+		Mind.energy = math.min(100, Mind.energy + 1)
+	end
+end
+
+task.spawn(function()
+	loadMemory()
+	Mem.sessions += 1
+	say("استيقظت. الجلسة رقم " .. Mem.sessions)
+	while true do
+		if R.running then
+			local ok, err = pcall(brain)
+			if not ok then
+				warn("[" .. Mind.name .. "] " .. tostring(err))
+				R.busy = false
+			end
+			if tick() - R.lastSave > CFG.AutoSave then
+				R.lastSave = tick()
+				saveMemory()
+			end
+		end
+		task.wait(CFG.Think)
+	end
+end)
+
+-- ===================== 11) الواجهة =====================
+local function corner(o, r)
+	Instance.new("UICorner", o).CornerRadius = UDim.new(0, r)
+end
+
+local function rainbow(o, th, tr)
+	local s = Instance.new("UIStroke", o)
+	s.Thickness = th
+	s.Transparency = tr or 0
+	task.spawn(function()
+		local h = 0
+		while s.Parent do
+			h = (h + 0.008) % 1
+			s.Color = Color3.fromHSV(h, 1, 1)
+			task.wait(0.03)
+		end
+	end)
+end
+
+local function drag(f)
+	local dragging, startIn, startPos
+	f.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			startIn = i.Position
+			startPos = f.Position
+		end
+	end)
+	UIS.InputChanged:Connect(function(i)
+		if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+			local d = i.Position - startIn
+			f.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+		end
+	end)
+	UIS.InputEnded:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+end
+
+local function btn(parent, text, onClick)
+	local b = Instance.new("TextButton", parent)
+	b.Size = UDim2.new(0.92, 0, 0, 36)
+	b.BackgroundColor3 = Color3.new(1, 1, 1)
+	b.BackgroundTransparency = 0
+	b.TextColor3 = Color3.new(0, 0, 0)
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 13
+	b.Text = text
+	corner(b, 14)
+	rainbow(b, 2, 0)
+	b.Activated:Connect(onClick)
+	return b
+end
+
+local function toggleBtn(parent, label, get, set)
+	local b
+	local function txt()
+		return label .. (get() and " ✅" or " ❌")
+	end
+	b = btn(parent, txt(), function()
+		set(not get())
+		b.Text = txt()
+	end)
+	return b
+end
+
+local function label(parent, h, font, size)
+	local l = Instance.new("TextLabel", parent)
+	l.Size = UDim2.new(0.92, 0, 0, h)
+	l.BackgroundTransparency = 1
+	l.TextColor3 = Color3.new(0, 0, 0)
+	l.Font = font or Enum.Font.Gotham
+	l.TextSize = size or 12
+	l.TextWrapped = true
+	l.TextXAlignment = Enum.TextXAlignment.Right
+	l.TextYAlignment = Enum.TextYAlignment.Top
+	l.Text = ""
+	return l
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = GUI_NAME
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local toggle = Instance.new("TextButton", gui)
+toggle.Size = UDim2.fromOffset(56, 56)
+toggle.Position = UDim2.new(0, 15, 0.5, -28)
+toggle.BackgroundColor3 = Color3.new(1, 1, 1)
+toggle.BackgroundTransparency = 0.6
+toggle.Text = "AI"
+toggle.TextColor3 = Color3.new(0, 0, 0)
+toggle.Font = Enum.Font.GothamBold
+toggle.TextSize = 16
+corner(toggle, 100)
+rainbow(toggle, 2, 0.6)
+drag(toggle)
+
+local menu = Instance.new("Frame", gui)
+menu.Size = UDim2.fromOffset(310, 390)
+menu.Position = UDim2.new(0, 85, 0.5, -195)
+menu.BackgroundColor3 = Color3.new(1, 1, 1)
+menu.BackgroundTransparency = 0.6
+menu.Visible = false
+corner(menu, 30)
+rainbow(menu, 3, 0.6)
+drag(menu)
+
+local title = label(menu, 40, Enum.Font.GothamBold, 15)
+title.Position = UDim2.new(0.04, 0, 0, 4)
+title.Text = "المطور: علاوي\nوعي اصطناعي يجرّب ويستنتج"
+title.TextXAlignment = Enum.TextXAlignment.Center
+
+local pages = {}
+local function showPage(name)
+	for n, f in pairs(pages) do
+		f.Visible = (n == name)
+	end
+end
+
+local function page(name)
+	local f = Instance.new("ScrollingFrame", menu)
+	f.Size = UDim2.new(0.92, 0, 0, 310)
+	f.Position = UDim2.new(0.04, 0, 0, 78)
+	f.BackgroundTransparency = 1
+	f.BorderSizePixel = 0
+	f.ScrollBarThickness = 3
+	f.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	f.CanvasSize = UDim2.new(0, 0, 0, 0)
+	f.Visible = false
+	local l = Instance.new("UIListLayout", f)
+	l.Padding = UDim.new(0, 8)
+	l.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	pages[name] = f
+	return f
+end
+
+local tabs = Instance.new("Frame", menu)
+tabs.Size = UDim2.new(0.92, 0, 0, 30)
+tabs.Position = UDim2.new(0.04, 0, 0, 46)
+tabs.BackgroundTransparency = 1
+local tl = Instance.new("UIListLayout", tabs)
+tl.FillDirection = Enum.FillDirection.Horizontal
+tl.Padding = UDim.new(0, 4)
+
+local function tab(name, target)
+	local b = btn(tabs, name, function() showPage(target) end)
+	b.Size = UDim2.new(0.24, 0, 1, 0)
+	b.TextSize = 11
+end
+
+local home = page("home")
+local mindPage = page("mind")
+local expPage = page("exp")
+local abilityPage = page("abilities")
+
+tab("الرئيسية", "home")
+tab("الوعي", "mind")
+tab("التجارب", "exp")
+tab("القدرات", "abilities")
+
+-- الرئيسية
+local statusLbl = label(home, 110, Enum.Font.GothamBold, 13)
+local statsLbl = label(home, 40, Enum.Font.Gotham, 12)
+
+local runBtn
+runBtn = btn(home, "▶ تشغيل الوعي", function()
+	R.running = not R.running
+	if not R.running then
+		local _, _, hum = getChar()
+		if hum then hum:Move(Vector3.zero, false) end
+	end
+	runBtn.Text = R.running and "⏹ إيقاف الوعي" or "▶ تشغيل الوعي"
+end)
+
+btn(home, "💾 حفظ الذاكرة الآن", function()
+	local ok, err = saveMemory()
+	say(ok and "تم حفظ الذاكرة" or ("فشل الحفظ: " .. tostring(err)))
+end)
+
+toggleBtn(home, "الضغط بالماوس", function() return Opt.clickOn end, function(v) Opt.clickOn = v end)
+toggleBtn(home, "الضغط المطول", function() return Opt.longOn end, function(v) Opt.longOn = v end)
+toggleBtn(home, "التفاعل بزر E", function() return Opt.eOn end, function(v) Opt.eOn = v end)
+toggleBtn(home, "القفز فوق العوائق", function() return Opt.jumpOn end, function(v) Opt.jumpOn = v end)
+
+btn(home, "🧠 فضول +", function()
+	Mind.curiosity = math.clamp(Mind.curiosity + 0.1, 0, 1)
+	say("زاد الفضول: " .. string.format("%.1f", Mind.curiosity))
+end)
+btn(home, "🧠 فضول -", function()
+	Mind.curiosity = math.clamp(Mind.curiosity - 0.1, 0, 1)
+	say("قل الفضول: " .. string.format("%.1f", Mind.curiosity))
+end)
+btn(home, "🛡 حذر +", function()
+	Mind.caution = math.clamp(Mind.caution + 0.1, 0, 1)
+	say("زاد الحذر: " .. string.format("%.1f", Mind.caution))
+end)
+btn(home, "🛡 حذر -", function()
+	Mind.caution = math.clamp(Mind.caution - 0.1, 0, 1)
+	say("قل الحذر: " .. string.format("%.1f", Mind.caution))
+end)
+btn(home, "🗑 مسح الذاكرة", clearMemory)
+
+-- الوعي
+local logLbl = label(mindPage, 0, Enum.Font.Gotham, 12)
+logLbl.AutomaticSize = Enum.AutomaticSize.Y
+logLbl.TextYAlignment = Enum.TextYAlignment.Top
+
+local rulesLbl = label(mindPage, 0, Enum.Font.GothamBold, 12)
+rulesLbl.AutomaticSize = Enum.AutomaticSize.Y
+
+-- التجارب
+toggleBtn(expPage, "تجارب الأزرار", function() return Opt.experimentGui end, function(v) Opt.experimentGui = v end)
+toggleBtn(expPage, "تجارب الأدوات (على نفسي)", function() return Opt.experimentTools end, function(v) Opt.experimentTools = v end)
+btn(expPage, "🔬 جرّب شيئاً جديداً الآن", function()
+	if not R.running or R.busy then return end
+	local kind, item = pickUntested()
+	if not kind then
+		say("ما بقي شي جديد أجربه")
+		return
+	end
+	R.busy = true
+	task.spawn(function()
+		if kind == "gui" then experimentGui(item) else experimentTool(item) end
+		R.busy = false
+	end)
+end)
+
+-- القدرات
+local abilityList = Instance.new("Frame", abilityPage)
+abilityList.Size = UDim2.new(0.92, 0, 0, 0)
+abilityList.AutomaticSize = Enum.AutomaticSize.Y
+abilityList.BackgroundTransparency = 1
+local al = Instance.new("UIListLayout", abilityList)
+al.Padding = UDim.new(0, 8)
+al.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local noAbility = label(abilityPage, 40, Enum.Font.Gotham, 12)
+noAbility.Text = "لا توجد قدرات بعد. اجرب وتعلّم أولاً."
+
+local lastAbilityKey = ""
+local function refreshAbilities()
+	local parts = {}
+	for k in pairs(Mem.abilities) do table.insert(parts, "c:" .. k) end
+	for k, rule in pairs(Mem.rules) do
+		if confidence(rule) >= CFG.RuleAnnounce then table.insert(parts, "r:" .. k) end
+	end
+	table.sort(parts)
+	local key = table.concat(parts, ";")
+	if key == lastAbilityKey then return end
+	lastAbilityKey = key
+
+	for _, child in ipairs(abilityList:GetChildren()) do
+		if child:IsA("TextButton") then child:Destroy() end
+	end
+	for _, ab in pairs(Mem.abilities) do
+		btn(abilityList, "▶ " .. ab.name, function() runAbility(ab) end)
+	end
+	for k, rule in pairs(Mem.rules) do
+		if confidence(rule) >= CFG.RuleAnnounce then
+			local kind, target = k:match("^(%a+)::(.+)$")
+			local short = (target or k):sub(-22)
+			btn(abilityList, "⚡ " .. (kind == "tool" and "أداة " or "زر ") .. short, function()
+				if R.running and not R.busy then
+					R.busy = true
+					task.spawn(function()
+						useRule(k)
+						R.busy = false
+					end)
+				end
+			end)
+		end
+	end
+	noAbility.Visible = (#parts == 0)
+end
+
+showPage("home")
+
+-- تحديث العرض
+task.spawn(function()
+	while statusLbl.Parent do
+		local moodText = Mind.mood > 0.3 and "متحمس" or (Mind.mood < -0.3 and "متضايق" or "هادئ")
+		statusLbl.Text = "الاسم: " .. Mind.name
+			.. "\nالمزاج: " .. moodText
+			.. "\nالطاقة: " .. math.floor(Mind.energy)
+			.. "\nالحالة: " .. (R.running and Mind.thought or "متوقف")
+		statsLbl.Text = "أزرار مجربة: " .. countKeys(Mem.rules)
+			.. " | قواعد: " .. countKeys(Mem.rules)
+			.. " | قدرات: " .. countKeys(Mem.abilities)
+			.. " | تجارب: " .. Mind.experimentsDone
+			.. " | جلسات: " .. Mem.sessions
+
+		logLbl.Text = table.concat(Log, "\n")
+
+		local lines = {}
+		for k, rule in pairs(Mem.rules) do
+			local effs = {}
+			for e, n in pairs(rule.effects) do table.insert(effs, e .. "×" .. n) end
+			table.insert(lines, string.format("%s: %s (%d%%)", k:sub(1, 26), table.concat(effs, ","), math.floor(confidence(rule) * 100)))
+			if #lines >= 8 then break end
+		end
+		rulesLbl.Text = #lines > 0 and ("القواعد المستنتجة:\n" .. table.concat(lines, "\n")) or "لم تستنتج قواعد بعد."
+
+		refreshAbilities()
+		task.wait(0.5)
+	end
+end)
+
+toggle.Activated:Connect(function()
+	menu.Visible = not menu.Visible
+end)
