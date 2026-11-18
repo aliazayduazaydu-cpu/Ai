@@ -386,6 +386,7 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 addEdgeGlow(Title)
+addEdgeGlow(Holder)
 
 
 do
@@ -4996,6 +4997,32 @@ do
 		local rot = (tick() * 90) % 360
 		for _, g in ipairs(cmdGradients) do
 			g.Rotation = rot
+		end
+	end)
+end
+
+-- ألوان متحركة لنص الأوامر (أبيض، أصفر، برتقالي)
+do
+	local textGrads = {}
+	for _, child in ipairs(CMDsF:GetChildren()) do
+		if child.Name == "CMD" then
+			local tg = Instance.new("UIGradient")
+			tg.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+				ColorSequenceKeypoint.new(0.25, Color3.fromRGB(255, 220, 40)),
+				ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 140, 0)),
+				ColorSequenceKeypoint.new(0.75, Color3.fromRGB(255, 220, 40)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
+			})
+			tg.Parent = child
+			table.insert(textGrads, tg)
+		end
+	end
+	RunService.RenderStepped:Connect(function()
+		-- الإزاحة تحرّك الألوان داخل النص نفسه
+		local off = ((tick() * 0.6) % 2) - 1
+		for _, g in ipairs(textGrads) do
+			g.Offset = Vector2.new(off, 0)
 		end
 	end)
 end
