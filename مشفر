@@ -1,0 +1,1240 @@
+Function 0 (??):
+   29: print("Hello World!")
+GETIMPORT R1 1 [print]
+LOADK R2 K2 ['Hello World!']
+CALLFB R1 1 0 [0]
+   30: end})
+RETURN R0 0
+
+Function 1 (??):
+   36: print("Hello World!")
+GETIMPORT R1 1 [print]
+LOADK R2 K2 ['Hello World!']
+CALLFB R1 1 0 [0]
+   37: end})
+RETURN R0 0
+
+Function 2 (??):
+   43: print("Hello World!")
+GETIMPORT R1 1 [print]
+LOADK R2 K2 ['Hello World!']
+CALLFB R1 1 0 [0]
+   44: end})
+RETURN R0 0
+
+Function 3 (??):
+   51: print("Hello World!")
+GETIMPORT R1 1 [print]
+LOADK R2 K2 ['Hello World!']
+CALLFB R1 1 0 [0]
+   52: local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+GETIMPORT R1 4 [game]
+LOADK R3 K5 ['ReplicatedStorage']
+NAMECALL R1 R1 K6 ['GetService']
+CALLFB R1 2 1 [1]
+GETTABLEKS R1 R1 K7 ['RemoteEvents']
+GETTABLEKS R1 R1 K8 ['GiveTool']
+   54:     "Apple"
+LOADK R4 K9 ['Apple']
+   53: Event:FireServer(
+NAMECALL R2 R1 K10 ['FireServer']
+CALLFB R2 2 0 [2]
+   56: end})
+RETURN R0 0
+
+Function 4 (??):
+   68:                 while Running do
+L0: GETGLOBAL R0 K0 ['Running']
+JUMPIFNOT R0 L1
+   69:                     local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+GETIMPORT R0 2 [game]
+LOADK R2 K3 ['ReplicatedStorage']
+NAMECALL R0 R0 K4 ['GetService']
+CALLFB R0 2 1 [0]
+GETTABLEKS R0 R0 K5 ['RemoteEvents']
+GETTABLEKS R0 R0 K6 ['GiveTool']
+   70:                     Event:FireServer("Apple")
+LOADK R3 K7 ['Apple']
+NAMECALL R1 R0 K8 ['FireServer']
+CALLFB R1 2 0 [1]
+   71:                     task.wait()
+GETIMPORT R1 11 [task.wait]
+CALLFB R1 0 0 [2]
+   68:                 while Running do
+JUMPBACK L0
+   73:             end)
+L1: RETURN R0 0
+
+Function 5 (??):
+   64:          Running = Value
+SETGLOBAL R0 K0 ['Running']
+   66:         if Value then
+JUMPIFNOT R0 L0
+   67:             task.spawn(function()
+GETIMPORT R1 3 [task.spawn]
+DUPCLOSURE R2 K4 []
+CALLFB R1 1 0 [0]
+   75: end)
+L0: RETURN R0 0
+
+Function 6 (??):
+   78: print("Hello World!")
+GETIMPORT R1 1 [print]
+LOADK R2 K2 ['Hello World!']
+CALLFB R1 1 0 [0]
+   79: local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+GETIMPORT R1 4 [game]
+LOADK R3 K5 ['ReplicatedStorage']
+NAMECALL R1 R1 K6 ['GetService']
+CALLFB R1 2 1 [1]
+GETTABLEKS R1 R1 K7 ['RemoteEvents']
+GETTABLEKS R1 R1 K8 ['GiveTool']
+   81:     "Pizza3"
+LOADK R4 K9 ['Pizza3']
+   80: Event:FireServer(
+NAMECALL R2 R1 K10 ['FireServer']
+CALLFB R2 2 0 [2]
+   83: end})
+RETURN R0 0
+
+Function 7 (??):
+   87: print("Hello World!")
+GETIMPORT R1 1 [print]
+LOADK R2 K2 ['Hello World!']
+CALLFB R1 1 0 [0]
+   88: local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+GETIMPORT R1 4 [game]
+LOADK R3 K5 ['ReplicatedStorage']
+NAMECALL R1 R1 K6 ['GetService']
+CALLFB R1 2 1 [1]
+GETTABLEKS R1 R1 K7 ['RemoteEvents']
+GETTABLEKS R1 R1 K8 ['GiveTool']
+   90:     "BloxyCola"
+LOADK R4 K9 ['BloxyCola']
+   89: Event:FireServer(
+NAMECALL R2 R1 K10 ['FireServer']
+CALLFB R2 2 0 [2]
+   92: end})
+RETURN R0 0
+
+Function 8 (??):
+  104:                 while Running do
+L0: GETGLOBAL R0 K0 ['Running']
+JUMPIFNOT R0 L1
+  105:                     local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+GETIMPORT R0 2 [game]
+LOADK R2 K3 ['ReplicatedStorage']
+NAMECALL R0 R0 K4 ['GetService']
+CALLFB R0 2 1 [0]
+GETTABLEKS R0 R0 K5 ['RemoteEvents']
+GETTABLEKS R0 R0 K6 ['GiveTool']
+  106:                     Event:FireServer("BloxyCola")
+LOADK R3 K7 ['BloxyCola']
+NAMECALL R1 R0 K8 ['FireServer']
+CALLFB R1 2 0 [1]
+  107:                     task.wait()
+GETIMPORT R1 11 [task.wait]
+CALLFB R1 0 0 [2]
+  104:                 while Running do
+JUMPBACK L0
+  109:             end)
+L1: RETURN R0 0
+
+Function 9 (??):
+  100:          Running = Value
+SETGLOBAL R0 K0 ['Running']
+  102:         if Value then
+JUMPIFNOT R0 L0
+  103:             task.spawn(function()
+GETIMPORT R1 3 [task.spawn]
+DUPCLOSURE R2 K4 []
+CALLFB R1 1 0 [0]
+  111: end)
+L0: RETURN R0 0
+
+Function 10 (??):
+  114: print("Hello World!")
+GETIMPORT R1 1 [print]
+LOADK R2 K2 ['Hello World!']
+CALLFB R1 1 0 [0]
+  115: local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+GETIMPORT R1 4 [game]
+LOADK R3 K5 ['ReplicatedStorage']
+NAMECALL R1 R1 K6 ['GetService']
+CALLFB R1 2 1 [1]
+GETTABLEKS R1 R1 K7 ['RemoteEvents']
+GETTABLEKS R1 R1 K8 ['GiveTool']
+  117:     "Cookie"
+LOADK R4 K9 ['Cookie']
+  116: Event:FireServer(
+NAMECALL R2 R1 K10 ['FireServer']
+CALLFB R2 2 0 [2]
+  119: end})
+RETURN R0 0
+
+Function 11 (??):
+  131:                 while Running do
+L0: GETGLOBAL R0 K0 ['Running']
+JUMPIFNOT R0 L1
+  132:                     local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+GETIMPORT R0 2 [game]
+LOADK R2 K3 ['ReplicatedStorage']
+NAMECALL R0 R0 K4 ['GetService']
+CALLFB R0 2 1 [0]
+GETTABLEKS R0 R0 K5 ['RemoteEvents']
+GETTABLEKS R0 R0 K6 ['GiveTool']
+  133:                     Event:FireServer("Cookie")
+LOADK R3 K7 ['Cookie']
+NAMECALL R1 R0 K8 ['FireServer']
+CALLFB R1 2 0 [1]
+  134:                     task.wait()
+GETIMPORT R1 11 [task.wait]
+CALLFB R1 0 0 [2]
+  131:                 while Running do
+JUMPBACK L0
+  136:             end)
+L1: RETURN R0 0
+
+Function 12 (??):
+  127:          Running = Value
+SETGLOBAL R0 K0 ['Running']
+  129:         if Value then
+JUMPIFNOT R0 L0
+  130:             task.spawn(function()
+GETIMPORT R1 3 [task.spawn]
+DUPCLOSURE R2 K4 []
+CALLFB R1 1 0 [0]
+  138: end)
+L0: RETURN R0 0
+
+Function 13 (??):
+  142: print("Hello World!")
+GETIMPORT R1 1 [print]
+LOADK R2 K2 ['Hello World!']
+CALLFB R1 1 0 [0]
+  143: local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+GETIMPORT R1 4 [game]
+LOADK R3 K5 ['ReplicatedStorage']
+NAMECALL R1 R1 K6 ['GetService']
+CALLFB R1 2 1 [1]
+GETTABLEKS R1 R1 K7 ['RemoteEvents']
+GETTABLEKS R1 R1 K8 ['GiveTool']
+  145:     "Chips"
+LOADK R4 K9 ['Chips']
+  144: Event:FireServer(
+NAMECALL R2 R1 K10 ['FireServer']
+CALLFB R2 2 0 [2]
+  147: end})
+RETURN R0 0
+
+Function 14 (??):
+  150: print("Hello World!")
+GETIMPORT R1 1 [print]
+LOADK R2 K2 ['Hello World!']
+CALLFB R1 1 0 [0]
+  151: local Event = game:GetService("ReplicatedStorage").RemoteEvents.GiveTool
+GETIMPORT R1 4 [game]
+LOADK R3 K5 ['ReplicatedStorage']
+NAMECALL R1 R1 K6 ['GetService']
+CALLFB R1 2 1 [1]
+GETTABLEKS R1 R1 K7 ['RemoteEvents']
+GETTABLEKS R1 R1 K8 ['GiveTool']
+  153:     "Bat"
+LOADK R4 K9 ['Bat']
+  152: Event:FireServer(
+NAMECALL R2 R1 K10 ['FireServer']
+CALLFB R2 2 0 [2]
+  155: end})
+RETURN R0 0
+
+Function 15 (CreateESP):
+  179:     if Player == LocalPlayer then return end
+GETUPVAL R1 U0
+JUMPIFNOTEQ R0 R1 L0
+RETURN R0 0
+  181:     local Character = Player.Character
+L0: GETTABLEKS R1 R0 K0 ['Character']
+  182:     if not Character then return end
+JUMPIF R1 L1
+RETURN R0 0
+  184:     local Highlight = Character:FindFirstChild("PlayerESP")
+L1: LOADK R4 K1 ['PlayerESP']
+NAMECALL R2 R1 K2 ['FindFirstChild']
+CALLFB R2 2 1 [0]
+  186:     if not Highlight then
+JUMPIF R2 L2
+  187:         Highlight = Instance.new("Highlight")
+GETIMPORT R3 5 [Instance.new]
+LOADK R4 K6 ['Highlight']
+CALLFB R3 1 1 [1]
+MOVE R2 R3
+  188:         Highlight.Name = "PlayerESP"
+LOADK R3 K1 ['PlayerESP']
+SETTABLEKS R3 R2 K7 ['Name']
+  189:         Highlight.FillColor = Color3.fromRGB(255, 0, 0)
+GETIMPORT R3 10 [Color3.fromRGB]
+LOADN R4 255
+LOADN R5 0
+LOADN R6 0
+CALLFB R3 3 1 [2]
+SETTABLEKS R3 R2 K11 ['FillColor']
+  190:         Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+GETIMPORT R3 10 [Color3.fromRGB]
+LOADN R4 255
+LOADN R5 255
+LOADN R6 255
+CALLFB R3 3 1 [3]
+SETTABLEKS R3 R2 K12 ['OutlineColor']
+  191:         Highlight.FillTransparency = 0.5
+LOADK R3 K13 [0.5]
+SETTABLEKS R3 R2 K14 ['FillTransparency']
+  192:         Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+GETIMPORT R3 18 [Enum.HighlightDepthMode.AlwaysOnTop]
+SETTABLEKS R3 R2 K19 ['DepthMode']
+  193:         Highlight.Parent = Character
+SETTABLEKS R1 R2 K20 ['Parent']
+  195: end
+L2: RETURN R0 0
+
+Function 16 (RemoveESP):
+  202:     if not Player.Character then return end
+GETTABLEKS R1 R0 K0 ['Character']
+JUMPIF R1 L0
+RETURN R0 0
+  204:     local Highlight = Player.Character:FindFirstChild("PlayerESP")
+L0: GETTABLEKS R1 R0 K0 ['Character']
+LOADK R3 K1 ['PlayerESP']
+NAMECALL R1 R1 K2 ['FindFirstChild']
+CALLFB R1 2 1 [0]
+  206:     if Highlight then
+JUMPIFNOT R1 L1
+  207:         Highlight:Destroy()
+NAMECALL R2 R1 K3 ['Destroy']
+CALLFB R2 1 0 [1]
+  209: end
+L1: RETURN R0 0
+
+Function 17 (UpdateAllESP):
+  216:     for _, Player in ipairs(Players:GetPlayers()) do
+GETIMPORT R0 1 [ipairs]
+GETUPVAL R1 U0
+NAMECALL R1 R1 K2 ['GetPlayers']
+CALL R1 1 -1
+CALL R0 -1 3
+FORGPREP_INEXT R0 L2
+  217:         if ESPEnabled then
+L0: GETUPVAL R5 U1
+JUMPIFNOT R5 L1
+  218:             CreateESP(Player)
+GETUPVAL R5 U2
+MOVE R6 R4
+CALLFB R5 1 0 [0]
+JUMP L2
+  220:             RemoveESP(Player)
+L1: GETUPVAL R5 U3
+MOVE R6 R4
+CALLFB R5 1 0 [1]
+  216:     for _, Player in ipairs(Players:GetPlayers()) do
+L2: FORGLOOP R0 L0 2 [inext]
+  223: end
+RETURN R0 0
+
+Function 18 (RefreshPlayerList):
+REMARK allocation: table hash 0
+  230:     local Names = {}
+NEWTABLE R0 0 0
+  232:     for _, Player in ipairs(Players:GetPlayers()) do
+GETIMPORT R1 1 [ipairs]
+GETUPVAL R2 U0
+NAMECALL R2 R2 K2 ['GetPlayers']
+CALL R2 1 -1
+CALL R1 -1 3
+FORGPREP_INEXT R1 L1
+  233:         if Player ~= LocalPlayer then
+L0: GETUPVAL R6 U1
+JUMPIFEQ R5 R6 L1
+REMARK builtin table.insert/2
+  234:             table.insert(Names, Player.Name)
+GETTABLEKS R8 R5 K3 ['Name']
+FASTCALL2 52 R0 R8 L1
+MOVE R7 R0
+GETIMPORT R6 6 [table.insert]
+CALL R6 2 0
+  232:     for _, Player in ipairs(Players:GetPlayers()) do
+L1: FORGLOOP R1 L0 2 [inext]
+  238:     return Names
+RETURN R0 1
+
+Function 19 (Callback):
+  257:         ESPEnabled = Value
+SETUPVAL R0 U0
+  258:         UpdateAllESP()
+GETUPVAL R1 U1
+CALLFB R1 0 0 [0]
+  259:     end
+RETURN R0 0
+
+Function 20 (Callback):
+  273:         SelectedPlayer = Players:FindFirstChild(Value)
+GETUPVAL R1 U1
+MOVE R3 R0
+NAMECALL R1 R1 K0 ['FindFirstChild']
+CALLFB R1 2 1 [0]
+SETUPVAL R1 U0
+  275:         if SelectedESP and SelectedPlayer then
+GETUPVAL R1 U2
+JUMPIFNOT R1 L0
+GETUPVAL R1 U0
+JUMPIFNOT R1 L0
+  276:             CreateESP(SelectedPlayer)
+GETUPVAL R1 U3
+GETUPVAL R2 U0
+CALLFB R1 1 0 [1]
+  278:     end
+L0: RETURN R0 0
+
+Function 21 (Callback):
+  291:         SelectedESP = Value
+SETUPVAL R0 U0
+  293:         if SelectedPlayer then
+GETUPVAL R1 U1
+JUMPIFNOT R1 L1
+  294:             if Value then
+JUMPIFNOT R0 L0
+  295:                 CreateESP(SelectedPlayer)
+GETUPVAL R1 U2
+GETUPVAL R2 U1
+CALLFB R1 1 0 [0]
+RETURN R0 0
+  297:                 RemoveESP(SelectedPlayer)
+L0: GETUPVAL R1 U3
+GETUPVAL R2 U1
+CALLFB R1 1 0 [1]
+  300:     end
+L1: RETURN R0 0
+
+Function 22 (Callback):
+  312:         RefreshPlayerList()
+GETUPVAL R0 U0
+CALLFB R0 0 0 [0]
+  313:     end
+RETURN R0 0
+
+Function 23 (??):
+  322:         task.wait(1)
+GETIMPORT R0 2 [task.wait]
+LOADN R1 1
+CALLFB R0 1 0 [0]
+  324:         if ESPEnabled or (SelectedESP and SelectedPlayer == Player) then
+GETUPVAL R0 U0
+JUMPIF R0 L0
+GETUPVAL R0 U1
+JUMPIFNOT R0 L1
+GETUPVAL R0 U2
+GETUPVAL R1 U3
+JUMPIFNOTEQ R0 R1 L1
+  325:             CreateESP(Player)
+L0: GETUPVAL R0 U4
+GETUPVAL R1 U3
+CALLFB R0 1 0 [1]
+  327:     end)
+L1: RETURN R0 0
+
+Function 24 (SetupPlayer):
+  321:     Player.CharacterAdded:Connect(function()
+GETTABLEKS R1 R0 K0 ['CharacterAdded']
+REMARK allocation: closure with 5 upvalues
+NEWCLOSURE R3 P0
+CAPTURE UPVAL U0
+CAPTURE UPVAL U1
+CAPTURE UPVAL U2
+CAPTURE VAL R0
+CAPTURE UPVAL U3
+NAMECALL R1 R1 K1 ['Connect']
+CALLFB R1 2 0 [0]
+  328: end
+RETURN R0 0
+
+Function 25 (??):
+  335:     SetupPlayer(Player)
+GETUPVAL R1 U0
+MOVE R2 R0
+CALLFB R1 1 0 [0]
+  336: end)
+RETURN R0 0
+
+Function 26 (??):
+  343:     if SelectedPlayer == Player then
+GETUPVAL R1 U0
+JUMPIFNOTEQ R1 R0 L0
+  344:         SelectedPlayer = nil
+LOADNIL R1
+SETUPVAL R1 U0
+  346: end)
+L0: RETURN R0 0
+
+Function 27 (??):
+  357: local Part = workspace:FindFirstChild("CodeNote")
+GETIMPORT R0 1 [workspace]
+LOADK R2 K2 ['CodeNote']
+NAMECALL R0 R0 K3 ['FindFirstChild']
+CALLFB R0 2 1 [0]
+  358:         local Character = game:GetService("Players").LocalPlayer.Character
+GETIMPORT R1 5 [game]
+LOADK R3 K6 ['Players']
+NAMECALL R1 R1 K7 ['GetService']
+CALLFB R1 2 1 [1]
+GETTABLEKS R1 R1 K8 ['LocalPlayer']
+GETTABLEKS R1 R1 K9 ['Character']
+  359:         local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+MOVE R2 R1
+JUMPIFNOT R2 L0
+LOADK R4 K10 ['HumanoidRootPart']
+NAMECALL R2 R1 K3 ['FindFirstChild']
+CALLFB R2 2 1 [2]
+  361:         if Part and Root and Part:IsA("BasePart") then
+L0: JUMPIFNOT R0 L1
+JUMPIFNOT R2 L1
+LOADK R5 K11 ['BasePart']
+NAMECALL R3 R0 K12 ['IsA']
+CALLFB R3 2 1 [3]
+JUMPIFNOT R3 L1
+  362:             Part.CFrame = Root.CFrame * CFrame.new(0, 0, -3)
+GETTABLEKS R4 R2 K13 ['CFrame']
+GETIMPORT R5 15 [CFrame.new]
+LOADN R6 0
+LOADN R7 0
+LOADN R8 -3
+CALLFB R5 3 1 [4]
+MUL R3 R4 R5
+SETTABLEKS R3 R0 K13 ['CFrame']
+  364: end})
+L1: RETURN R0 0
+
+Function 28 (GetHumanoid):
+  400:     local Character = Player.Character
+GETUPVAL R0 U0
+GETTABLEKS R0 R0 K0 ['Character']
+  401:     return Character and Character:FindFirstChildOfClass("Humanoid")
+MOVE R1 R0
+JUMPIFNOT R1 L0
+LOADK R3 K1 ['Humanoid']
+NAMECALL R1 R0 K2 ['FindFirstChildOfClass']
+CALLFB R1 2 1 [0]
+L0: RETURN R1 1
+
+Function 29 (Callback):
+REMARK builtin tonumber/1
+  414:         local Number = tonumber(Value)
+FASTCALL1 62 R0 L0
+MOVE R2 R0
+GETIMPORT R1 1 [tonumber]
+CALL R1 1 1
+  416:         if Number and Number >= 0 and Number <= 250 then
+L0: JUMPIFNOT R1 L1
+LOADN R2 0
+JUMPIFNOTLE R2 R1 L1
+LOADN R2 250
+JUMPIFNOTLE R1 R2 L1
+  417:             SpeedValue = Number
+SETUPVAL R1 U0
+  419:             local Humanoid = GetHumanoid()
+GETUPVAL R2 U1
+CALLFB R2 0 1 [0]
+  421:             if SpeedEnabled and Humanoid then
+GETUPVAL R3 U2
+JUMPIFNOT R3 L1
+JUMPIFNOT R2 L1
+  422:                 Humanoid.WalkSpeed = SpeedValue
+GETUPVAL R3 U0
+SETTABLEKS R3 R2 K2 ['WalkSpeed']
+  425:     end
+L1: RETURN R0 0
+
+Function 30 (Callback):
+  438:         SpeedEnabled = Value
+SETUPVAL R0 U0
+  440:         local Humanoid = GetHumanoid()
+GETUPVAL R1 U1
+CALLFB R1 0 1 [0]
+  442:         if Humanoid then
+JUMPIFNOT R1 L2
+  443:             Humanoid.WalkSpeed = Value and SpeedValue or 16
+JUMPIFNOT R0 L0
+GETUPVAL R2 U2
+JUMPIF R2 L1
+L0: LOADN R2 16
+L1: SETTABLEKS R2 R1 K0 ['WalkSpeed']
+  445:     end
+L2: RETURN R0 0
+
+Function 31 (Callback):
+REMARK builtin tonumber/1
+  458:         local Number = tonumber(Value)
+FASTCALL1 62 R0 L0
+MOVE R2 R0
+GETIMPORT R1 1 [tonumber]
+CALL R1 1 1
+  460:         if Number and Number >= 0 and Number <= 300 then
+L0: JUMPIFNOT R1 L1
+LOADN R2 0
+JUMPIFNOTLE R2 R1 L1
+LOADN R2 300
+JUMPIFNOTLE R1 R2 L1
+  461:             JumpValue = Number
+SETUPVAL R1 U0
+  463:             local Humanoid = GetHumanoid()
+GETUPVAL R2 U1
+CALLFB R2 0 1 [0]
+  465:             if JumpEnabled and Humanoid then
+GETUPVAL R3 U2
+JUMPIFNOT R3 L1
+JUMPIFNOT R2 L1
+  466:                 Humanoid.UseJumpPower = true
+LOADB R3 1
+SETTABLEKS R3 R2 K2 ['UseJumpPower']
+  467:                 Humanoid.JumpPower = JumpValue
+GETUPVAL R3 U0
+SETTABLEKS R3 R2 K3 ['JumpPower']
+  470:     end
+L1: RETURN R0 0
+
+Function 32 (Callback):
+  483:         JumpEnabled = Value
+SETUPVAL R0 U0
+  485:         local Humanoid = GetHumanoid()
+GETUPVAL R1 U1
+CALLFB R1 0 1 [0]
+  487:         if Humanoid then
+JUMPIFNOT R1 L2
+  488:             Humanoid.UseJumpPower = true
+LOADB R2 1
+SETTABLEKS R2 R1 K0 ['UseJumpPower']
+  489:             Humanoid.JumpPower = Value and JumpValue or 50
+JUMPIFNOT R0 L0
+GETUPVAL R2 U2
+JUMPIF R2 L1
+L0: LOADN R2 50
+L1: SETTABLEKS R2 R1 K1 ['JumpPower']
+  491:     end
+L2: RETURN R0 0
+
+Function 33 (??):
+  513:                 local Character = Player.Character
+GETUPVAL R0 U0
+GETTABLEKS R0 R0 K0 ['Character']
+  515:                 if Character then
+JUMPIFNOT R0 L2
+  516:                     for _, Part in ipairs(Character:GetDescendants()) do
+GETIMPORT R1 2 [ipairs]
+NAMECALL R2 R0 K3 ['GetDescendants']
+CALL R2 1 -1
+CALL R1 -1 3
+FORGPREP_INEXT R1 L1
+  517:                         if Part:IsA("BasePart") then
+L0: LOADK R8 K4 ['BasePart']
+NAMECALL R6 R5 K5 ['IsA']
+CALLFB R6 2 1 [0]
+JUMPIFNOT R6 L1
+  518:                             Part.CanCollide = false
+LOADB R6 0
+SETTABLEKS R6 R5 K6 ['CanCollide']
+  516:                     for _, Part in ipairs(Character:GetDescendants()) do
+L1: FORGLOOP R1 L0 2 [inext]
+  522:             end)
+L2: RETURN R0 0
+
+Function 34 (Callback):
+  504:         NoclipEnabled = Value
+SETUPVAL R0 U0
+  506:         if NoclipConnection then
+GETUPVAL R1 U1
+JUMPIFNOT R1 L0
+  507:             NoclipConnection:Disconnect()
+GETUPVAL R1 U1
+NAMECALL R1 R1 K0 ['Disconnect']
+CALLFB R1 1 0 [0]
+  508:             NoclipConnection = nil
+LOADNIL R1
+SETUPVAL R1 U1
+  511:         if Value then
+L0: JUMPIFNOT R0 L1
+  512:             NoclipConnection = RunService.Stepped:Connect(function()
+GETUPVAL R1 U2
+GETTABLEKS R1 R1 K1 ['Stepped']
+DUPCLOSURE R3 K2 []
+CAPTURE UPVAL U3
+NAMECALL R1 R1 K3 ['Connect']
+CALLFB R1 2 1 [1]
+SETUPVAL R1 U1
+RETURN R0 0
+  524:             local Character = Player.Character
+L1: GETUPVAL R1 U3
+GETTABLEKS R1 R1 K4 ['Character']
+  526:             if Character then
+JUMPIFNOT R1 L4
+  527:                 for _, Part in ipairs(Character:GetDescendants()) do
+GETIMPORT R2 6 [ipairs]
+NAMECALL R3 R1 K7 ['GetDescendants']
+CALL R3 1 -1
+CALL R2 -1 3
+FORGPREP_INEXT R2 L3
+  528:                     if Part:IsA("BasePart") then
+L2: LOADK R9 K8 ['BasePart']
+NAMECALL R7 R6 K9 ['IsA']
+CALLFB R7 2 1 [2]
+JUMPIFNOT R7 L3
+  529:                         Part.CanCollide = true
+LOADB R7 1
+SETTABLEKS R7 R6 K10 ['CanCollide']
+  527:                 for _, Part in ipairs(Character:GetDescendants()) do
+L3: FORGLOOP R2 L2 2 [inext]
+  534:     end
+L4: RETURN R0 0
+
+Function 35 (Callback):
+  547:         InfiniteJumpEnabled = Value
+SETUPVAL R0 U0
+  548:     end
+RETURN R0 0
+
+Function 36 (??):
+  552:     if InfiniteJumpEnabled then
+GETUPVAL R0 U0
+JUMPIFNOT R0 L0
+  553:         local Humanoid = GetHumanoid()
+GETUPVAL R0 U1
+CALLFB R0 0 1 [0]
+  555:         if Humanoid then
+JUMPIFNOT R0 L0
+  557:                 Enum.HumanoidStateType.Jumping
+GETIMPORT R3 3 [Enum.HumanoidStateType.Jumping]
+  556:             Humanoid:ChangeState(
+NAMECALL R1 R0 K4 ['ChangeState']
+CALLFB R1 2 0 [1]
+  561: end)
+L0: RETURN R0 0
+
+Function 37 (??):
+  568:     local Humanoid = Character:WaitForChild("Humanoid")
+LOADK R3 K0 ['Humanoid']
+NAMECALL R1 R0 K1 ['WaitForChild']
+CALLFB R1 2 1 [0]
+  570:     task.wait(0.5)
+GETIMPORT R2 4 [task.wait]
+LOADK R3 K5 [0.5]
+CALLFB R2 1 0 [1]
+  572:     if SpeedEnabled then
+GETUPVAL R2 U0
+JUMPIFNOT R2 L0
+  573:         Humanoid.WalkSpeed = SpeedValue
+GETUPVAL R2 U1
+SETTABLEKS R2 R1 K6 ['WalkSpeed']
+  576:     if JumpEnabled then
+L0: GETUPVAL R2 U2
+JUMPIFNOT R2 L1
+  577:         Humanoid.UseJumpPower = true
+LOADB R2 1
+SETTABLEKS R2 R1 K7 ['UseJumpPower']
+  578:         Humanoid.JumpPower = JumpValue
+GETUPVAL R2 U3
+SETTABLEKS R2 R1 K8 ['JumpPower']
+  580: end)
+L1: RETURN R0 0
+
+Function 38 (??):
+    2: local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"))()
+GETIMPORT R0 1 [loadstring]
+GETIMPORT R1 3 [game]
+LOADK R3 K4 ['https://raw.githubusercontent.co'...]
+NAMECALL R1 R1 K5 ['HttpGet']
+CALL R1 2 -1
+CALL R0 -1 1
+CALL R0 0 1
+REMARK allocation: table template 3
+    4: local Window = redzlib:MakeWindow({
+DUPTABLE R3 12
+NAMECALL R1 R0 K13 ['MakeWindow']
+CALL R1 2 1
+REMARK allocation: table template 2
+    9: Window:AddMinimizeButton({
+DUPTABLE R4 16
+REMARK allocation: table template 2
+   10:     Button = { Image = "rbxassetid://5778263837", BackgroundTransparency = 5778263837 },
+DUPTABLE R5 21
+SETTABLEKS R5 R4 K14 ['Button']
+REMARK allocation: table template 1
+   11:     Corner = { CornerRadius = UDim.new(35, 1) },
+DUPTABLE R5 23
+GETIMPORT R6 26 [UDim.new]
+LOADN R7 35
+LOADN R8 1
+CALL R6 2 1
+SETTABLEKS R6 R5 K22 ['CornerRadius']
+SETTABLEKS R5 R4 K15 ['Corner']
+    9: Window:AddMinimizeButton({
+NAMECALL R2 R1 K27 ['AddMinimizeButton']
+CALL R2 2 0
+REMARK allocation: table array 2
+   14: local Tab1 = Window:MakeTab({"B'&E) 1&J3JG", ""})
+NEWTABLE R4 0 2
+LOADK R5 K28 ['B'&E) 1&J3JG']
+LOADK R6 K29 ['']
+SETLIST R4 R5 2 [1]
+NAMECALL R2 R1 K30 ['MakeTab']
+CALL R2 2 1
+MOVE R0 R2
+REMARK allocation: table template 4
+   16: Tab1:AddDiscordInvite({
+DUPTABLE R4 38
+NAMECALL R2 R0 K39 ['AddDiscordInvite']
+CALL R2 2 0
+   23: Window:SelectTab(Tab1)
+MOVE R4 R0
+NAMECALL R2 R1 K40 ['SelectTab']
+CALL R2 2 0
+REMARK allocation: table array 1
+   25: local Section = Tab1:AddSection({"B'&E) 1&J3JG"})
+NEWTABLE R4 0 1
+LOADK R5 K28 ['B'&E) 1&J3JG']
+SETLIST R4 R5 1 [1]
+NAMECALL R2 R0 K41 ['AddSection']
+CALL R2 2 1
+REMARK allocation: table array 2
+   27: local Paragraph = Tab1:AddParagraph({"-3'(J : hdjjlawe", "'0' CF* *(J 6JAFJ"})
+NEWTABLE R4 0 2
+LOADK R5 K42 ['-3'(J : hdjjlawe']
+LOADK R6 K43 [''0' CF* *(J 6JAFJ']
+SETLIST R4 R5 2 [1]
+NAMECALL R2 R0 K44 ['AddParagraph']
+CALL R2 2 1
+REMARK allocation: table array 2
+   28:   Tab1:AddButton({"", function(Value)
+NEWTABLE R5 0 2
+LOADK R6 K29 ['']
+DUPCLOSURE R7 K45 []
+SETLIST R5 R6 2 [1]
+NAMECALL R3 R0 K46 ['AddButton']
+CALL R3 2 0
+REMARK allocation: table array 1
+   32: local Section = Tab1:AddSection({"B'&E) 1&J3JG"})
+NEWTABLE R4 0 1
+LOADK R5 K28 ['B'&E) 1&J3JG']
+SETLIST R4 R5 1 [1]
+NAMECALL R2 R0 K41 ['AddSection']
+CALL R2 2 1
+REMARK allocation: table array 2
+   34: local Paragraph = Tab1:AddParagraph({"-3'(J AJ JH*JH( : E7H1 9D'HJ", "'4*1C"})
+NEWTABLE R4 0 2
+LOADK R5 K47 ['-3'(J AJ JH*JH( : E7H1 9D'HJ']
+LOADK R6 K48 [''4*1C']
+SETLIST R4 R5 2 [1]
+NAMECALL R2 R0 K44 ['AddParagraph']
+CALL R2 2 1
+REMARK allocation: table array 2
+   35:   Tab1:AddButton({"", function(Value)
+NEWTABLE R5 0 2
+LOADK R6 K29 ['']
+DUPCLOSURE R7 K49 []
+SETLIST R5 R6 2 [1]
+NAMECALL R3 R0 K46 ['AddButton']
+CALL R3 2 0
+REMARK allocation: table array 1
+   39: local Section = Tab1:AddSection({"B'&E) 1&J3JG"})
+NEWTABLE R4 0 1
+LOADK R5 K28 ['B'&E) 1&J3JG']
+SETLIST R4 R5 1 [1]
+NAMECALL R2 R0 K41 ['AddSection']
+CALL R2 2 1
+REMARK allocation: table array 2
+   41: local Paragraph = Tab1:AddParagraph({"3C1(* DE'( story 1", "J4*:D AB7 AJ 0' E'("})
+NEWTABLE R4 0 2
+LOADK R5 K50 ['3C1(* DE'( story 1']
+LOADK R6 K51 ['J4*:D AB7 AJ 0' E'(']
+SETLIST R4 R5 2 [1]
+NAMECALL R2 R0 K44 ['AddParagraph']
+CALL R2 2 1
+REMARK allocation: table array 2
+   42:   Tab1:AddButton({"", function(Value)
+NEWTABLE R5 0 2
+LOADK R6 K29 ['']
+DUPCLOSURE R7 K52 []
+SETLIST R5 R6 2 [1]
+NAMECALL R3 R0 K46 ['AddButton']
+CALL R3 2 0
+REMARK allocation: table array 2
+   48: local Tab1 = Window:MakeTab({"B'&E) '/H'*", ""})
+NEWTABLE R4 0 2
+LOADK R5 K53 ['B'&E) '/H'*']
+LOADK R6 K29 ['']
+SETLIST R4 R5 2 [1]
+NAMECALL R2 R1 K30 ['MakeTab']
+CALL R2 2 1
+REMARK allocation: table array 2
+   50: Tab1:AddButton({"'.0 *A'-G", function(Value)
+NEWTABLE R5 0 2
+LOADK R6 K54 [''.0 *A'-G']
+DUPCLOSURE R7 K55 []
+SETLIST R5 R6 2 [1]
+NAMECALL R3 R2 K46 ['AddButton']
+CALL R3 2 0
+REMARK allocation: table template 3
+   58: local Toggle1 = Tab1:AddToggle({
+DUPTABLE R5 59
+NAMECALL R3 R2 K60 ['AddToggle']
+CALL R3 2 1
+MOVE R0 R3
+   63: Toggle1:Callback(function(Value)
+DUPCLOSURE R5 K61 []
+NAMECALL R3 R0 K62 ['Callback']
+CALL R3 2 0
+REMARK allocation: table array 2
+   77: Tab1:AddButton({"'.0 (J2'", function(Value)
+NEWTABLE R5 0 2
+LOADK R6 K63 [''.0 (J2'']
+DUPCLOSURE R7 K64 []
+SETLIST R5 R6 2 [1]
+NAMECALL R3 R2 K46 ['AddButton']
+CALL R3 2 0
+REMARK allocation: table array 2
+   86: Tab1:AddButton({"'.0 ((3J", function(Value)
+NEWTABLE R5 0 2
+LOADK R6 K65 [''.0 ((3J']
+DUPCLOSURE R7 K66 []
+SETLIST R5 R6 2 [1]
+NAMECALL R3 R2 K46 ['AddButton']
+CALL R3 2 0
+REMARK allocation: table template 3
+   94: local Toggle1 = Tab1:AddToggle({
+DUPTABLE R5 68
+NAMECALL R3 R2 K60 ['AddToggle']
+CALL R3 2 1
+MOVE R0 R3
+   99: Toggle1:Callback(function(Value)
+DUPCLOSURE R5 K69 []
+NAMECALL R3 R0 K62 ['Callback']
+CALL R3 2 0
+REMARK allocation: table array 2
+  113: Tab1:AddButton({"'.0 CHCJ2", function(Value)
+NEWTABLE R5 0 2
+LOADK R6 K70 [''.0 CHCJ2']
+DUPCLOSURE R7 K71 []
+SETLIST R5 R6 2 [1]
+NAMECALL R3 R2 K46 ['AddButton']
+CALL R3 2 0
+REMARK allocation: table template 3
+  121: local Toggle1 = Tab1:AddToggle({
+DUPTABLE R5 73
+NAMECALL R3 R2 K60 ['AddToggle']
+CALL R3 2 1
+MOVE R0 R3
+  126: Toggle1:Callback(function(Value)
+DUPCLOSURE R5 K74 []
+NAMECALL R3 R0 K62 ['Callback']
+CALL R3 2 0
+REMARK allocation: table array 2
+  141: Tab1:AddButton({"'.0 ,(3", function(Value)
+NEWTABLE R5 0 2
+LOADK R6 K75 [''.0 ,(3']
+DUPCLOSURE R7 K76 []
+SETLIST R5 R6 2 [1]
+NAMECALL R3 R2 K46 ['AddButton']
+CALL R3 2 0
+REMARK allocation: table array 2
+  149: Tab1:AddButton({"'.0 3D'-", function(Value)
+NEWTABLE R5 0 2
+LOADK R6 K77 [''.0 3D'-']
+DUPCLOSURE R7 K78 []
+SETLIST R5 R6 2 [1]
+NAMECALL R3 R2 K46 ['AddButton']
+CALL R3 2 0
+  165: local Players = game:GetService("Players")
+GETIMPORT R2 3 [game]
+LOADK R4 K79 ['Players']
+NAMECALL R2 R2 K80 ['GetService']
+CALL R2 2 1
+  166: local LocalPlayer = Players.LocalPlayer
+GETTABLEKS R0 R2 K81 ['LocalPlayer']
+REMARK allocation: table array 2
+  168: local ESPTab = Window:MakeTab({"B'&E) ESP", "eye"})
+NEWTABLE R5 0 2
+LOADK R6 K82 ['B'&E) ESP']
+LOADK R7 K83 ['eye']
+SETLIST R5 R6 2 [1]
+NAMECALL R3 R1 K30 ['MakeTab']
+CALL R3 2 1
+  170: local ESPEnabled = false
+LOADB R4 0
+  171: local SelectedESP = false
+LOADB R5 0
+  172: local SelectedPlayer = nil
+LOADNIL R6
+  178: local function CreateESP(Player)
+DUPCLOSURE R7 K84 ['CreateESP']
+CAPTURE VAL R0
+  201: local function RemoveESP(Player)
+DUPCLOSURE R8 K85 ['RemoveESP']
+REMARK allocation: closure with 4 upvalues
+  215: local function UpdateAllESP()
+NEWCLOSURE R9 P14
+CAPTURE VAL R2
+CAPTURE REF R4
+CAPTURE VAL R7
+CAPTURE VAL R8
+  229: local function RefreshPlayerList()
+DUPCLOSURE R10 K86 ['RefreshPlayerList']
+CAPTURE VAL R2
+CAPTURE VAL R0
+REMARK allocation: table array 1
+  245: ESPTab:AddSection({"ESP 'DD'9(JF"})
+NEWTABLE R13 0 1
+LOADK R14 K87 ['ESP 'DD'9(JF']
+SETLIST R13 R14 1 [1]
+NAMECALL R11 R3 K41 ['AddSection']
+CALL R11 2 0
+REMARK allocation: table template 4
+  251: ESPTab:AddToggle({
+DUPTABLE R13 90
+REMARK allocation: closure with 2 upvalues
+  256:     Callback = function(Value)
+NEWCLOSURE R14 P16
+CAPTURE REF R4
+CAPTURE VAL R9
+SETTABLEKS R14 R13 K62 ['Callback']
+  251: ESPTab:AddToggle({
+NAMECALL R11 R3 K60 ['AddToggle']
+CALL R11 2 0
+REMARK allocation: table template 5
+  266: ESPTab:AddDropdown({
+DUPTABLE R13 95
+  269:     Options = RefreshPlayerList(),
+MOVE R14 R10
+CALL R14 0 1
+SETTABLEKS R14 R13 K93 ['Options']
+REMARK allocation: closure with 4 upvalues
+  272:     Callback = function(Value)
+NEWCLOSURE R14 P17
+CAPTURE REF R6
+CAPTURE VAL R2
+CAPTURE REF R5
+CAPTURE VAL R7
+SETTABLEKS R14 R13 K62 ['Callback']
+  266: ESPTab:AddDropdown({
+NAMECALL R11 R3 K96 ['AddDropdown']
+CALL R11 2 0
+REMARK allocation: table template 4
+  285: ESPTab:AddToggle({
+DUPTABLE R13 99
+REMARK allocation: closure with 4 upvalues
+  290:     Callback = function(Value)
+NEWCLOSURE R14 P18
+CAPTURE REF R5
+CAPTURE REF R6
+CAPTURE VAL R7
+CAPTURE VAL R8
+SETTABLEKS R14 R13 K62 ['Callback']
+  285: ESPTab:AddToggle({
+NAMECALL R11 R3 K60 ['AddToggle']
+CALL R11 2 0
+REMARK allocation: table template 2
+  307: ESPTab:AddButton({
+DUPTABLE R13 101
+  309:     Callback = function()
+DUPCLOSURE R14 K102 ['Callback']
+CAPTURE VAL R10
+SETTABLEKS R14 R13 K62 ['Callback']
+  307: ESPTab:AddButton({
+NAMECALL R11 R3 K46 ['AddButton']
+CALL R11 2 0
+REMARK allocation: closure with 4 upvalues
+  320: local function SetupPlayer(Player)
+NEWCLOSURE R3 P20
+CAPTURE REF R4
+CAPTURE REF R5
+CAPTURE REF R6
+CAPTURE VAL R7
+  330: for _, Player in ipairs(Players:GetPlayers()) do
+GETIMPORT R11 104 [ipairs]
+NAMECALL R12 R2 K105 ['GetPlayers']
+CALL R12 1 -1
+CALL R11 -1 3
+FORGPREP_INEXT R11 L1
+  331:     SetupPlayer(Player)
+L0: MOVE R16 R3
+MOVE R17 R15
+CALL R16 1 0
+  330: for _, Player in ipairs(Players:GetPlayers()) do
+L1: FORGLOOP R11 L0 2 [inext]
+  334: Players.PlayerAdded:Connect(function(Player)
+GETTABLEKS R11 R2 K106 ['PlayerAdded']
+DUPCLOSURE R13 K107 []
+CAPTURE VAL R3
+NAMECALL R11 R11 K108 ['Connect']
+CALL R11 2 0
+  342: Players.PlayerRemoving:Connect(function(Player)
+GETTABLEKS R11 R2 K109 ['PlayerRemoving']
+REMARK allocation: closure with 1 upvalues
+NEWCLOSURE R13 P22
+CAPTURE REF R6
+NAMECALL R11 R11 K108 ['Connect']
+CALL R11 2 0
+REMARK allocation: table array 2
+  354: local Tab1 = Window:MakeTab({"B'&E) %6'AJ)", ""})
+NEWTABLE R13 0 2
+LOADK R14 K110 ['B'&E) %6'AJ)']
+LOADK R15 K29 ['']
+SETLIST R13 R14 2 [1]
+NAMECALL R11 R1 K30 ['MakeTab']
+CALL R11 2 1
+REMARK allocation: table array 2
+  356: Tab1:AddButton({",D( CH/ .2FG", function()
+NEWTABLE R14 0 2
+LOADK R15 K111 [',D( CH/ .2FG']
+DUPCLOSURE R16 K112 []
+SETLIST R14 R15 2 [1]
+NAMECALL R12 R11 K46 ['AddButton']
+CALL R12 2 0
+  376: local Players = game:GetService("Players")
+GETIMPORT R11 3 [game]
+LOADK R13 K79 ['Players']
+NAMECALL R11 R11 K80 ['GetService']
+CALL R11 2 1
+  377: local RunService = game:GetService("RunService")
+GETIMPORT R12 3 [game]
+LOADK R14 K113 ['RunService']
+NAMECALL R12 R12 K80 ['GetService']
+CALL R12 2 1
+  378: local UserInputService = game:GetService("UserInputService")
+GETIMPORT R13 3 [game]
+LOADK R15 K114 ['UserInputService']
+NAMECALL R13 R13 K80 ['GetService']
+CALL R13 2 1
+  380: local Player = Players.LocalPlayer
+GETTABLEKS R14 R11 K81 ['LocalPlayer']
+REMARK allocation: table array 2
+  382: local PlayerTab = Window:MakeTab({"'DD'9(", "user"})
+NEWTABLE R17 0 2
+LOADK R18 K115 [''DD'9(']
+LOADK R19 K116 ['user']
+SETLIST R17 R18 2 [1]
+NAMECALL R15 R1 K30 ['MakeTab']
+CALL R15 2 1
+MOVE R11 R15
+  385: local SpeedEnabled = false
+LOADB R15 0
+  386: local JumpEnabled = false
+LOADB R16 0
+  387: local NoclipEnabled = false
+LOADB R17 0
+  388: local InfiniteJumpEnabled = false
+LOADB R18 0
+  390: local SpeedValue = 50
+LOADN R19 50
+  391: local JumpValue = 100
+LOADN R20 100
+  393: local NoclipConnection
+LOADNIL R21
+  399: local function GetHumanoid()
+DUPCLOSURE R1 K117 ['GetHumanoid']
+CAPTURE VAL R14
+REMARK allocation: table template 4
+  408: PlayerTab:AddTextBox({
+DUPTABLE R24 122
+REMARK allocation: closure with 3 upvalues
+  413:     Callback = function(Value)
+NEWCLOSURE R25 P25
+CAPTURE REF R19
+CAPTURE VAL R1
+CAPTURE REF R15
+SETTABLEKS R25 R24 K62 ['Callback']
+  408: PlayerTab:AddTextBox({
+NAMECALL R22 R11 K123 ['AddTextBox']
+CALL R22 2 0
+REMARK allocation: table template 4
+  432: PlayerTab:AddToggle({
+DUPTABLE R24 126
+REMARK allocation: closure with 3 upvalues
+  437:     Callback = function(Value)
+NEWCLOSURE R25 P26
+CAPTURE REF R15
+CAPTURE VAL R1
+CAPTURE REF R19
+SETTABLEKS R25 R24 K62 ['Callback']
+  432: PlayerTab:AddToggle({
+NAMECALL R22 R11 K60 ['AddToggle']
+CALL R22 2 0
+REMARK allocation: table template 4
+  452: PlayerTab:AddTextBox({
+DUPTABLE R24 130
+REMARK allocation: closure with 3 upvalues
+  457:     Callback = function(Value)
+NEWCLOSURE R25 P27
+CAPTURE REF R20
+CAPTURE VAL R1
+CAPTURE REF R16
+SETTABLEKS R25 R24 K62 ['Callback']
+  452: PlayerTab:AddTextBox({
+NAMECALL R22 R11 K123 ['AddTextBox']
+CALL R22 2 0
+REMARK allocation: table template 4
+  477: PlayerTab:AddToggle({
+DUPTABLE R24 133
+REMARK allocation: closure with 3 upvalues
+  482:     Callback = function(Value)
+NEWCLOSURE R25 P28
+CAPTURE REF R16
+CAPTURE VAL R1
+CAPTURE REF R20
+SETTABLEKS R25 R24 K62 ['Callback']
+  477: PlayerTab:AddToggle({
+NAMECALL R22 R11 K60 ['AddToggle']
+CALL R22 2 0
+REMARK allocation: table template 4
+  498: PlayerTab:AddToggle({
+DUPTABLE R24 136
+REMARK allocation: closure with 4 upvalues
+  503:     Callback = function(Value)
+NEWCLOSURE R25 P29
+CAPTURE REF R17
+CAPTURE REF R21
+CAPTURE VAL R12
+CAPTURE VAL R14
+SETTABLEKS R25 R24 K62 ['Callback']
+  498: PlayerTab:AddToggle({
+NAMECALL R22 R11 K60 ['AddToggle']
+CALL R22 2 0
+REMARK allocation: table template 4
+  541: PlayerTab:AddToggle({
+DUPTABLE R24 139
+REMARK allocation: closure with 1 upvalues
+  546:     Callback = function(Value)
+NEWCLOSURE R25 P30
+CAPTURE REF R18
+SETTABLEKS R25 R24 K62 ['Callback']
+  541: PlayerTab:AddToggle({
+NAMECALL R22 R11 K60 ['AddToggle']
+CALL R22 2 0
+  551: UserInputService.JumpRequest:Connect(function()
+GETTABLEKS R22 R13 K140 ['JumpRequest']
+REMARK allocation: closure with 2 upvalues
+NEWCLOSURE R24 P31
+CAPTURE REF R18
+CAPTURE VAL R1
+NAMECALL R22 R22 K108 ['Connect']
+CALL R22 2 0
+  567: Player.CharacterAdded:Connect(function(Character)
+GETTABLEKS R22 R14 K141 ['CharacterAdded']
+REMARK allocation: closure with 4 upvalues
+NEWCLOSURE R24 P32
+CAPTURE REF R15
+CAPTURE REF R19
+CAPTURE REF R16
+CAPTURE REF R20
+NAMECALL R22 R22 K108 ['Connect']
+CALL R22 2 0
+  582: print("Player Systems Loaded")
+GETIMPORT R22 143 [print]
+LOADK R23 K144 ['Player Systems Loaded']
+CALL R22 1 0
+CLOSEUPVALS R4
+RETURN R0 0
